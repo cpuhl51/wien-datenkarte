@@ -244,7 +244,7 @@ const LAYERS = [
    subs:[{id:"rel",label:"pro 1.000 Einw.",data:S.dea_rel,fmt:fmt1,unit:" ‰"},
          {id:"abs",label:"Anzahl",data:S.dea_abs,fmt:fmtInt,unit:""}],
    note:"Rate nicht altersbereinigt: Bezirke mit älterer Bevölkerung liegen höher."},
-  {id:"edu",label:"Bildungsstand",color:"#7a3db8",src:SRC.edu,stand:y=>`Stichtag ${dmy(per("edu",y))}, Bevölkerung 25–64 Jahre`,stack:"edu",
+  {id:"edu",label:"Bildungsstand",color:"#7a3db8",src:SRC.edu,stand:y=>`Stichtag ${dmy(per("edu",y))}, Bevölkerung 25–64 Jahre`,stack:["edu"],
    subs:[{id:"aka",label:"Akademiker",data:S.edu_aka,...PCT,note:"Hochschule und hochschulverwandte Lehranstalten."},
          {id:"mat",label:"Matura (AHS+BHS)",data:S.edu_mat,...PCT},
          {id:"bms",label:"Fachschule (BMS)",data:S.edu_bms,...PCT},
