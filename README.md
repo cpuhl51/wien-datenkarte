@@ -40,3 +40,8 @@ python3 scripts/build_page.py
 - Die Kurzlinks `wien.gv.at/gogv/…` aus dem Datenkatalog liefern derzeit 404. Das Skript nutzt die direkten Dateipfade.
 - Hundeattacken gibt es nur für ganz Wien (2022, 2023). Der Link für 2024 ist bei der Stadt defekt.
 - Staatsbürgerschaft und Wahl sind noch Einzeljahre und fest in der Vorlage eingetragen.
+
+## Lizenz
+
+Der Code steht unter der [MIT-Lizenz](LICENSE). Die Daten gehören den jeweiligen Quellen
+(Stadt Wien: CC BY 4.0) und fallen nicht unter die MIT-Lizenz.
