@@ -173,7 +173,7 @@ const fcount = k => { const a=Array(24).fill(0); F.items.forEach(i=>{ if(!k||i.k
 /* Wiener Linien Störungen: Momentaufnahme, Bezirk über die betroffenen Haltestellen */
 const WL = DATA.wl || {items:[],fetched:""};
 /* Live-Störungen: Adresse des Cloudflare Workers eintragen (siehe live/README.md). Leer = Momentaufnahme vom Datenlauf. */
-const LIVE_URL = "";
+const LIVE_URL = "https://wien-stoerungen.cpuhl51.workers.dev/";
 const wcount = k => { const a=Array(24).fill(0); WL.items.forEach(i=>{ if(!k||i.k===k){ a[0]++; i.b.forEach(b=>a[b]++); } }); return {[FY]:a}; };
 const WL_KIND = {kurz:"Störung",lang:"Länger dauernd",aufzug:"Aufzug"};
 

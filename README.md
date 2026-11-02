@@ -42,7 +42,7 @@ python3 scripts/build_page.py
 
 - Die Kurzlinks `wien.gv.at/gogv/…` aus dem Datenkatalog liefern derzeit 404. Das Skript nutzt die direkten Dateipfade.
 - Hundeattacken gibt es nur für ganz Wien (2022, 2023). Der Link für 2024 ist bei der Stadt defekt.
-- Öffi-Störungen sind eine Momentaufnahme vom letzten Datenlauf, bis der Worker in `live/` eingerichtet ist (die Wiener-Linien-Schnittstelle erlaubt keine direkten Browser-Abfragen).
+- Öffi-Störungen kommen live über den Cloudflare Worker `wien-stoerungen` (siehe `live/`), weil die Wiener-Linien-Schnittstelle keine direkten Browser-Abfragen erlaubt. Fällt er aus, zeigt die App die Momentaufnahme vom letzten Datenlauf.
 - „Öffis unterwegs“ zeigt Fahrten laut Fahrplan, keine echten Positionen: Die Wiener Linien veröffentlichen keine Fahrzeugpositionen. Ausfälle und Verspätungen sind nicht enthalten.
 - Staatsbürgerschaft und Wahl sind noch Einzeljahre und fest in der Vorlage eingetragen.
 
