@@ -195,6 +195,10 @@ const viennaNow = () => { const p=Object.fromEntries(new Intl.DateTimeFormat("de
 const FP_DAY = FP ? (FP.days[viennaNow().day] ? viennaNow().day : Object.keys(FP.days)[0]) : null;
 const fslots = typ => { const o={}; if(!FP) return {0:Array(24).fill(0)}; const days=FP.days[FP_DAY];
   const types=typ?[typ]:Object.keys(days); for(let i=0;i<days[types[0]].length;i++){ const a=Array(24).fill(0); types.forEach(k=>days[k][i].forEach((v,b)=>a[b]+=v)); o[i]=a; } return o; };
+/* Fahrten je 1.000 Einwohner (Bevölkerungsstand des letzten verfügbaren Jahres) */
+const POP_LAST = (()=>{ const ys=Object.keys(S.pop).sort(); return {y:ys[ys.length-1], a:S.pop[ys[ys.length-1]]}; })();
+const perK = o => Object.fromEntries(Object.entries(o).map(([k,a])=>[k,a.map((v,b)=>POP_LAST.a[b]?Math.round(1e5*v/POP_LAST.a[b])/100:0)]));
+const fmt2 = n => n.toLocaleString("de-AT",{minimumFractionDigits:2,maximumFractionDigits:2});
 const hhmm = i => { const m=i*(FP?FP.step:10); return `${String(Math.floor(m/60)).padStart(2,"0")}:${String(m%60).padStart(2,"0")}`; };
 
 const SRC = {
@@ -263,7 +267,9 @@ const LAYERS = [
    subs:[{id:"all",label:"Alle",data:fslots(),fmt:fmtInt,unit:""},
          {id:"u",label:"U-Bahn",data:fslots("1"),fmt:fmtInt,unit:""},
          {id:"tram",label:"Straßenbahn",data:fslots("0"),fmt:fmtInt,unit:""},
-         {id:"bus",label:"Bus",data:fslots("3"),fmt:fmtInt,unit:""}],
+         {id:"bus",label:"Bus",data:fslots("3"),fmt:fmtInt,unit:""},
+         {id:"rel",label:"pro 1.000 Einw.",data:perK(fslots()),fmt:fmt2,unit:" ‰",
+          note:`Fahrzeuge unterwegs je 1.000 Einwohner (Einwohner am 1.1.${POP_LAST.y}). Bezirke mit wenig Bewohnern, aber vielen Durchfahrten wie die Innere Stadt liegen dadurch weit vorne.`}],
    note:"Fahrten, die laut Plan gerade unterwegs sind oder an einer Haltestelle stehen. Zwischen zwei Haltestellen wird die Position geschätzt. Wien gesamt enthält auch Fahrten knapp außerhalb der Stadtgrenze."},
   {id:"wl",label:"Öffi-Störungen",color:"#c4161c",src:SRC.wl,live:true,
    stand:()=>`Momentaufnahme vom ${WL.fetched.replace(/^(\d{4})-(\d\d)-(\d\d) /,(m,y,mo,d)=>`${+d}.${+mo}.${y}, `)} Uhr · nur gerade gültige Meldungen`,
@@ -354,7 +360,7 @@ function render(){
   for(let b=1;b<=23;b++){paths[b].setAttribute("fill",mix(bg,c,t(arr[b])));paths[b].classList.toggle("sel",b===sel);}
   document.getElementById("ramp").style.background=`linear-gradient(90deg,${mix(bg,c,.12)},${c})`;
   document.getElementById("ticks").innerHTML=[lo,(lo+hi)/2,hi].map(v=>`<span>${s.fmt(v)}${s.unit}</span>`).join("");
-  document.getElementById("layernote").textContent=[layer.note,s.note].filter(Boolean).join(" ")+(yearsOf(s).length>1?" Kartenfarben: Spannweite der Bezirke über alle Jahre.":"");
+  document.getElementById("layernote").textContent=[layer.note,s.note].filter(Boolean).join(" ")+(yearsOf(s).length>1?(layer.clock?" Kartenfarben: Spannweite der Bezirke über den ganzen Tag.":" Kartenfarben: Spannweite der Bezirke über alle Jahre."):"");
   const title=layer.subs.length>1&&s.label!==layer.label?`${layer.label} · ${s.label}`:layer.label;
   document.getElementById("ranktitle").textContent=`Rangliste · ${title} · ${layer.clock?hhmm(y)+" Uhr":(layer.fund||layer.live)?"aktuell":y}`;
   const order=[...Array(23)].map((_,i)=>i+1).sort((a,b)=>arr[b]-arr[a]);
