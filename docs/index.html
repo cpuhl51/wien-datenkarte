@@ -54,6 +54,10 @@ h1{font-family:var(--display);font-weight:800;font-size:clamp(28px,5vw,44px);lin
 svg.map{width:100%;height:auto;display:block;touch-action:manipulation}
 svg.map path{stroke:var(--surface);stroke-width:1.2;cursor:pointer;transition:fill .25s}
 svg.map path.sel{stroke:var(--ink);stroke-width:2.6}
+svg.map.zoomed > text{display:none}
+svg.map > path{vector-effect:non-scaling-stroke}
+svg.map text.stat{font-family:var(--body);font-weight:500;fill:var(--ink);paint-order:stroke;stroke:var(--surface)}
+svg.map .orient{pointer-events:none}
 svg.map .ovl{pointer-events:none}
 svg.map .ovl path{cursor:pointer}
 .hlp{stroke:var(--ink)!important;stroke-width:3!important;fill-opacity:.9!important}
@@ -136,9 +140,9 @@ dt .pd{display:block;font-size:12px;color:var(--muted)}
 svg.vin{width:100%;height:auto;display:block}
 svg.vin path:hover{stroke-width:2.2}
 svg.vin text.vl{font:600 13px var(--body);fill:#3a2e08;pointer-events:none}
-:root{--dotline:#1b2421;--vin-via:#d9d2c2;--vin-kas:#8a8170;--vin-bef:#2e7d6f;--road:#8a3b12}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--dotline:#0b0f0e;--vin-via:#3f3a30;--vin-kas:#9a907c;--vin-bef:#5fb3a3;--road:#f0a040}}
-:root[data-theme="dark"]{--vin-via:#3f3a30;--vin-kas:#9a907c;--vin-bef:#5fb3a3;--road:#f0a040}
+:root{--water:#74a9cf;--dotline:#1b2421;--vin-via:#d9d2c2;--vin-kas:#8a8170;--vin-bef:#2e7d6f;--road:#8a3b12}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--water:#3b6f96;--dotline:#0b0f0e;--vin-via:#3f3a30;--vin-kas:#9a907c;--vin-bef:#5fb3a3;--road:#f0a040}}
+:root[data-theme="dark"]{--water:#3b6f96;--dotline:#0b0f0e;--vin-via:#3f3a30;--vin-kas:#9a907c;--vin-bef:#5fb3a3;--road:#f0a040}
 .card h4{font:600 12px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:12px 0 6px}
 </style>
 </head>
@@ -168,7 +172,8 @@ svg.vin text.vl{font:600 13px var(--body);fill:#3a2e08;pointer-events:none}
 
   <div class="grid">
     <div class="mapbox">
-      <div class="maphead"><button class="wien" id="wien" aria-pressed="false">Wien gesamt</button><span class="hint">Zahlen = gewählte Ebene · Bezirk antippen für Details</span></div>
+      <div class="maphead"><button class="wien" id="wien" aria-pressed="false">Wien gesamt</button><button class="wien" id="locate">Mein Standort</button><button class="wien" id="zoomout" hidden>Ganze Stadt</button><span class="hint">Zahlen = gewählte Ebene · Bezirk antippen für Details</span></div>
+      <p class="note" id="locmsg" hidden></p>
       <svg class="map" id="map" role="img" aria-label="Karte der Wiener Gemeindebezirke"></svg>
       <div class="legend"><div class="ramp" id="ramp"></div><div class="ticks" id="ticks"></div></div>
       <p class="note" id="layernote"></p>
@@ -244,7 +249,7 @@ function rankList(title,rows,note){
 
 /* Standorte (Punkte) und historische Flächen: werden erst geladen, wenn eine solche Ebene gewählt wird */
 let PT = null, PT_LOADING = null, BEF = null;
-function loadPoints(){ if(PT) return Promise.resolve(PT); if(!PT_LOADING) PT_LOADING = fetch("punkte.json").then(r=>r.json()).then(d=>{PT=d; fillPointLayers(); return d;}); return PT_LOADING; }
+function loadPoints(){ if(PT) return Promise.resolve(PT); if(!PT_LOADING) PT_LOADING = fetch("punkte.json").then(r=>r.json()).then(d=>{ Object.values(d.points).forEach(p=>{ if(p.ref) p.pts=p.idx.map(i=>d.points[p.ref].pts[i]); }); PT=d; fillPointLayers(); return d;}); return PT_LOADING; }
 function loadBefunde(){ if(BEF) return Promise.resolve(BEF); return fetch("befunde.json").then(r=>r.json()).then(d=>BEF=d); }
 const POINT_SETS = {
   /* [Schlüssel, Name, Erklärung, Punktfarbe] */
@@ -257,7 +262,7 @@ const POINT_SETS = {
          ["problem","Problemstoffe","Batterien, Lacke, Medikamente","#ae3ec9"],
          ["sackerl","Sackerl-Spender","Hundekotsackerl","#9aa3a7"]],
   infra:[["brunnen","Trinkbrunnen","","#1c7ed6"],["wc","Öffentliche WCs","","#e8590c"],["park","Parks","","#37b24d"],["spiel","Spielplätze","","#e64980"],
-         ["hundezone","Hundezonen","","#a07850"],["kiga","Kindergärten","","#f59f00"],["schule","Schulen","","#7048e8"],["defi","Defibrillatoren","","#fa5252"],["polizei","Polizei","","#4dabf7"]]
+         ["hundezone","Hundezonen","","#a07850"],["defi","Defibrillatoren","","#fa5252"],["polizei","Polizei","","#4dabf7"]]
 };
 const ptSub = ([k,l,n,c]) => ({id:k,label:l,data:{0:Array(24).fill(0)},fmt:fmtInt,unit:"",note:n?`${l}: ${n}.`:"",pts:k,dot:c,color:c});
 function fillPointLayers(){ LAYERS.filter(L=>L.points).forEach(L=>L.subs.forEach(s=>{ const p=PT.points[s.pts]; if(p) s.data={0:p.count}; })); }
@@ -467,13 +472,55 @@ function mapFmt(v,s){
 }
 
 const esc=s=>String(s==null?"":s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");
+const orient=document.createElementNS(NS,"g"); orient.setAttribute("class","orient"); svg.insertBefore(orient, svg.querySelector("text"));
+const UCOL={"1":"#e20210","2":"#a862a4","3":"#ef7c00","4":"#00963f","5":"#008f95","6":"#9d6930"};
+function drawOrient(on){
+  if(!on||!PT||!PT.orient){ orient.innerHTML=""; return; }
+  const O=PT.orient, k=zoom.k;
+  orient.innerHTML=(O.fluss||[]).map(g=>`<path d="${geoPath(g)}" style="fill:none;stroke:var(--water);stroke-width:${2.4/k};stroke-linecap:round"></path>`).join("")
+    +(O.ubahn||[]).map(g=>`<path d="${geoPath(g)}" style="fill:none;stroke:${UCOL[g.l]||"#888"};stroke-width:${2/k};stroke-opacity:.9;stroke-linecap:round"></path>`).join("")
+    +(k>2?(O.stat||[]).map(s=>{const [x,y]=px([s[0],s[1]]);return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${3/k}" style="fill:var(--surface);stroke:${UCOL[s[3]]||"#888"};stroke-width:${1.2/k}"></circle><text x="${(x+5/k).toFixed(1)}" y="${(y+3/k).toFixed(1)}" class="stat" style="font-size:${9/k}px;stroke-width:${2.5/k}px">${esc(s[2])}</text>`;}).join(""):"")
+    +(me?(()=>{const [x,y]=px([me.lon,me.lat]);return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${14/k}" style="fill:var(--ink);fill-opacity:.15;stroke:var(--ink);stroke-width:${1/k}"></circle><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${5/k}" style="fill:var(--ink);stroke:var(--surface);stroke-width:${2.5/k}"></circle>`;})():"");
+}
+/* Ausschnitt: zoom.k = Vergrößerung, Mittelpunkt in Kartenkoordinaten */
+const zoom={k:1,cx:W/2,cy:H/2};
+function applyZoom(){
+  const w=(W+8)/zoom.k, h=(H+8)/zoom.k;
+  const x=Math.max(-4,Math.min(W+4-w,zoom.cx-w/2)), y=Math.max(-4,Math.min(H+4-h,zoom.cy-h/2));
+  svg.setAttribute("viewBox",`${x.toFixed(1)} ${y.toFixed(1)} ${w.toFixed(1)} ${h.toFixed(1)}`);
+  svg.classList.toggle("zoomed",zoom.k>1);
+  document.getElementById("zoomout").hidden=zoom.k===1;
+}
+let me=null;
+function locate(){
+  const btn=document.getElementById("locate"), msg=document.getElementById("locmsg");
+  if(!navigator.geolocation){ msg.textContent="Dein Browser kann den Standort nicht ermitteln."; msg.hidden=false; return; }
+  btn.disabled=true; msg.textContent="Standort wird ermittelt …"; msg.hidden=false;
+  navigator.geolocation.getCurrentPosition(p=>{
+    btn.disabled=false; me={lat:p.coords.latitude, lon:p.coords.longitude, acc:p.coords.accuracy};
+    const [x,y]=px([me.lon,me.lat]);
+    if(x<-20||x>W+20||y<-20||y>H+20){ msg.textContent="Du bist gerade außerhalb von Wien. Die Karte zeigt nur Wien."; me=null; return; }
+    msg.hidden=true; zoom.k=6; zoom.cx=x; zoom.cy=y; applyZoom(); render();
+  },e=>{ btn.disabled=false; msg.textContent=e.code===1?"Standortfreigabe abgelehnt. Du kannst sie in den Browser-Einstellungen für diese Seite erlauben.":"Standort konnte nicht ermittelt werden."; },{enableHighAccuracy:true,timeout:15000,maximumAge:60000});
+}
+function distM(a,b){ const R=6371000,toR=Math.PI/180, dLat=(b[1]-a[1])*toR, dLon=(b[0]-a[0])*toR, x=Math.sin(dLat/2)**2+Math.cos(a[1]*toR)*Math.cos(b[1]*toR)*Math.sin(dLon/2)**2; return 2*R*Math.asin(Math.sqrt(x)); }
+const fmtDist=m=>m<1000?`${Math.round(m/10)*10} m`:`${fmt1(m/1000)} km`;
+function nearList(s){
+  if(!me||!PT||!PT.points[s.pts]) return "";
+  const pts=PT.points[s.pts].pts.map(p=>[distM([me.lon,me.lat],[p[0],p[1]]),p]).sort((a,b)=>a[0]-b[0]).slice(0,10);
+  const st=(PT.orient&&PT.orient.stat||[]).map(p=>[distM([me.lon,me.lat],[p[0],p[1]]),p]).sort((a,b)=>a[0]-b[0])[0];
+  return `<h4>In deiner Nähe: ${s.label}</h4><ul class="flist">${pts.map(([d,p])=>`<li><span class="fd">${fmtDist(d)}</span><span>${esc(p[3]||s.label)} · <a href="https://www.google.com/maps/search/?api=1&query=${p[1]},${p[0]}" target="_blank" rel="noopener">Karte</a></span></li>`).join("")}</ul>
+    ${st?`<p class="note" style="margin:4px 0 0">Nächste U-Bahn: ${esc(st[1][2])} (U${esc(st[1][3])}), ${fmtDist(st[0])} Luftlinie.</p>`:""}
+    <p class="note" style="margin:4px 0 0">Entfernungen in Luftlinie. „Karte“ öffnet den Ort in Google Maps.</p>`;
+}
+
 const overlay=document.createElementNS(NS,"g"); overlay.setAttribute("class","ovl"); svg.insertBefore(overlay, svg.querySelector("text"));
 function drawPoints(key,c){
   overlay.innerHTML="";
   if(!PT||!PT.points[key]) return;
-  const pts=PT.points[key].pts, r=pts.length>2000?2:pts.length>500?2.6:4.5;
+  const pts=PT.points[key].pts, r=(pts.length>2000?2:pts.length>500?2.6:4.5)*(zoom.k>1?2.2/zoom.k:1);
   overlay.innerHTML=pts.map(p=>{const [x,y]=px([p[0],p[1]]);return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r}"/>`;}).join("");
-  overlay.setAttribute("fill",c); overlay.setAttribute("stroke","var(--dotline)"); overlay.setAttribute("stroke-width",r>3?"1":".6");
+  overlay.setAttribute("fill",c); overlay.setAttribute("stroke","var(--dotline)"); overlay.setAttribute("stroke-width",String((r>3?1:.6)/Math.max(1,zoom.k/2.2)));
 }
 function geoPath(g){
   const ring=r=>"M"+r.map(c=>px(c).map(v=>v.toFixed(1)).join(",")).join("L");
@@ -520,6 +567,8 @@ document.getElementById("yslider").addEventListener("input",e=>setYearIdx(+e.tar
 document.getElementById("yprev").addEventListener("click",()=>setYearIdx(+document.getElementById("yslider").value-1));
 document.getElementById("ynext").addEventListener("click",()=>setYearIdx(+document.getElementById("yslider").value+1));
 document.getElementById("wien").addEventListener("click",()=>select(0));
+document.getElementById("locate").addEventListener("click",()=>{ if(!layer.points){ layer=LAYERS.find(L=>L.id==="infra"); } locate(); });
+document.getElementById("zoomout").addEventListener("click",()=>{ zoom.k=1; zoom.cx=W/2; zoom.cy=H/2; applyZoom(); render(); });
 
 function renderAntik(){
   document.getElementById("layernote").textContent="Römische Siedlungsbereiche (Flächen) und Straßen (dünne Linien) über dem heutigen Stadtgebiet. Gestrichelt = ungefährer Verlauf. Das Legionslager ist der rote Bereich im 1. Bezirk, sein Plan steht in der Infokarte.";
@@ -552,6 +601,7 @@ function histPlan(items){
 }
 
 function renderSpecial(){
+  orient.innerHTML=""; if(zoom.k!==1){ zoom.k=1; zoom.cx=W/2; zoom.cy=H/2; applyZoom(); }
   document.querySelector(".yearbar").hidden=true; document.querySelector(".rank").hidden=true;
   document.getElementById("stand").innerHTML=`<div><b>Datenstand:</b> ${layer.stand()}</div><div><span>Quelle:</span> ${layer.src}</div>`;
   document.querySelectorAll("#layers .chip").forEach(c=>c.setAttribute("aria-pressed",c.dataset.l===layer.id));
@@ -575,6 +625,7 @@ function render(){
   renderControls();
   const s=subOf(layer), y=yearOf(layer), arr=s.data[y], [lo,hi]=scaleOf(s), bg=base(), c=colOf(layer);
   const t=v=>.12+.88*((v-lo)/(hi-lo||1));
+  drawOrient(layer.points);
   if(layer.points){ if(!PT){ loadPoints().then(()=>render()).catch(()=>{document.getElementById("layernote").textContent="Standorte konnten nicht geladen werden (nur auf der veröffentlichten Seite verfügbar).";}); } else drawPoints(s.pts,s.dot||c); }
   else overlay.innerHTML="";
   mapThousand=s.unit===""&&Math.max(...arr.slice(1))>=1e4;
@@ -692,7 +743,7 @@ function renderDetail(s,y,order,c){
     ${(layer.id==="nat"||layer.id==="cob")&&NT&&NT[b]?rankList(b===0?"Häufigste Staatsangehörigkeiten (Top 10)":"Häufigste Staatsangehörigkeiten (Top 5)",NT[b].map(r=>[r[0].replace(" - Arabische Republik","").replace("Russische Föderation","Russland"),r[1],r[2]]),"Stand 1.1.2025, Bericht „Wiener Bevölkerung“ der Stadt Wien. Andere Jahre und weitere Länder veröffentlicht die Stadt nicht als offene Daten."):""}
     ${layer.id==="brand"&&BR?rankList(`Top 10 Marken ${BR.year}`,BR.ranking[b].map(r=>[brandName(r[0]),r[1],fmt1(r[2])+" %"]),"Pkw-Bestand am 31.12., nicht Neuzulassungen."):""}
     ${layer.fund?fundList(b):""}
-    ${layer.points&&PT&&PT.points[s.pts]?ptList(s,b):""}
+    ${layer.points&&PT&&PT.points[s.pts]?nearList(s)+ptList(s,b):""}
     ${layer.id==="wl"?wlList(b):""}
     <h4>Weitere Werte</h4>
     <dl><dt>Fläche</dt><dd>${fmt1(b===0?AREA_ALL:AREA[b])} km²</dd>${others}</dl>

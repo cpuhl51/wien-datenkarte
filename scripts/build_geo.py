@@ -124,6 +124,25 @@ for key, layer, props in HIST:
     res["hist"][key] = [{"t": f["geometry"]["type"], "c": simp(f["geometry"]["coordinates"], 0.00003),
                          "p": [clean(f["properties"].get(k)) for k in props]} for f in fs if f.get("geometry")]
 
+# Fraktionen verweisen auf die Punkte der Altstoff-Sammelstellen statt sie zu kopieren (kleinere Datei)
+if "altstoff" in res["points"]:
+    pos = {(p[0], p[1], p[3]): i for i, p in enumerate(res["points"]["altstoff"]["pts"])}
+    for k, _ in FRAKTIONEN:
+        if k in res["points"]:
+            res["points"][k] = {"count": res["points"][k]["count"], "ref": "altstoff",
+                                "idx": [pos[(p[0], p[1], p[3])] for p in res["points"][k]["pts"]]}
+
+# Orientierung: U-Bahn-Linien und -Stationen, große Gewässer
+RIVERS = {"Donau", "Neue Donau", "Donaukanal", "Wienfluss", "Liesingbach"}
+res["orient"] = {
+    "ubahn": [{"t": f["geometry"]["type"], "c": simp(f["geometry"]["coordinates"], 0.00005), "l": clean(f["properties"].get("LINFO"))}
+              for f in load("UBAHNOGD") if f.get("geometry")],
+    "stat": [[round(f["geometry"]["coordinates"][0], 5), round(f["geometry"]["coordinates"][1], 5), clean(f["properties"].get("HTXT")), clean(f["properties"].get("LINFO"))]
+             for f in load("UBAHNHALTOGD") if f.get("geometry")],
+    "fluss": [{"t": f["geometry"]["type"], "c": simp(f["geometry"]["coordinates"], 0.0002), "n": clean(f["properties"].get("NAME"))}
+              for f in load("FLIESSGEWOGD") if f.get("geometry") and clean(f["properties"].get("NAME")) in RIVERS],
+}
+
 json.dump(res, open(out, "w"), ensure_ascii=False, separators=(",", ":"))
 
 bef = [{"t": f["geometry"]["type"], "c": simp(f["geometry"]["coordinates"], 0.000015),
@@ -131,6 +150,6 @@ bef = [{"t": f["geometry"]["type"], "c": simp(f["geometry"]["coordinates"], 0.00
 json.dump(bef, open(out_bef, "w"), ensure_ascii=False, separators=(",", ":"))
 
 for k, v in res["points"].items():
-    print(f"{k:10s} {v['count'][0]:5d} Punkte in Wien, ohne Bezirk: {len(v['pts']) - v['count'][0]}")
+    print(f"{k:10s} {v['count'][0]:5d} Punkte in Wien, ohne Bezirk: {len(v.get('pts', v.get('idx', []))) - v['count'][0]}")
 print("historisch:", {k: len(v) for k, v in res["hist"].items()}, "| Befunde:", len(bef),
       "| Größen KB:", os.path.getsize(out) // 1024, os.path.getsize(out_bef) // 1024)

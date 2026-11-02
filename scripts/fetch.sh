@@ -48,7 +48,8 @@ echo "ok  vindobona"
 mkdir -p wfs
 for L in MISTPLATZOGD ALTSTOFFSAMMLUNGOGD PROBLEMSTOFFOGD HUNDESACKERLOGD TRINKBRUNNENOGD WCANLAGE2OGD PARKINFOOGD \
          SPIELPLATZPUNKTOGD HUNDEZONEOGD KINDERGARTENOGD SCHULEOGD DEFIBRILLATOROGD POLIZEIOGD \
-         ARCHAEOSDLGOGD ARCHAEOSTRASSENOGD MITTELALTBEFESTOGD BEFUNDARCHAEOOGD; do
+         ARCHAEOSDLGOGD ARCHAEOSTRASSENOGD MITTELALTBEFESTOGD BEFUNDARCHAEOOGD \
+         UBAHNOGD UBAHNHALTOGD FLIESSGEWOGD; do
   curl -fsS --retry 3 -m 180 -o "wfs/$L.json.tmp" "https://data.wien.gv.at/daten/geo?service=WFS&request=GetFeature&version=1.1.0&typeName=ogdwien:$L&srsName=EPSG:4326&outputFormat=json" \
     && mv "wfs/$L.json.tmp" "wfs/$L.json" || echo "Warnung: $L nicht geladen, alte Datei bleibt"
 done
