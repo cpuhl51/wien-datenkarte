@@ -44,7 +44,13 @@ def load(name):
 
 
 def clean(v):
-    v = re.sub(r"\s+", " ", str(v or "")).strip()
+    """Text aus den Geodaten: Zeilenumbrüche (<br>) zu Trennern, HTML-Zeichen auflösen, Tags entfernen"""
+    import html as _h
+    v = str(v or "")
+    v = re.sub(r"(?i)<br\s*/?>", " · ", v)
+    v = re.sub(r"<[^>]+>", " ", _h.unescape(v))
+    v = re.sub(r"\s+", " ", v).strip(" ·")
+    v = re.sub(r"( · )+", " · ", v)
     return "" if v in ("None", "null") else v
 
 
@@ -87,7 +93,12 @@ for key, layer, label in POINTS:
         if not g or g["type"] != "Point":
             continue
         x, y = g["coordinates"][:2]
-        b = district(x, y)
+        try:
+            b = int(str(f["properties"].get("BEZIRK") or "").strip().rstrip("."))
+        except ValueError:
+            b = 0
+        if not 1 <= b <= 23:          # kein gültiger Bezirk in den Daten: über die Lage bestimmen
+            b = district(x, y)
         cnt[b] += 1
         cnt[0] += 1 if b else 0
         pts.append([round(x, 5), round(y, 5), b, label(f["properties"])[:120]])

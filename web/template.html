@@ -45,6 +45,14 @@ h1{font-family:var(--display);font-weight:800;font-size:clamp(28px,5vw,44px);lin
 svg.map{width:100%;height:auto;display:block;touch-action:manipulation}
 svg.map path{stroke:var(--surface);stroke-width:1.2;cursor:pointer;transition:fill .25s}
 svg.map path.sel{stroke:var(--ink);stroke-width:2.6}
+svg.map.base > path{fill-opacity:.35}
+svg.map .tiles{pointer-events:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) svg.map .tiles{filter:invert(1) hue-rotate(180deg) brightness(.85) contrast(.9)}}
+:root[data-theme="dark"] svg.map .tiles{filter:invert(1) hue-rotate(180deg) brightness(.85) contrast(.9)}
+.wien.zb{min-width:34px;padding:6px 0;font-size:16px;line-height:1}
+.baseop{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.baseop input{width:90px;accent-color:var(--accent)}
+.wien[aria-pressed="true"]#basebtn{background:var(--ink);color:var(--bg)}
 svg.map.zoomed > text{display:none}
 svg.map > path{vector-effect:non-scaling-stroke}
 svg.map text.stat{font-family:var(--body);font-weight:500;fill:var(--ink);paint-order:stroke;stroke:var(--surface)}
@@ -169,7 +177,8 @@ svg.vin text.vl{font:600 13px var(--body);fill:#3a2e08;pointer-events:none}
 
   <div class="grid">
     <div class="mapbox">
-      <div class="maphead"><button class="wien" id="wien" aria-pressed="false">Wien gesamt</button><button class="wien" id="locate">Mein Standort</button><button class="wien" id="zoomout" hidden>Ganze Stadt</button><span class="hint">Zahlen = gewählte Ebene · Bezirk antippen für Details</span></div>
+      <div class="maphead"><button class="wien" id="wien" aria-pressed="false">Wien gesamt</button><button class="wien" id="locate">Mein Standort</button><button class="wien zb" id="zin" aria-label="Hineinzoomen">+</button><button class="wien zb" id="zoutb" aria-label="Herauszoomen">−</button><button class="wien" id="zoomout" hidden>Ganze Stadt</button><button class="wien" id="basebtn" aria-pressed="false">Stadtplan</button>
+        <label class="baseop" id="baseop" hidden>Deckkraft <input type="range" id="baseopr" min="0.2" max="1" step="0.1" value="0.6"></label><span class="hint">Zahlen = gewählte Ebene · Bezirk antippen für Details</span></div>
       <p class="note" id="locmsg" hidden></p>
       <svg class="map" id="map" role="img" aria-label="Karte der Wiener Gemeindebezirke"></svg>
       <div class="legend"><div class="ramp" id="ramp"></div><div class="ticks" id="ticks"></div></div>
@@ -183,6 +192,7 @@ svg.vin text.vl{font:600 13px var(--body);fill:#3a2e08;pointer-events:none}
 
   <footer>
     <span>Daten: Stadt Wien – data.wien.gv.at, Lizenz CC BY 4.0 (Aufbereitung MA 23 auf Basis Statistik Austria). Wahl 2025: vienna.at. Fundtiere: Veterinäramt MA 60.</span>
+    <span>Grundkarte „Stadtplan“: basemap.at, CC BY 4.0.</span>
     <span>Bezirksgrenzen: Statistik Austria, über GitHub ginseng666/GeoJSON-TopoJSON-Austria (Stand 2021, vereinfacht). Flächen daraus berechnet: Summe 414,5 km², offiziell 414,9 km².</span>
   </footer>
 </div>
@@ -469,6 +479,32 @@ function mapFmt(v,s){
 }
 
 const esc=s=>String(s==null?"":s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");
+/* Stadtplan als Grundkarte (basemap.at, Kacheln in Web-Mercator, jede Kachel über ihre Eckpunkte eingepasst) */
+const tilesG=document.createElementNS(NS,"g"); tilesG.setAttribute("class","tiles"); svg.insertBefore(tilesG, svg.firstChild);
+let baseOn=null, baseOpacity=0.6;
+const unpx=(X,Y)=>[((X/SC)+minX)/K, maxY-(Y/SC)];
+const lon2x=(lon,z)=>(lon+180)/360*2**z, lat2y=(lat,z)=>(1-Math.log(Math.tan(lat*Math.PI/180)+1/Math.cos(lat*Math.PI/180))/Math.PI)/2*2**z;
+const x2lon=(x,z)=>x/2**z*360-180, y2lat=(y,z)=>{const n=Math.PI-2*Math.PI*y/2**z;return 180/Math.PI*Math.atan(.5*(Math.exp(n)-Math.exp(-n)));};
+function drawTiles(){
+  const on=baseOn===null?!!layer.points:baseOn;
+  svg.classList.toggle("base",on);
+  document.getElementById("basebtn").setAttribute("aria-pressed",on);
+  document.getElementById("baseop").hidden=!on;
+  if(!on){ tilesG.innerHTML=""; return; }
+  const vb=svg.getAttribute("viewBox").split(" ").map(Number);
+  const [lonL,latT]=unpx(vb[0],vb[1]), [lonR,latB]=unpx(vb[0]+vb[2],vb[1]+vb[3]);
+  const screenW=svg.clientWidth||380, dpr=Math.min(2,window.devicePixelRatio||1);
+  let z=Math.round(Math.log2(360*screenW*dpr/((lonR-lonL)*256*1.4))); z=Math.max(10,Math.min(18,z));
+  const x0=Math.floor(lon2x(lonL,z)), x1=Math.floor(lon2x(lonR,z)), y0=Math.floor(lat2y(latT,z)), y1=Math.floor(lat2y(latB,z));
+  if((x1-x0+1)*(y1-y0+1)>80) return;
+  let h="";
+  for(let x=x0;x<=x1;x++) for(let y=y0;y<=y1;y++){
+    const [ax,ay]=px([x2lon(x,z),y2lat(y,z)]), [bx,by]=px([x2lon(x+1,z),y2lat(y+1,z)]);
+    h+=`<image href="https://mapsneu.wien.gv.at/basemap/bmapgrau/normal/google3857/${z}/${y}/${x}.png" x="${ax.toFixed(2)}" y="${ay.toFixed(2)}" width="${(bx-ax+.05).toFixed(2)}" height="${(by-ay+.05).toFixed(2)}" preserveAspectRatio="none"></image>`;
+  }
+  tilesG.innerHTML=h; tilesG.style.opacity=baseOpacity;
+}
+
 const orient=document.createElementNS(NS,"g"); orient.setAttribute("class","orient"); svg.insertBefore(orient, svg.querySelector("text"));
 const UCOL={"1":"#e20210","2":"#a862a4","3":"#ef7c00","4":"#00963f","5":"#008f95","6":"#9d6930"};
 function drawOrient(on){
@@ -583,6 +619,10 @@ document.getElementById("yprev").addEventListener("click",()=>setYearIdx(+docume
 document.getElementById("ynext").addEventListener("click",()=>setYearIdx(+document.getElementById("yslider").value+1));
 document.getElementById("wien").addEventListener("click",()=>select(0));
 document.getElementById("locate").addEventListener("click",()=>{ if(!layer.points){ layer=LAYERS.find(L=>L.id==="infra"); } locate(); });
+document.getElementById("basebtn").addEventListener("click",()=>{ const on=baseOn===null?!!layer.points:baseOn; baseOn=!on; render(); });
+document.getElementById("baseopr").addEventListener("input",e=>{ baseOpacity=+e.target.value; tilesG.style.opacity=baseOpacity; });
+document.getElementById("zin").addEventListener("click",()=>{ if(zoom.k===1&&sel>0){ const L=labels.find(l=>l[0]===sel); if(L){zoom.cx=L[1];zoom.cy=L[2];} } zoom.k=Math.min(16,zoom.k*2); applyZoom(); render(); });
+document.getElementById("zoutb").addEventListener("click",()=>{ zoom.k=Math.max(1,zoom.k/2); if(zoom.k===1){zoom.cx=W/2;zoom.cy=H/2;} applyZoom(); render(); });
 document.getElementById("zoomout").addEventListener("click",()=>{ zoom.k=1; zoom.cx=W/2; zoom.cy=H/2; applyZoom(); render(); });
 
 function renderAntik(){
@@ -635,6 +675,9 @@ function renderSpecial(){
   if(!BEF) loadBefunde().then(()=>{ if(layer.id==="vin") render(); }).catch(()=>{});
 }
 function render(){
+  render2(); try{ drawTiles(); }catch(e){}
+}
+function render2(){
   if(layer.special){ renderSpecial(); return; }
   document.querySelector(".yearbar").hidden=false; document.querySelector(".rank").hidden=false;
   renderControls();
