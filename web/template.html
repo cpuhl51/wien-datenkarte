@@ -108,6 +108,10 @@ dl .exp summary b{font:500 14px var(--mono);color:var(--ink)}
 dl .exp summary:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 dl .exp .flist{margin-top:6px}
 dt .pd{display:block;font-size:12px;color:var(--muted)}
+.darow{display:grid;grid-template-columns:3em minmax(0,1fr) 2.5em;align-items:center;gap:8px}
+.darow .stack{margin:3px 0}
+.darow .dy,.darow .dt{font:500 13px var(--mono);font-variant-numeric:tabular-nums}
+.darow .dt{text-align:right}
 .card h4{font:600 12px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:12px 0 6px}
 </style>
 
@@ -474,7 +478,10 @@ function renderDetail(s,y,order,c){
   const pd=(layer.id==="bir"||layer.id==="dea")?`<p class="sub" style="margin-top:-6px">${perDayTxt(layer.id,b,y)}</p>`:"";
   const place=b===0?`<p class="sub">${layer.label}${lab} ${layer.clock?hhmm(y)+" Uhr":(layer.fund||layer.live)?"aktuell":y}: <b>${s.fmt(now)}${s.unit}</b></p>`
                    :`<p class="sub">${layer.label}${lab} ${layer.clock?hhmm(y)+" Uhr":(layer.fund||layer.live)?"aktuell":y}: <b>${s.fmt(now)}${s.unit}</b> · Platz ${order.indexOf(b)+1} von 23 · Wien: ${s.fmt(s.data[y][0])}${s.unit}</p>`;
-  const dogAtt=b===0?`<h4>Hundeattacken (nur Wien gesamt)</h4><dl>${Object.entries(DOG_ATT).map(([yr,v])=>`<dt>${yr}: Vorfälle gesamt</dt><dd>${v.all}</dd><dt>${yr}: Mensch gebissen</dt><dd>${v.human}</dd>`).join("")}</dl><p class="note" style="margin:4px 0 0">Bissstatistik der MA 58, Vorfälle mit Mehrfachzählung je Kategorie. Für 2024 ist der Download-Link der Stadt derzeit defekt.</p>`:"";
+  const dogAtt=b===0?`<h4>Hundeattacken (nur Wien gesamt)</h4>${Object.entries(DOG_ATT).map(([yr,v])=>{const o=v.all-v.human;
+    return `<div class="darow"><span class="dy">${yr}</span><div class="stack" role="img" aria-label="${yr}: ${v.human} Vorfälle mit gebissenem Menschen, ${o} sonstige, ${v.all} gesamt"><i style="width:${100*v.human/v.all}%;background:var(--accent)"></i><i style="width:${100*o/v.all}%;background:#6e7d7a"></i></div><span class="dt">${v.all}</span></div>`;}).join("")}
+    <div class="skey"><span><b style="background:var(--accent)"></b>Mensch gebissen</span><span><b style="background:#6e7d7a"></b>sonstige (Hund gebissen, Attacke, Sachschaden)</span></div>
+    <p class="note" style="margin:0">${Object.entries(DOG_ATT).map(([yr,v])=>`${yr}: ${v.human} Mensch, ${v.all-v.human} sonstige`).join(" · ")}. Bissstatistik der MA 58; „sonstige“ = Vorfälle ohne gebissenen Menschen. Für 2024 ist der Download-Link der Stadt derzeit defekt.</p>`:"";
   document.getElementById("detail").innerHTML=`
     <h2>${b===0?"Wien gesamt":b+". "+NAMES[b]}</h2>
     ${place}${pd}
