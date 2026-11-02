@@ -192,6 +192,37 @@ if os.path.exists(tp):
     wl = {"items": active, "fetched": datetime.now().strftime("%Y-%m-%d %H:%M"), "stops": len(stop_bez),
           "stopb": {str(k): v for k, v in stop_bez.items() if v}}
 
+# Sterbefälle Wien je Monat: aus Wochenzahlen von Statistik Austria (Wohnort Wien, ohne Auslandssterbefälle).
+# Jede Woche wird gleichmäßig auf ihre 7 Tage verteilt; nur vollständig abgedeckte Monate werden ausgegeben.
+dea_month = None
+wp, kp = os.path.join(src, "gest_woche.csv"), os.path.join(src, "gest_woche_kalender.csv")
+if os.path.exists(wp) and os.path.exists(kp):
+    from datetime import timedelta
+    start = {}
+    for r in csv.reader(open(kp, encoding="utf-8-sig"), delimiter=";"):
+        m = re.search(r"von (\d+)\.(\d+)\.(\d+)", r[1] if len(r) > 1 else "")
+        if m:
+            start[r[0]] = date(int(m[3]), int(m[2]), int(m[1]))
+    wk = {}
+    for r in csv.DictReader(open(wp, encoding="utf-8-sig"), delimiter=";"):
+        if r["C-B00-0"] == "B00-9":
+            wk[r["C-KALWOCHE-0"]] = wk.get(r["C-KALWOCHE-0"], 0) + int(r["F-ANZ-1"])
+    last = max((k for k, v in wk.items() if v > 0), default=None)
+    covered_to = start[last] + timedelta(days=6) if last else None
+    mon = {}
+    for k, v in wk.items():
+        if k in start and k <= last:
+            for i in range(7):
+                d = start[k] + timedelta(days=i)
+                mon[(d.year, d.month)] = mon.get((d.year, d.month), 0) + v / 7
+    first_day = min(start[k] for k in wk if k in start)
+    out_m = {}
+    for (y, m), v in mon.items():
+        nxt = date(y + (m == 12), m % 12 + 1, 1)
+        if date(y, m, 1) >= first_day and nxt - timedelta(days=1) <= covered_to:
+            out_m.setdefault(str(y), [None] * 12)[m - 1] = round(v)
+    dea_month = {"years": out_m, "to": covered_to.isoformat() if covered_to else ""}
+
 # Fahrplan-Zählung (scripts/gtfs_count.py), optional
 fp = os.path.join(src, "fahrten.json")
 fahrten = json.load(open(fp)) if os.path.exists(fp) else None
@@ -201,7 +232,7 @@ json.dump({"series": clean,
            "dates": {k: {str(y): d for y, d in v.items()} for k, v in D.items()},
            "fund": {"items": items, "from": fund_dates[0] if fund_dates else "", "to": fund_dates[-1] if fund_dates else "",
                     "fetched": date.today().isoformat(), "archived": len(archive)},
-           "wl": wl, "fahrten": fahrten},
+           "wl": wl, "fahrten": fahrten, "dea_month": dea_month},
           open(out, "w"), ensure_ascii=False, separators=(",", ":"))
 for k, v in clean.items():
     ys = list(v)

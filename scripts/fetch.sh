@@ -17,6 +17,8 @@ declare -A FILES=(
   [nat5.csv]=$MA23/vie-bez-pop-sex-age5-stk-nat-geo4-2002f.csv              # Nationalität
   [avgage.csv]=$MA23/vie-bez-biz-pop-age-2002f.csv                        # Durchschnittsalter
   [fund.xml]=https://www.wien.gv.at/fundundvergabetiere/internet/rssfeed.xml  # Fundtiere (30 Tage)
+  [gest_woche.csv]=https://data.statistik.gv.at/data/OGD_gest_kalwo_GEST_KALWOCHE_100.csv            # Sterbefälle je Woche (Statistik Austria)
+  [gest_woche_kalender.csv]=https://data.statistik.gv.at/data/OGD_gest_kalwo_GEST_KALWOCHE_100_C-KALWOCHE-0.csv  # Wochen-Kalender dazu
   [haltepunkte.csv]=https://www.wienerlinien.at/ogd_realtime/doku/ogd/wienerlinien-ogd-haltepunkte.csv  # Haltestellen
   [trafficinfo.json]=https://www.wienerlinien.at/ogd_realtime/trafficInfoList  # Störungen (Momentaufnahme)
 )
