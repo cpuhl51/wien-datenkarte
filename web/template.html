@@ -45,6 +45,8 @@ h1{font-family:var(--display);font-weight:800;font-size:clamp(28px,5vw,44px);lin
 svg.map{width:100%;height:auto;display:block;touch-action:manipulation}
 svg.map path{stroke:var(--surface);stroke-width:1.2;cursor:pointer;transition:fill .25s}
 svg.map path.sel{stroke:var(--ink);stroke-width:2.6}
+svg.map .ovl{pointer-events:none}
+svg.map .ovl path{pointer-events:auto}
 svg.map text.small{font-size:9.5px}
 svg.map text.tiny{font-size:8px;stroke-width:2px;letter-spacing:-.03em}
 svg.map text{font:600 11px var(--mono);fill:var(--ink);paint-order:stroke;stroke:var(--surface);stroke-width:3px;pointer-events:none}
@@ -116,9 +118,9 @@ dt .pd{display:block;font-size:12px;color:var(--muted)}
 svg.vin{width:100%;height:auto;display:block}
 svg.vin path:hover{stroke-width:2.2}
 svg.vin text.vl{font:600 13px var(--body);fill:#3a2e08;pointer-events:none}
-:root{--vin-via:#d9d2c2;--vin-kas:#8a8170}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--vin-via:#3f3a30;--vin-kas:#9a907c}}
-:root[data-theme="dark"]{--vin-via:#3f3a30;--vin-kas:#9a907c}
+:root{--vin-via:#d9d2c2;--vin-kas:#8a8170;--vin-bef:#2e7d6f}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--vin-via:#3f3a30;--vin-kas:#9a907c;--vin-bef:#5fb3a3}}
+:root[data-theme="dark"]{--vin-via:#3f3a30;--vin-kas:#9a907c;--vin-bef:#5fb3a3}
 .card h4{font:600 12px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:12px 0 6px}
 </style>
 
@@ -219,6 +221,17 @@ function rankList(title,rows,note){
   return `<h4>${title}</h4><div class="rows">${rows.map((r,i)=>`<div class="row" style="cursor:default"><span class="n">${i+1}.</span><span class="bar"><i style="width:${Math.max(2,100*r[1]/max)}%;background:var(--line)"></i><span>${r[0]}</span></span><span class="v">${fmtInt(r[1])} · ${r[2]}</span></div>`).join("")}</div>${note?`<p class="note" style="margin:4px 0 0">${note}</p>`:""}`;
 }
 
+/* Standorte (Punkte) und historische Flächen: werden erst geladen, wenn eine solche Ebene gewählt wird */
+let PT = null, PT_LOADING = null, BEF = null;
+function loadPoints(){ if(PT) return Promise.resolve(PT); if(!PT_LOADING) PT_LOADING = fetch("punkte.json").then(r=>r.json()).then(d=>{PT=d; fillPointLayers(); return d;}); return PT_LOADING; }
+function loadBefunde(){ if(BEF) return Promise.resolve(BEF); return fetch("befunde.json").then(r=>r.json()).then(d=>BEF=d); }
+const POINT_SETS = {
+  waste:[["altstoff","Altstoff-Sammelstellen","Glas, Metall, Papier, Plastik"],["sackerl","Hundekotsackerl-Spender",""],["mist","Mistplätze","Sperrmüll, Elektro, Grünschnitt"],["problem","Problemstoff-Sammelstellen","Batterien, Lacke, Medikamente"]],
+  infra:[["brunnen","Trinkbrunnen",""],["wc","Öffentliche WCs",""],["park","Parks",""],["spiel","Spielplätze",""],["hundezone","Hundezonen",""],["kiga","Kindergärten",""],["schule","Schulen",""],["defi","Defibrillatoren",""],["polizei","Polizei",""]]
+};
+const ptSub = ([k,l,n]) => ({id:k,label:l,data:{0:Array(24).fill(0)},fmt:fmtInt,unit:"",note:n?`${l}: ${n}.`:"",pts:k});
+function fillPointLayers(){ LAYERS.filter(L=>L.points).forEach(L=>L.subs.forEach(s=>{ const p=PT.points[s.pts]; if(p) s.data={0:p.count}; })); }
+
 /* Römisches Legionslager Vindobona */
 const VIN = DATA.vindobona;
 const VIN_DE = {principia:"Kommandogebäude",praetorium:"Haus des Legionskommandanten",tribuni:"Häuser der Tribunen (Offiziere)",
@@ -246,9 +259,12 @@ function vinPlan(){
     const cx=r.reduce((s,p)=>s+p[0],0)/r.length, cy=r.reduce((s,p)=>s+p[1],0)/r.length;
     return `<text x="${cx.toFixed(0)}" y="${(cy+4).toFixed(0)}" text-anchor="middle" class="vl">${SHORT[g.p[0]]}</text>`;}).join("");
   const blds=(VIN.bau||[]).map(g=>g.p[0]).filter((v,i,a)=>a.indexOf(v)===i);
+  const befT={}; (BEF||[]).forEach(g=>{befT[g.p]=(befT[g.p]||0)+1;});
+  const bef=(BEF||[]).map(g=>`<path d="${poly(g)}" fill="none" stroke="var(--vin-bef)" stroke-width=".6"/>`).join("");
   return `<h4>Lagerplan Vindobona</h4>
-    <div class="vinbox"><svg viewBox="0 0 ${Wd} ${Hd}" class="vin" role="img" aria-label="Plan des römischen Legionslagers Vindobona">${via}${kas}${bau}${fort}${labs}</svg></div>
-    <div class="skey"><span><b style="background:#b0563b"></b>Lagermauer</span><span><b style="background:#e0a030"></b>Tortürme</span><span><b style="background:#d08a40"></b>Zwischentürme</span><span><b style="background:#4b7a9c"></b>Gräben und Hafen</span><span><b style="background:var(--vin-via)"></b>Hauptstraßen</span><span><b style="background:#c9a227"></b>Sondergebäude</span><span><b style="border:1px solid var(--vin-kas)"></b>Kasernen</span></div>
+    <div class="vinbox"><svg viewBox="0 0 ${Wd} ${Hd}" class="vin" role="img" aria-label="Plan des römischen Legionslagers Vindobona">${via}${bef}${kas}${bau}${fort}${labs}</svg></div>
+    <div class="skey"><span><b style="background:#b0563b"></b>Lagermauer</span><span><b style="background:#e0a030"></b>Tortürme</span><span><b style="background:#d08a40"></b>Zwischentürme</span><span><b style="background:#4b7a9c"></b>Gräben und Hafen</span><span><b style="background:var(--vin-via)"></b>Hauptstraßen</span><span><b style="background:#c9a227"></b>Sondergebäude</span><span><b style="border:1px solid var(--vin-kas)"></b>Kasernen</span><span><b style="background:var(--vin-bef)"></b>Grabungsbefunde</span></div>
+    ${BEF?`<p class="note" style="margin:0 0 6px">${fmtInt(BEF.length)} römerzeitliche Grabungsbefunde, am häufigsten: ${Object.entries(befT).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([k,v])=>`${k} (${fmtInt(v)})`).join(", ")}.</p>`:`<p class="note" style="margin:0 0 6px">Grabungsbefunde werden geladen …</p>`}
     <p class="note" style="margin:0 0 8px">Kräftige Flächen = archäologischer Befund, blasse und gestrichelte = Rekonstruktion. Tippe auf ein Element für den Namen.</p>
     <h4>Gebäude im Lager</h4><dl>${blds.map(n=>`<dt>${n}</dt><dd style="font-family:var(--body);font-weight:400">${VIN_DE[n]||""}</dd>`).join("")}</dl>
     <h4>Hauptstraßen</h4><dl>${["via principalis","via praetoria","via decumana","via sagularis"].map(n=>`<dt>${n}</dt><dd style="font-family:var(--body);font-weight:400">${VIN_DE[n]}</dd>`).join("")}</dl>
@@ -256,6 +272,8 @@ function vinPlan(){
 }
 
 const SRC = {
+  pts:"Stadt Wien – Standorte (Geodaten von data.wien.gv.at), Bezirk über die Koordinaten zugeordnet",
+  antik:"Stadt Wien – Stadtarchäologie: Antike Siedlungsbereiche und Antike Straßenzüge, Mittelalterliche Stadtbefestigung (Geodaten)",
   vin:"Stadt Wien – Stadtarchäologie: Legionslager Befestigungsanlagen, Hauptstraßen, Kasernen und Sondergebäude (Geodaten)",
   brand:"Stadt Wien – Pkw-Bestand nach Automarken seit 2011, Bezirke (Datensatz aktualisiert 16.12.2025)",
   fp:"Wiener Linien – Fahrplandaten GTFS (Open Data CC BY), eigene Auszählung",
@@ -351,6 +369,12 @@ const LAYERS = [
          {id:"kurz",label:"Störungen",data:wcount("kurz"),fmt:fmtInt,unit:""},
          {id:"aufzug",label:"Aufzüge",data:wcount("aufzug"),fmt:fmtInt,unit:""}],
    note:"Bezirk = Bezirk der betroffenen Haltestellen; eine Meldung kann mehrere Bezirke betreffen. Länger dauernde Störungen nennen nur Linien, keine Haltestellen, und zählen daher nur bei Wien gesamt."},
+  {id:"waste",label:"Müll",color:"#4f7d3a",src:SRC.pts,points:true,live:true,stand:()=>`Standorte laut Stadt Wien, abgerufen ${ABRUF}`,
+   subs:POINT_SETS.waste.map(ptSub),note:"Anzahl je Bezirk, jeder Punkt auf der Karte ist ein Standort."},
+  {id:"infra",label:"Einrichtungen",color:"#2f6f8f",src:SRC.pts,points:true,live:true,stand:()=>`Standorte laut Stadt Wien, abgerufen ${ABRUF}`,
+   subs:POINT_SETS.infra.map(ptSub),note:"Anzahl je Bezirk, jeder Punkt auf der Karte ist ein Standort."},
+  {id:"antik",label:"Antikes Wien",special:true,color:"#8a5a2b",src:SRC.antik,stand:()=>"Rekonstruktion der Stadtarchäologie Wien nach Grabungen und Funden",
+   subs:[{id:"x",label:"Antike",data:{0:Array(24).fill(0)},fmt:fmtInt,unit:""}],note:""},
   ...(VIN?[{id:"vin",label:"Römerlager",special:true,color:"#b0563b",src:SRC.vin,stand:()=>`Rekonstruktion nach Ausgrabungen, Datensatz aktualisiert ${dmy(VIN.date)}`,
    subs:[{id:"x",label:"Vindobona",data:{0:Array(24).fill(0)},fmt:fmtInt,unit:""}],note:""}]:[]),
   {id:"vote",label:"Wien-Wahl",src:SRC.vote,stand:()=>"Wahl vom 27.4.2025 · Bezirke: vorläufiges Ergebnis inkl. Großteil der Wahlkarten · Wien gesamt: amtliches Endergebnis vom 8.5.2025",
@@ -413,6 +437,31 @@ function mapFmt(v,s){
   return fmtInt(v);
 }
 
+const overlay=document.createElementNS(NS,"g"); overlay.setAttribute("class","ovl"); svg.insertBefore(overlay, svg.querySelector("text"));
+function drawPoints(key,c){
+  overlay.innerHTML="";
+  if(!PT||!PT.points[key]) return;
+  const pts=PT.points[key].pts, r=pts.length>2000?1.3:pts.length>500?1.8:3.2;
+  overlay.innerHTML=pts.map(p=>{const [x,y]=px([p[0],p[1]]);return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r}"/>`;}).join("");
+  overlay.setAttribute("fill",c); overlay.setAttribute("stroke","var(--surface)"); overlay.setAttribute("stroke-width",r>2?".8":".3");
+}
+function geoPath(g){
+  const ring=r=>"M"+r.map(c=>px(c).map(v=>v.toFixed(1)).join(",")).join("L");
+  if(g.t==="Polygon") return g.c.map(r=>ring(r)+"Z").join("");
+  if(g.t==="MultiPolygon") return g.c.map(p=>p.map(r=>ring(r)+"Z").join("")).join("");
+  if(g.t==="LineString") return ring(g.c);
+  if(g.t==="MultiLineString") return g.c.map(ring).join("");
+  return "";
+}
+const SIED_COL={"Legionslager":"#b0563b","Lagervorstadt (canabae legionis)":"#d9824a","Zivilsiedlung (Kernbereich)":"#c9a227","Zivilsiedlung (Randbereich)":"#e3cf7a","Gräberfeld":"#7d6b8a","Straßenstation":"#4b7a9c"};
+const siedCol=n=>{ for(const k in SIED_COL) if((n||"").startsWith(k.split(" (")[0])) return SIED_COL[k]; return "#a08060"; };
+function drawAntik(){
+  overlay.removeAttribute("fill"); overlay.removeAttribute("stroke");
+  const H=PT.hist;
+  overlay.innerHTML=(H.siedlung||[]).map(g=>`<path d="${geoPath(g)}" fill="${siedCol(g.p[0])}" fill-opacity=".55" stroke="${siedCol(g.p[0])}" stroke-width="1"><title>${g.p[0]}</title></path>`).join("")
+    +(H.strasse||[]).map(g=>`<path d="${geoPath(g)}" fill="none" stroke="#5a3a1a" stroke-width="2" ${/ungef/.test(JSON.stringify(g))?'stroke-dasharray="4 3"':""}><title>${g.p[0]}</title></path>`).join("");
+}
+
 const hex=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
 const base=()=>getComputedStyle(document.documentElement).getPropertyValue("--nodata").trim()||"#e4e8e6";
 const mix=(a,b,t)=>{const A=hex(a),B=hex(b);return "rgb("+A.map((v,i)=>Math.round(v+(B[i]-v)*t)).join(",")+")";};
@@ -442,16 +491,48 @@ document.getElementById("yprev").addEventListener("click",()=>setYearIdx(+docume
 document.getElementById("ynext").addEventListener("click",()=>setYearIdx(+document.getElementById("yslider").value+1));
 document.getElementById("wien").addEventListener("click",()=>select(0));
 
+function renderAntik(){
+  document.getElementById("layernote").textContent="Römische Siedlungsbereiche (Flächen) und Straßen (Linien) über dem heutigen Stadtgebiet. Gestrichelt = ungefährer Verlauf.";
+  if(!PT){ document.getElementById("detail").innerHTML=`<h2>Antikes Wien</h2><p class="note">Lädt …</p>`; loadPoints().then(()=>render()).catch(()=>{document.getElementById("detail").innerHTML=`<h2>Antikes Wien</h2><p class="note">Konnte nicht geladen werden (nur auf der veröffentlichten Seite verfügbar).</p>`;}); return; }
+  drawAntik();
+  const S2={}; (PT.hist.siedlung||[]).forEach(g=>{ if(!S2[g.p[0]]) S2[g.p[0]]=g.p[1]; });
+  const R2={}; (PT.hist.strasse||[]).forEach(g=>{ if(!R2[g.p[0]]) R2[g.p[0]]=g.p[1]; });
+  const mid=(PT.hist.mittelalter||[]);
+  document.getElementById("detail").innerHTML=`<h2>Antikes Wien</h2><p class="sub">Vindobona und seine Umgebung, rund 100 bis 400 n. Chr.</p>
+    <div class="skey">${Object.keys(S2).map(n=>`<span><b style="background:${siedCol(n)}"></b>${n}</span>`).join("")}<span><b style="background:#5a3a1a"></b>Römerstraßen</span></div>
+    <h4>Siedlungsbereiche</h4><dl>${Object.entries(S2).map(([n,i])=>`<dt style="grid-column:1/-1;color:var(--ink);font-weight:600">${n}</dt>${i?`<dd style="grid-column:1/-1;text-align:left;font:13px var(--body);color:var(--muted);margin-bottom:6px">${i}</dd>`:""}`).join("")}</dl>
+    <h4>Straßen</h4><dl>${Object.entries(R2).map(([n,i])=>`<dt style="grid-column:1/-1;color:var(--ink);font-weight:600">${n}</dt>${i?`<dd style="grid-column:1/-1;text-align:left;font:13px var(--body);color:var(--muted);margin-bottom:6px">${i}</dd>`:""}`).join("")}</dl>
+    ${mid.length?`<h4>Mittelalterliche Stadtbefestigung</h4>${histPlan(mid)}<p class="note" style="margin:0">Stadtmauer, Tore, Türme und Gräben des mittelalterlichen Wien, rund 1200 bis 1858. Tippe auf ein Element für den Namen.</p>`:""}`;
+}
+function histPlan(items){
+  let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9; const K2=Math.cos(48.21*Math.PI/180);
+  const walk=(c,f)=>typeof c[0]==="number"?f(c):c.forEach(x=>walk(x,f));
+  items.forEach(g=>walk(g.c,([x,y])=>{x*=K2;x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y);}));
+  const Wd=600, sc=(Wd-20)/(x1-x0), Hd=Math.round((y1-y0)*sc)+20, P=([x,y])=>[(10+(x*K2-x0)*sc).toFixed(1),(10+(y1-y)*sc).toFixed(1)];
+  const ring=r=>"M"+r.map(P).join("L")+"Z", path=g=>g.t==="MultiPolygon"?g.c.map(p=>p.map(ring).join("")).join(""):g.c.map(ring).join("");
+  const col={Stadtmauer:"#7d3a28",Tor:"#e0a030",Turm:"#d08a40",Graben:"#4b7a9c",Zwinger:"#b0563b"};
+  const cf=a=>{ for(const k in col) if((a||"").includes(k)) return col[k]; return "#9a7a5a"; };
+  return `<div class="vinbox"><svg viewBox="0 0 ${Wd} ${Hd}" class="vin" role="img" aria-label="Plan der mittelalterlichen Stadtbefestigung">${items.map(g=>`<path d="${path(g)}" fill="${cf(g.p[0])}" fill-opacity=".8" stroke="${cf(g.p[0])}" stroke-width=".8"><title>${[g.p[0],g.p[2],g.p[1]].filter(Boolean).join(" · ")}</title></path>`).join("")}</svg></div>
+    <div class="skey"><span><b style="background:#7d3a28"></b>Stadtmauer</span><span><b style="background:#e0a030"></b>Tore</span><span><b style="background:#d08a40"></b>Türme</span><span><b style="background:#4b7a9c"></b>Gräben</span></div>`;
+}
+
 function renderSpecial(){
   document.querySelector(".yearbar").hidden=true; document.querySelector(".rank").hidden=true;
   document.getElementById("stand").innerHTML=`<div><b>Datenstand:</b> ${layer.stand()}</div><div><span>Quelle:</span> ${layer.src}</div>`;
   document.querySelectorAll("#layers .chip").forEach(c=>c.setAttribute("aria-pressed",c.dataset.l===layer.id));
   const sc=document.getElementById("subs"); sc.innerHTML=""; sc.hidden=true;
   const bg=base();
+  if(layer.id==="antik"){
+    for(let b=1;b<=23;b++){ paths[b].setAttribute("fill",bg); paths[b].classList.remove("sel"); labelEls[b].textContent=""; }
+    document.getElementById("ramp").style.background="none"; document.getElementById("ticks").innerHTML="";
+    renderAntik(); return;
+  }
+  overlay.innerHTML="";
   for(let b=1;b<=23;b++){ paths[b].setAttribute("fill",b===1?mix(bg,layer.color,.8):bg); paths[b].classList.toggle("sel",b===1); labelEls[b].textContent=b===1?"Lager":""; }
   document.getElementById("ramp").style.background="none"; document.getElementById("ticks").innerHTML="";
   document.getElementById("layernote").textContent="Das Legionslager Vindobona lag im heutigen 1. Bezirk. Den Lagerplan siehst du rechts bzw. darunter.";
   document.getElementById("detail").innerHTML=`<h2>Legionslager Vindobona</h2><p class="sub">Römisches Militärlager im heutigen 1. Bezirk</p>${vinPlan()}`;
+  if(!BEF) loadBefunde().then(()=>{ if(layer.id==="vin") render(); }).catch(()=>{});
 }
 function render(){
   if(layer.special){ renderSpecial(); return; }
@@ -459,6 +540,8 @@ function render(){
   renderControls();
   const s=subOf(layer), y=yearOf(layer), arr=s.data[y], [lo,hi]=scaleOf(s), bg=base(), c=colOf(layer);
   const t=v=>.12+.88*((v-lo)/(hi-lo||1));
+  if(layer.points){ if(!PT){ loadPoints().then(()=>render()).catch(()=>{document.getElementById("layernote").textContent="Standorte konnten nicht geladen werden (nur auf der veröffentlichten Seite verfügbar).";}); } else drawPoints(s.pts,c); }
+  else overlay.innerHTML="";
   mapThousand=s.unit===""&&Math.max(...arr.slice(1))>=1e4;
   for(let b=1;b<=23;b++){paths[b].setAttribute("fill",mix(bg,c,t(arr[b])));paths[b].classList.toggle("sel",b===sel);
     labelEls[b].textContent=mapFmt(arr[b],s);}
@@ -537,9 +620,17 @@ function wlList(b){
   return `<h4>Aktuelle Meldungen (${it.length})</h4><ul class="flist">${it.map(i=>`<li><span class="fd">${WL_KIND[i.k]||""}</span><span>${i.l.length?"<b>"+i.l.join(", ")+"</b> · ":""}${i.t}</span><span class="fo">${i.d!==i.t?i.d:""}</span></li>`).join("")}</ul>`;
 }
 
+function ptList(s,b){
+  const it=PT.points[s.pts].pts.filter(p=>b===0||p[2]===b);
+  const named=it.filter(p=>p[3]);
+  if(!named.length) return `<p class="note">${fmtInt(it.length)} Standorte${b?" im Bezirk":" in Wien"}.</p>`;
+  const show=named.slice(0,80);
+  return `<h4>${s.label} (${fmtInt(it.length)})</h4><ul class="flist">${show.map(p=>`<li><span class="fd">${p[2]?p[2]+".":""}</span><span>${p[3]}</span></li>`).join("")}</ul>${named.length>80?`<p class="note" style="margin:4px 0 0">Die ersten 80 von ${fmtInt(named.length)}.</p>`:""}`;
+}
+
 function renderDetail(s,y,order,c){
   const b=sel, ys=yearsOf(s), first=s.data[ys[0]][b], now=s.data[y][b];
-  const others=LAYERS.filter(L=>L!==layer).map(L=>{
+  const others=LAYERS.filter(L=>L!==layer&&!L.points&&!L.special).map(L=>{
     const ss=subOf(L), yy=yearOf(L), lab=L.subs.length>1&&ss.label!==L.label?" · "+ss.label:"";
     const name=`${L.label}${lab} (${L.clock?hhmm(yy)+" Uhr":(L.fund||L.live)?"aktuell":yy})`, val=`${ss.fmt(ss.data[yy][b])}${ss.unit}`;
     if(L.fund||L.id==="wl") return `<details class="exp" id="exp-${L.id}"${openExp[L.id]?" open":""}><summary><span>${name}</span><b>${val}</b></summary>${L.fund?fundList(b,L):wlList(b)}</details>`;
@@ -565,7 +656,8 @@ function renderDetail(s,y,order,c){
     ${(layer.id==="nat"||layer.id==="cob")&&NT&&NT[b]?rankList(b===0?"Häufigste Staatsangehörigkeiten (Top 10)":"Häufigste Staatsangehörigkeiten (Top 5)",NT[b].map(r=>[r[0].replace(" - Arabische Republik","").replace("Russische Föderation","Russland"),r[1],r[2]]),"Stand 1.1.2025, Bericht „Wiener Bevölkerung“ der Stadt Wien. Andere Jahre und weitere Länder veröffentlicht die Stadt nicht als offene Daten."):""}
     ${layer.id==="brand"&&BR?rankList(`Top 10 Marken ${BR.year}`,BR.ranking[b].map(r=>[brandName(r[0]),r[1],fmt1(r[2])+" %"]),"Pkw-Bestand am 31.12., nicht Neuzulassungen."):""}
     ${layer.fund?fundList(b):""}
-    ${layer.live?wlList(b):""}
+    ${layer.points&&PT&&PT.points[s.pts]?ptList(s,b):""}
+    ${layer.id==="wl"?wlList(b):""}
     <h4>Weitere Werte</h4>
     <dl><dt>Fläche</dt><dd>${fmt1(b===0?AREA_ALL:AREA[b])} km²</dd>${others}</dl>
     ${dogAtt}`;

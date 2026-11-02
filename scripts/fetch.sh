@@ -44,6 +44,16 @@ for L in FORTIFIKATIONOGD HAUPTSTRARCHOGD KASERNEOGD LAGERBAUOGD; do
 done
 echo "ok  vindobona"
 
+# Standorte und historische Flächen (WFS als GeoJSON); einzelne Ausfälle brechen den Lauf nicht ab
+mkdir -p wfs
+for L in MISTPLATZOGD ALTSTOFFSAMMLUNGOGD PROBLEMSTOFFOGD HUNDESACKERLOGD TRINKBRUNNENOGD WCANLAGE2OGD PARKINFOOGD \
+         SPIELPLATZPUNKTOGD HUNDEZONEOGD KINDERGARTENOGD SCHULEOGD DEFIBRILLATOROGD POLIZEIOGD \
+         ARCHAEOSDLGOGD ARCHAEOSTRASSENOGD MITTELALTBEFESTOGD BEFUNDARCHAEOOGD; do
+  curl -fsS --retry 3 -m 180 -o "wfs/$L.json.tmp" "https://data.wien.gv.at/daten/geo?service=WFS&request=GetFeature&version=1.1.0&typeName=ogdwien:$L&srsName=EPSG:4326&outputFormat=json" \
+    && mv "wfs/$L.json.tmp" "wfs/$L.json" || echo "Warnung: $L nicht geladen, alte Datei bleibt"
+done
+echo "ok  wfs"
+
 # Fahrplan der Wiener Linien (GTFS, ca. 100 MB) – nur für die Fahrplan-Zählung, wird nicht gespeichert
 curl -fsS --retry 3 -m 300 -o gtfs.zip https://www.wienerlinien.at/ogd_realtime/doku/ogd/gtfs/gtfs.zip
 rm -rf gtfs && mkdir gtfs && unzip -q -o gtfs.zip -d gtfs && rm gtfs.zip

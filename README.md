@@ -2,7 +2,7 @@
 
 Interaktive Karte der Wiener Gemeindebezirke mit offenen Daten der Stadt Wien:
 Einwohner (Frauen/Männer), Alter (Mädchen/Buben), Geburtsland, Nationalität, Geburten, Sterbefälle, Bildungsstand, Kfz, Hunde,
-Fundtiere, Öffis unterwegs laut Fahrplan, Öffi-Störungen (Wiener Linien), Automarken, das römische Legionslager Vindobona und Wien-Wahl 2025. Mit Jahresregler, „Wien gesamt“
+Fundtiere, Öffis unterwegs laut Fahrplan, Öffi-Störungen (Wiener Linien), Automarken, Müll-Sammelstellen und öffentliche Einrichtungen als Punkte, das antike Wien, das Legionslager Vindobona mit Grabungsbefunden, die mittelalterliche Stadtmauer und Wien-Wahl 2025. Mit Jahresregler, „Wien gesamt“
 und Datenstand bei jeder Ebene.
 
 Zuerst Web-App (GitHub Pages), später Android-App im Google Play Store.
@@ -16,6 +16,7 @@ Zuerst Web-App (GitHub Pages), später Android-App im Google Play Store.
 | `scripts/build_data.py` | Bereitet die Rohdaten zu `data/data.json` auf |
 | `scripts/gtfs_count.py` | Zählt aus dem Fahrplan der Wiener Linien die Fahrten pro Bezirk, alle 10 Minuten, für heute und morgen |
 | `live/` | Cloudflare Worker für Live-Störungen, mit Anleitung |
+| `scripts/build_geo.py` | Standorte je Bezirk zählen, historische Flächen vereinfachen (`docs/punkte.json`, `docs/befunde.json`, werden bei Bedarf geladen) |
 | `scripts/build_page.py` | Baut `docs/index.html` (das ist die veröffentlichte Seite) |
 | `data/geo/` | Bezirksgrenzen und berechnete Flächen |
 | `data/fundtiere/archiv.json` | Sammelt jede Fundtier-Meldung, auch nach Ablauf der 30 Tage im Feed |
@@ -27,6 +28,7 @@ Zuerst Web-App (GitHub Pages), später Android-App im Google Play Store.
 bash scripts/fetch.sh
 TZ=Europe/Vienna python3 scripts/gtfs_count.py data/raw/gtfs data/geo/bezirke.json data/raw/fahrten.json
 python3 scripts/build_data.py data/raw data/data.json data/geo/flaechen.json data/fundtiere/archiv.json
+python3 scripts/build_geo.py data/raw/wfs data/geo/bezirke.json data/geo_punkte.json docs/befunde.json
 python3 scripts/build_page.py
 ```
 

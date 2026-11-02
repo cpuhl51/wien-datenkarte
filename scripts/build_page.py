@@ -32,4 +32,8 @@ head = """<!doctype html>
 cut = html.index("</style>") + len("</style>")      # Titel, Schriften und Styles gehören in den Kopf
 html = head.replace("</head>", html[:cut] + "\n</head>") + html[cut:] + "\n</body>\n</html>\n"
 open(p("docs", "index.html"), "w", encoding="utf-8").write(html)
+# Standorte und historische Flächen werden von der Seite erst bei Bedarf geladen
+import shutil
+if os.path.exists(p("data", "geo_punkte.json")):
+    shutil.copyfile(p("data", "geo_punkte.json"), p("docs", "punkte.json"))
 print("docs/index.html geschrieben,", len(html) // 1024, "KB")
