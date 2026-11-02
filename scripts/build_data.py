@@ -223,6 +223,46 @@ if os.path.exists(wp) and os.path.exists(kp):
             out_m.setdefault(str(y), [None] * 12)[m - 1] = round(v)
     dea_month = {"years": out_m, "to": covered_to.isoformat() if covered_to else ""}
 
+# Pkw-Bestand nach Marken (Stand 31.12.), Anteil der Marke am Pkw-Bestand des Bezirks
+brand_rows = read("brand") if os.path.exists(os.path.join(src, "brand.csv")) else []
+brands = None
+if brand_rows:
+    tot, per = {}, {}
+    for r in brand_rows:
+        b_ = idx(r["DISTRICT_CODE"]); y = int(r["REF_YEAR"]); v = num(r["BRAND_TOTAL"]) or 0
+        if not 1 <= b_ <= 23:
+            continue
+        for key in (b_, 0):
+            tot.setdefault(y, [0] * 24)[key] += v
+            per.setdefault(r["BRAND"], {}).setdefault(y, [0] * 24)[key] += v
+    last = max(tot)
+    top = sorted(per, key=lambda k: -per[k].get(last, [0])[0])[:10]
+    brands = {"top": top, "date": max(r["REF_DATE"] for r in brand_rows), "share": {}, "ranking": {}}
+    for k in top:
+        brands["share"][k] = {str(y): [round(100 * per[k].get(y, [0] * 24)[i] / tot[y][i], 2) if tot[y][i] else 0 for i in range(24)] for y in sorted(tot)}
+    for i in range(24):              # Top 10 je Bezirk im letzten Jahr
+        rk = sorted(((per[k].get(last, [0] * 24)[i], k) for k in per), reverse=True)[:10]
+        brands["ranking"][i] = [[k, int(v), round(100 * v / tot[last][i], 1)] for v, k in rk]
+    brands["year"] = last
+
+# Häufigste Staatsangehörigkeiten je Bezirk (Stadt Wien, Bericht „Wiener Bevölkerung“, Anhang 7.5)
+nat_top = None
+tp = os.path.join(src, "nat_top5.html")
+if os.path.exists(tp):
+    s = open(tp, encoding="utf-8", errors="replace").read()
+    nat_top = {}
+    for tb in re.findall(r"<table.*?</table>", s, re.S):
+        rows = [[html.unescape(re.sub(r"<[^>]+>", "", c)).strip() for c in re.findall(r"<t[hd][^>]*>(.*?)</t[hd]>", r, re.S)]
+                for r in re.findall(r"<tr.*?</tr>", tb, re.S)]
+        rows = [r for r in rows if len(r) >= 2 and r[0]]
+        if not rows:
+            continue
+        m = re.match(r"(\d+)\.", rows[0][0])
+        key = int(m.group(1)) if m else (0 if rows[0][0].startswith("Wien") else None)
+        if key is None:
+            continue
+        nat_top[key] = [[r[0], int(r[1].replace(".", "")), r[2]] for r in rows[1:] if r[1].replace(".", "").isdigit()]
+
 # Fahrplan-Zählung (scripts/gtfs_count.py), optional
 fp = os.path.join(src, "fahrten.json")
 fahrten = json.load(open(fp)) if os.path.exists(fp) else None
@@ -232,7 +272,7 @@ json.dump({"series": clean,
            "dates": {k: {str(y): d for y, d in v.items()} for k, v in D.items()},
            "fund": {"items": items, "from": fund_dates[0] if fund_dates else "", "to": fund_dates[-1] if fund_dates else "",
                     "fetched": date.today().isoformat(), "archived": len(archive)},
-           "wl": wl, "fahrten": fahrten, "dea_month": dea_month},
+           "wl": wl, "fahrten": fahrten, "dea_month": dea_month, "brands": brands, "nat_top": nat_top},
           open(out, "w"), ensure_ascii=False, separators=(",", ":"))
 for k, v in clean.items():
     ys = list(v)

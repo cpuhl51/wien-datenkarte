@@ -15,6 +15,7 @@ declare -A FILES=(
   [veh.csv]=$MA23/vie-bez-biz-tec-veh-2002f.csv                           # Kraftfahrzeuge
   [age5.csv]=$MA23/vie-bez-pop-sex-age5-stk-cob-geo4-2002f.csv            # Altersgruppen
   [nat5.csv]=$MA23/vie-bez-pop-sex-age5-stk-nat-geo4-2002f.csv              # Nationalität
+  [brand.csv]=$MA23/vie-bez-tec-sex-veh-brd-2011f.csv                       # Pkw nach Marken
   [avgage.csv]=$MA23/vie-bez-biz-pop-age-2002f.csv                        # Durchschnittsalter
   [fund.xml]=https://www.wien.gv.at/fundundvergabetiere/internet/rssfeed.xml  # Fundtiere (30 Tage)
   [gest_woche.csv]=https://data.statistik.gv.at/data/OGD_gest_kalwo_GEST_KALWOCHE_100.csv            # Sterbefälle je Woche (Statistik Austria)
@@ -32,6 +33,9 @@ for name in "${!FILES[@]}"; do
   mv "$name.tmp" "$name"
   echo "ok  $name"
 done
+
+# Häufigste Staatsangehörigkeiten je Bezirk (HTML-Tabelle der Stadt Wien, keine Prüfung auf HTML)
+curl -fsS --retry 3 -m 60 -o nat_top5.html "https://www.wien.gv.at/spezial/migration-integration-jugendliche/anhang/top-5-bevolkerungsgruppen-nach-staatsangehorigkeit-in-den-wiener-gemeindebezirken-in-absoluten-zahlen-und-in-percent-der-gesamtbevolkerung-des-bezirks/" || echo "Warnung: Staatsangehörigkeits-Tabelle nicht geladen"
 
 # Fahrplan der Wiener Linien (GTFS, ca. 100 MB) – nur für die Fahrplan-Zählung, wird nicht gespeichert
 curl -fsS --retry 3 -m 300 -o gtfs.zip https://www.wienerlinien.at/ogd_realtime/doku/ogd/gtfs/gtfs.zip

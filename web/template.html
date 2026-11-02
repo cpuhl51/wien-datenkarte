@@ -203,7 +203,17 @@ const perK = o => Object.fromEntries(Object.entries(o).map(([k,a])=>[k,a.map((v,
 const fmt2 = n => n.toLocaleString("de-AT",{minimumFractionDigits:2,maximumFractionDigits:2});
 const hhmm = i => { const m=i*(FP?FP.step:10); return `${String(Math.floor(m/60)).padStart(2,"0")}:${String(m%60).padStart(2,"0")}`; };
 
+/* Automarken und häufigste Staatsangehörigkeiten */
+const BR = DATA.brands, NT = DATA.nat_top;
+const brandName = k => ({VW:"VW",BMW:"BMW",MERCEDES:"Mercedes",SKODA:"Škoda",AUDI:"Audi",FORD:"Ford",OPEL:"Opel",TOYOTA:"Toyota",RENAULT:"Renault",HYUNDAI:"Hyundai",SEAT:"Seat",MAZDA:"Mazda",PEUGEOT:"Peugeot",KIA:"Kia",FIAT:"Fiat",CITROEN:"Citroën",TESLA:"Tesla",VOLVO:"Volvo",NISSAN:"Nissan",DACIA:"Dacia",SUZUKI:"Suzuki",HONDA:"Honda",MINI:"Mini",PORSCHE:"Porsche"}[k] || k.charAt(0)+k.slice(1).toLowerCase());
+function rankList(title,rows,note){
+  if(!rows||!rows.length) return "";
+  const max=rows[0][1];
+  return `<h4>${title}</h4><div class="rows">${rows.map((r,i)=>`<div class="row" style="cursor:default"><span class="n">${i+1}.</span><span class="bar"><i style="width:${Math.max(2,100*r[1]/max)}%;background:var(--line)"></i><span>${r[0]}</span></span><span class="v">${fmtInt(r[1])} · ${r[2]}</span></div>`).join("")}</div>${note?`<p class="note" style="margin:4px 0 0">${note}</p>`:""}`;
+}
+
 const SRC = {
+  brand:"Stadt Wien – Pkw-Bestand nach Automarken seit 2011, Bezirke (Datensatz aktualisiert 16.12.2025)",
   fp:"Wiener Linien – Fahrplandaten GTFS (Open Data CC BY), eigene Auszählung",
   wl:"Wiener Linien – Echtzeit-Betriebsinfo (trafficInfoList) und Haltestellenliste, Open Data CC BY",
   pop:"Stadt Wien – Bevölkerungsentwicklung nach Geburtsland seit 2002, Bezirke (Datensatz aktualisiert 20.11.2025)",
@@ -269,6 +279,9 @@ const LAYERS = [
          {id:"pkwa",label:"Pkw Anzahl",data:S.pkw_abs,fmt:fmtInt,unit:""},
          {id:"bik",label:"Motorräder pro 1.000 Einw.",data:S.bik_rel,fmt:fmt1,unit:" ‰"}],
    note:"Pkw inkl. Taxis; Motorräder = Krafträder. Die sehr hohen Werte der Inneren Stadt kommen vermutlich daher, dass Firmenautos am Firmensitz zugelassen sind."},
+  ...(BR?[{id:"brand",label:"Automarken",color:"#2f6f8f",src:SRC.brand,stand:y=>`Pkw-Bestand am 31.12.${y}`,
+   subs:BR.top.slice(0,8).map(k=>({id:k.toLowerCase(),label:brandName(k),data:BR.share[k],fmt:fmt1,unit:" %"})),
+   note:"Anteil der Marke an allen Pkw im Bezirk. Wien gesamt = Summe der 23 Bezirke (Fahrzeuge ohne Bezirkszuordnung sind nicht enthalten)."}]:[]),
   {id:"dog",label:"Hunde",color:"#8a5a2b",src:SRC.dog,stand:y=>`Gemeldete Hunde am ${dmy(per("dog",y))}`,
    subs:[{id:"rel",label:"pro 1.000 Einw.",data:S.dog_rel,fmt:fmt1,unit:" ‰"},
          {id:"abs",label:"Anzahl",data:S.dog_abs,fmt:fmtInt,unit:""}],
@@ -490,6 +503,8 @@ function renderDetail(s,y,order,c){
     ${layer.id==="bir"?`<p class="note">Monatswerte für Geburten veröffentlichen weder die Stadt Wien noch Statistik Austria als offene Daten.</p>`:""}
     ${ys.length>1&&y!==ys[0]&&!layer.clock?`<p class="note" style="margin:0 0 4px">Seit ${ys[0]}: von ${s.fmt(first)}${s.unit} auf ${s.fmt(now)}${s.unit}</p>`:""}
     ${(layer.stack||[]).map(k=>stackBar(k,b,y)).join("")}
+    ${(layer.id==="nat"||layer.id==="cob")&&NT&&NT[b]?rankList(b===0?"Häufigste Staatsangehörigkeiten (Top 10)":"Häufigste Staatsangehörigkeiten (Top 5)",NT[b].map(r=>[r[0].replace(" - Arabische Republik","").replace("Russische Föderation","Russland"),r[1],r[2]]),"Stand 1.1.2025, Bericht „Wiener Bevölkerung“ der Stadt Wien. Andere Jahre und weitere Länder veröffentlicht die Stadt nicht als offene Daten."):""}
+    ${layer.id==="brand"&&BR?rankList(`Top 10 Marken ${BR.year}`,BR.ranking[b].map(r=>[brandName(r[0]),r[1],fmt1(r[2])+" %"]),"Pkw-Bestand am 31.12., nicht Neuzulassungen."):""}
     ${layer.fund?fundList(b):""}
     ${layer.live?wlList(b):""}
     <h4>Weitere Werte</h4>
