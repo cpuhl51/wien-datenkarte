@@ -63,6 +63,8 @@ svg.map .tiles{pointer-events:none}
 .baseop input{width:90px;accent-color:var(--accent)}
 .wien[aria-pressed="true"]#basebtn{background:var(--ink);color:var(--bg)}
 svg.map.zoomed > text{display:none}
+svg.map.zoomed{touch-action:none;cursor:grab}
+svg.map.zoomed:active{cursor:grabbing}
 svg.map > path{vector-effect:non-scaling-stroke}
 svg.map text.stat{font-family:var(--body);font-weight:500;fill:var(--ink);paint-order:stroke;stroke:var(--surface)}
 svg.map .orient{pointer-events:none}
@@ -190,7 +192,7 @@ svg.vin text.vl{font:600 13px var(--body);fill:#3a2e08;pointer-events:none}
   <div class="grid">
     <div class="mapbox">
       <div class="maphead"><button class="wien" id="wien" aria-pressed="false">Wien gesamt</button><button class="wien" id="locate">Mein Standort</button><button class="wien zb" id="zin" aria-label="Hineinzoomen">+</button><button class="wien zb" id="zoutb" aria-label="Herauszoomen">−</button><button class="wien" id="zoomout" hidden>Ganze Stadt</button><button class="wien" id="basebtn" aria-pressed="false">Stadtplan</button>
-        <label class="baseop" id="baseop" hidden>Deckkraft <input type="range" id="baseopr" min="0.2" max="1" step="0.1" value="0.6"></label><span class="hint">Zahlen = gewählte Ebene · Bezirk antippen für Details</span></div>
+        <label class="baseop" id="baseop" hidden>Deckkraft <input type="range" id="baseopr" min="0.2" max="1" step="0.1" value="0.6"></label><span class="hint">Zahlen = gewählte Ebene · Bezirk antippen für Details · gezoomt: mit dem Finger verschieben</span></div>
       <p class="note" id="locmsg" hidden></p>
       <svg class="map" id="map" role="img" aria-label="Karte der Wiener Gemeindebezirke"></svg>
       <div class="legend"><div class="ramp" id="ramp"></div><div class="ticks" id="ticks"></div></div>
@@ -345,6 +347,7 @@ const SRC = {
   vote:"vienna.at – Bezirksergebnisse und amtliches Endergebnis Wien-Wahl 2025"
 };
 const PCT = {fmt:fmt1,unit:" %",max:100};
+const perHundred = o => Object.fromEntries(Object.entries(o).map(([y,a])=>[y,a.map(v=>Math.round(v*10)/100)]));
 const LAYERS = [
   {id:"pop",label:"Einwohner",color:"#c4161c",src:SRC.pop,stand:y=>`Bevölkerungsstand am ${dmy(per("pop",y))}`,
    stack:["sex"],
@@ -392,9 +395,9 @@ const LAYERS = [
          {id:"all",label:"Pflichtschule",data:S.edu_all,...PCT}],
    note:"Höchste abgeschlossene Ausbildung."},
   {id:"veh",label:"Kfz",color:"#3d6f9e",src:SRC.veh,stand:y=>`Zugelassene Fahrzeuge am ${dmy(per("veh",y))}`,
-   subs:[{id:"pkw",label:"Pkw pro 1.000 Einw.",data:S.pkw_rel,fmt:fmtInt,unit:" ‰"},
+   subs:[{id:"pkw",label:"Pkw je 100 Einw.",data:perHundred(S.pkw_rel),fmt:fmt1,unit:" %",note:"36,7 % heißt: 36,7 Pkw je 100 Einwohner."},
          {id:"pkwa",label:"Pkw Anzahl",data:S.pkw_abs,fmt:fmtInt,unit:""},
-         {id:"bik",label:"Motorräder pro 1.000 Einw.",data:S.bik_rel,fmt:fmt1,unit:" ‰"}],
+         {id:"bik",label:"Motorräder je 100 Einw.",data:perHundred(S.bik_rel),fmt:fmt1,unit:" %",note:"5,0 % heißt: 5 Motorräder je 100 Einwohner."}],
    note:"Pkw inkl. Taxis; Motorräder = Krafträder. Die sehr hohen Werte der Inneren Stadt kommen vermutlich daher, dass Firmenautos am Firmensitz zugelassen sind."},
   ...(BR?[{id:"brand",label:"Automarken",color:"#2f6f8f",src:SRC.brand,stand:y=>`Pkw-Bestand am 31.12.${y}`,
    subs:BR.top.slice(0,8).map(k=>({id:k.toLowerCase(),label:brandName(k),data:BR.share[k],fmt:fmt1,unit:" %"})),
@@ -841,6 +844,36 @@ document.addEventListener("click",e=>{ const el=e.target.closest&&e.target.close
 document.addEventListener("keydown",e=>{ if((e.key==="Enter"||e.key===" ")&&e.target.getAttribute&&e.target.getAttribute("data-info")){ e.preventDefault(); showInfo(e.target); } });
 
 function select(b){sel=b;render();}
+const pointers=new Map(); let drag=null, moved=false, tileTimer=null;
+function mapUnitsPerPx(){ const vb=svg.getAttribute("viewBox").split(" ").map(Number); return vb[2]/(svg.clientWidth||vb[2]); }
+function scheduleTiles(){ clearTimeout(tileTimer); tileTimer=setTimeout(()=>{ try{drawOrient(layer.points);drawTiles();}catch(e){} },120); }
+svg.addEventListener("pointerdown",e=>{
+  pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(zoom.k>1||pointers.size===2){ drag={cx:zoom.cx,cy:zoom.cy,x:e.clientX,y:e.clientY,k:zoom.k,dist:null}; moved=false; }
+  if(pointers.size===2){ const [a,b]=[...pointers.values()]; drag.dist=Math.hypot(a.x-b.x,a.y-b.y); drag.k=zoom.k; }
+});
+svg.addEventListener("pointermove",e=>{
+  if(!drag||!pointers.has(e.pointerId)) return;
+  pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  const u=mapUnitsPerPx();
+  if(pointers.size>=2&&drag.dist){
+    const [a,b]=[...pointers.values()], d=Math.hypot(a.x-b.x,a.y-b.y);
+    zoom.k=Math.max(1,Math.min(32,drag.k*d/drag.dist)); moved=true;
+  } else {
+    const dx=e.clientX-drag.x, dy=e.clientY-drag.y;
+    if(Math.abs(dx)+Math.abs(dy)>6) moved=true;
+    zoom.cx=drag.cx-dx*u*(zoom.k/drag.k); zoom.cy=drag.cy-dy*u*(zoom.k/drag.k);
+  }
+  applyZoom(); scheduleTiles(); e.preventDefault();
+});
+function endPointer(e){
+  pointers.delete(e.pointerId);
+  if(pointers.size===0&&drag){ drag=null; if(moved){ if(zoom.k<1.05){zoom.k=1;zoom.cx=W/2;zoom.cy=H/2;applyZoom();} render(); } }
+  else if(pointers.size===1&&drag){ const p=[...pointers.values()][0]; drag={cx:zoom.cx,cy:zoom.cy,x:p.x,y:p.y,k:zoom.k,dist:null}; }
+}
+svg.addEventListener("pointerup",endPointer); svg.addEventListener("pointercancel",endPointer);
+/* nach dem Verschieben keinen Bezirk oder Punkt auswählen */
+window.addEventListener("click",e=>{ if(moved&&svg.contains(e.target)){ e.stopPropagation(); e.preventDefault(); moved=false; } },true);
 /* Antippen eines Punktes auf der Karte: nächster Punkt im Umkreis von ~14 Bildschirmpixeln */
 svg.addEventListener("click",e=>{
   if(!layer.points||!PT) return;
