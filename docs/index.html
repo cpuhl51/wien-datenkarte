@@ -291,7 +291,7 @@ function vinPlan(){
   const blds=(VIN.bau||[]).map(g=>g.p[0]).filter((v,i,a)=>a.indexOf(v)===i);
   const befT={}; (BEF||[]).forEach(g=>{befT[g.p]=(befT[g.p]||0)+1;});
   const bef=(BEF||[]).map(g=>`<path d="${poly(g)}" fill="none" stroke="var(--vin-bef)" stroke-width=".6"/>`).join("");
-  return `<h4>Lagerplan Vindobona</h4>
+  return `<h4>Legionslager Vindobona (heute 1. Bezirk)</h4>
     <div class="vinbox"><svg viewBox="0 0 ${Wd} ${Hd}" class="vin" role="img" aria-label="Plan des römischen Legionslagers Vindobona">${via}${bef}${kas}${bau}${fort}${labs}</svg></div>
     <div class="pinfo" hidden></div>
     <div class="skey"><span><b style="background:#b0563b"></b>Lagermauer</span><span><b style="background:#e0a030"></b>Tortürme</span><span><b style="background:#d08a40"></b>Zwischentürme</span><span><b style="background:#4b7a9c"></b>Gräben und Hafen</span><span><b style="background:var(--vin-via)"></b>Hauptstraßen</span><span><b style="background:#c9a227"></b>Sondergebäude</span><span><b style="border:1px solid var(--vin-kas)"></b>Kasernen</span><span><b style="background:var(--vin-bef)"></b>Grabungsbefunde</span></div>
@@ -304,7 +304,7 @@ function vinPlan(){
 
 const SRC = {
   pts:"Stadt Wien – Standorte (Geodaten von data.wien.gv.at), Bezirk über die Koordinaten zugeordnet",
-  antik:"Stadt Wien – Stadtarchäologie: Antike Siedlungsbereiche und Antike Straßenzüge, Mittelalterliche Stadtbefestigung (Geodaten)",
+  antik:"Stadt Wien – Stadtarchäologie: Antike Siedlungsbereiche, Antike Straßenzüge, Legionslager (Befestigung, Hauptstraßen, Kasernen, Sondergebäude, Grabungsbefunde), Mittelalterliche Stadtbefestigung (Geodaten)",
   vin:"Stadt Wien – Stadtarchäologie: Legionslager Befestigungsanlagen, Hauptstraßen, Kasernen und Sondergebäude (Geodaten)",
   brand:"Stadt Wien – Pkw-Bestand nach Automarken seit 2011, Bezirke (Datensatz aktualisiert 16.12.2025)",
   fp:"Wiener Linien – Fahrplandaten GTFS (Open Data CC BY), eigene Auszählung",
@@ -404,10 +404,8 @@ const LAYERS = [
    subs:POINT_SETS.waste.map(ptSub),note:"Anzahl je Bezirk, jeder Punkt auf der Karte ist ein Standort."},
   {id:"infra",label:"Einrichtungen",color:"#2f6f8f",src:SRC.pts,points:true,live:true,stand:()=>`Standorte laut Stadt Wien, abgerufen ${ABRUF}`,
    subs:POINT_SETS.infra.map(ptSub),note:"Anzahl je Bezirk, jeder Punkt auf der Karte ist ein Standort."},
-  {id:"antik",label:"Antikes Wien",special:true,color:"#8a5a2b",src:SRC.antik,stand:()=>"Rekonstruktion der Stadtarchäologie Wien nach Grabungen und Funden",
+  {id:"antik",label:"Römisches Wien",special:true,color:"#8a5a2b",src:SRC.antik,stand:()=>"Rekonstruktion der Stadtarchäologie Wien nach Grabungen und Funden",
    subs:[{id:"x",label:"Antike",data:{0:Array(24).fill(0)},fmt:fmtInt,unit:""}],note:""},
-  ...(VIN?[{id:"vin",label:"Römerlager",special:true,color:"#b0563b",src:SRC.vin,stand:()=>`Rekonstruktion nach Ausgrabungen, Datensatz aktualisiert ${dmy(VIN.date)}`,
-   subs:[{id:"x",label:"Vindobona",data:{0:Array(24).fill(0)},fmt:fmtInt,unit:""}],note:""}]:[]),
   {id:"vote",label:"Wien-Wahl",src:SRC.vote,stand:()=>"Wahl vom 27.4.2025 · Bezirke: vorläufiges Ergebnis inkl. Großteil der Wahlkarten · Wien gesamt: amtliches Endergebnis vom 8.5.2025",
    subs:Object.keys(VOTE).map(p=>({id:p,label:p,color:PARTY_COL[p],data:{2025:VOTE[p]},...PCT})),
    note:"Gemeinderat, Stimmenanteil der gewählten Partei."}
@@ -490,8 +488,8 @@ const siedCol=n=>{ for(const k in SIED_COL) if((n||"").startsWith(k.split(" (")[
 function drawAntik(){
   overlay.removeAttribute("fill"); overlay.removeAttribute("stroke");
   const H=PT.hist;
-  overlay.innerHTML=(H.siedlung||[]).map(g=>`<path d="${geoPath(g)}" style="fill:${siedCol(g.p[0])};fill-opacity:.6;stroke:${siedCol(g.p[0])};stroke-width:1.2" data-info="${esc(g.p[0])}" data-key="s:${esc(g.p[0])}" tabindex="0"></path>`).join("")
-    +(H.strasse||[]).map(g=>`<path d="${geoPath(g)}" style="fill:none;stroke:var(--road);stroke-width:2.6;stroke-linecap:round${/ungef/.test(JSON.stringify(g))?";stroke-dasharray:5 4":""}" data-info="${esc(g.p[0])}" data-key="r:${esc(g.p[0])}" tabindex="0"></path>`).join("");
+  overlay.innerHTML=(H.strasse||[]).map(g=>`<path d="${geoPath(g)}" style="fill:none;stroke:var(--road);stroke-width:1.3;stroke-opacity:.75;stroke-linecap:round${/ungef/.test(JSON.stringify(g))?";stroke-dasharray:4 3":""}" data-info="${esc(g.p[0])}" data-key="r:${esc(g.p[0])}" tabindex="0"></path>`).join("")
+    +(H.siedlung||[]).map(g=>`<path d="${geoPath(g)}" style="fill:${siedCol(g.p[0])};fill-opacity:.75;stroke:${siedCol(g.p[0])};stroke-width:1" data-info="${esc(g.p[0])}" data-key="s:${esc(g.p[0])}" tabindex="0"></path>`).join("");
 }
 
 const hex=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
@@ -524,16 +522,18 @@ document.getElementById("ynext").addEventListener("click",()=>setYearIdx(+docume
 document.getElementById("wien").addEventListener("click",()=>select(0));
 
 function renderAntik(){
-  document.getElementById("layernote").textContent="Römische Siedlungsbereiche (Flächen) und Straßen (Linien) über dem heutigen Stadtgebiet. Gestrichelt = ungefährer Verlauf.";
-  if(!PT){ document.getElementById("detail").innerHTML=`<h2>Antikes Wien</h2><p class="note">Lädt …</p>`; loadPoints().then(()=>render()).catch(()=>{document.getElementById("detail").innerHTML=`<h2>Antikes Wien</h2><p class="note">Konnte nicht geladen werden (nur auf der veröffentlichten Seite verfügbar).</p>`;}); return; }
+  document.getElementById("layernote").textContent="Römische Siedlungsbereiche (Flächen) und Straßen (dünne Linien) über dem heutigen Stadtgebiet. Gestrichelt = ungefährer Verlauf. Das Legionslager ist der rote Bereich im 1. Bezirk, sein Plan steht in der Infokarte.";
+  if(!PT){ document.getElementById("detail").innerHTML=`<h2>Römisches Wien</h2><p class="note">Lädt …</p>`; loadPoints().then(()=>render()).catch(()=>{document.getElementById("detail").innerHTML=`<h2>Römisches Wien</h2><p class="note">Konnte nicht geladen werden (nur auf der veröffentlichten Seite verfügbar).</p>`;}); return; }
   drawAntik();
   const S2={}; (PT.hist.siedlung||[]).forEach(g=>{ if(!S2[g.p[0]]) S2[g.p[0]]=g.p[1]; });
   const R2={}; (PT.hist.strasse||[]).forEach(g=>{ if(!R2[g.p[0]]) R2[g.p[0]]=g.p[1]; });
   const mid=(PT.hist.mittelalter||[]);
-  document.getElementById("detail").innerHTML=`<h2>Antikes Wien</h2><p class="sub">Vindobona und seine Umgebung, rund 100 bis 400 n. Chr.</p>
+  if(!BEF) loadBefunde().then(()=>{ if(layer.id==="antik") render(); }).catch(()=>{});
+  document.getElementById("detail").innerHTML=`<h2>Römisches Wien</h2><p class="sub">Vindobona und seine Umgebung, rund 100 bis 400 n. Chr.</p>
     <div class="infobox" id="infobox" hidden></div>
     <div class="skey">${Object.keys(S2).map(n=>`<span><b style="background:${siedCol(n)}"></b>${n}</span>`).join("")}<span><b style="background:var(--road)"></b>Römerstraßen</span></div>
     <p class="note" style="margin:0 0 6px">Tippe auf der Karte auf eine Fläche oder Straße: Die Erklärung erscheint hier und der Eintrag unten wird markiert.</p>
+    ${VIN?vinPlan():""}
     <h4>Siedlungsbereiche</h4><dl>${Object.entries(S2).map(([n,i])=>`<dt data-key="s:${esc(n)}" style="grid-column:1/-1;color:var(--ink);font-weight:600"><b class="sw" style="background:${siedCol(n)}"></b>${n}</dt>${i?`<dd style="grid-column:1/-1;text-align:left;font:13px var(--body);color:var(--muted);margin-bottom:6px">${i}</dd>`:""}`).join("")}</dl>
     <h4>Straßen</h4><dl>${Object.entries(R2).map(([n,i])=>`<dt data-key="r:${esc(n)}" style="grid-column:1/-1;color:var(--ink);font-weight:600">${n}</dt>${i?`<dd style="grid-column:1/-1;text-align:left;font:13px var(--body);color:var(--muted);margin-bottom:6px">${i}</dd>`:""}`).join("")}</dl>
     ${mid.length?`<h4>Mittelalterliche Stadtbefestigung</h4>${histPlan(mid)}<p class="note" style="margin:0">Stadtmauer, Tore, Türme und Gräben des mittelalterlichen Wien, rund 1200 bis 1858. Tippe auf ein Teil, um seinen Namen zu sehen.</p>`:""}`;
