@@ -45,7 +45,8 @@ h1{font-family:var(--display);font-weight:800;font-size:clamp(28px,5vw,44px);lin
 svg.map{width:100%;height:auto;display:block;touch-action:manipulation}
 svg.map path{stroke:var(--surface);stroke-width:1.2;cursor:pointer;transition:fill .25s}
 svg.map path.sel{stroke:var(--ink);stroke-width:2.6}
-svg.map text.small{font-size:8.5px;letter-spacing:-.02em}
+svg.map text.small{font-size:9.5px}
+svg.map text.tiny{font-size:8px;stroke-width:2px;letter-spacing:-.03em}
 svg.map text{font:600 11px var(--mono);fill:var(--ink);paint-order:stroke;stroke:var(--surface);stroke-width:3px;pointer-events:none}
 .legend{display:flex;flex-direction:column;gap:4px}
 .ramp{height:10px;border-radius:3px}
@@ -316,7 +317,9 @@ GEO.features.forEach(f=>{
   let d="", cx=0, cy=0, n=0, best=0;
   P.forEach(poly=>{
     poly.forEach(ring=>{ring.forEach((c,i)=>{const [x,y]=px(c);d+=(i?"L":"M")+x.toFixed(1)+","+y.toFixed(1);});d+="Z";});
-    if(poly[0].length>best){best=poly[0].length;cx=0;cy=0;n=0;poly[0].forEach(c=>{const [x,y]=px(c);cx+=x;cy+=y;n++;});}
+    if(poly[0].length>best){best=poly[0].length;let A=0,X=0,Y=0;const r=poly[0].map(px);
+      for(let i=0;i<r.length-1;i++){const k=r[i][0]*r[i+1][1]-r[i+1][0]*r[i][1];A+=k;X+=(r[i][0]+r[i+1][0])*k;Y+=(r[i][1]+r[i+1][1])*k;}
+      cx=X/(3*A);cy=Y/(3*A);n=1;}
   });
   const p=document.createElementNS(NS,"path");
   p.setAttribute("d",d);p.setAttribute("fill-rule","evenodd");p.setAttribute("tabindex","0");
@@ -327,14 +330,14 @@ GEO.features.forEach(f=>{
 });
 const labelEls={};
 labels.forEach(([b,x,y])=>{const t=document.createElementNS(NS,"text");t.setAttribute("x",x);t.setAttribute("y",y+4);t.setAttribute("text-anchor","middle");
-  if(AREA[b]<3.5) t.classList.add("small");   /* kleine innere Bezirke */
+  if(AREA[b]<2.5) t.classList.add("tiny"); else if(AREA[b]<8) t.classList.add("small");   /* kleine innere Bezirke */
   t.textContent=b;svg.appendChild(t);labelEls[b]=t;});
 /* Kurzform für die Karte: 228 Tsd, 46 %, 0,6 ‰ */
+let mapThousand=false;
 function mapFmt(v,s){
   if(s.unit===" %"||s.unit===" ‰"){ const a=Math.abs(v); return (a>=10?fmtInt(v):a>=1?fmt1(v):v.toLocaleString("de-AT",{maximumFractionDigits:2}))+s.unit.trim(); }
-  if(Math.abs(v)>=1e6) return fmt1(v/1e6)+" Mio";
-  if(Math.abs(v)>=1e4) return fmtInt(v/1e3)+" Tsd";
-  if(s.unit.trim()==="J.") return fmt1(v);
+  if(s.unit.trim()==="J.") return fmtInt(v);
+  if(mapThousand) return v>=1e4?fmtInt(v/1e3):fmt1(v/1e3);
   return fmtInt(v);
 }
 
@@ -371,11 +374,12 @@ function render(){
   renderControls();
   const s=subOf(layer), y=yearOf(layer), arr=s.data[y], [lo,hi]=scaleOf(s), bg=base(), c=colOf(layer);
   const t=v=>.12+.88*((v-lo)/(hi-lo||1));
+  mapThousand=s.unit===""&&Math.max(...arr.slice(1))>=1e4;
   for(let b=1;b<=23;b++){paths[b].setAttribute("fill",mix(bg,c,t(arr[b])));paths[b].classList.toggle("sel",b===sel);
     labelEls[b].textContent=mapFmt(arr[b],s);}
   document.getElementById("ramp").style.background=`linear-gradient(90deg,${mix(bg,c,.12)},${c})`;
   document.getElementById("ticks").innerHTML=[lo,(lo+hi)/2,hi].map(v=>`<span>${s.fmt(v)}${s.unit}</span>`).join("");
-  document.getElementById("layernote").textContent=[layer.note,s.note].filter(Boolean).join(" ")+(yearsOf(s).length>1?(layer.clock?" Kartenfarben: Spannweite der Bezirke über den ganzen Tag.":" Kartenfarben: Spannweite der Bezirke über alle Jahre."):"");
+  document.getElementById("layernote").textContent=(mapThousand?"Zahlen auf der Karte in Tausend. ":"")+(s.unit.trim()==="J."?"Zahlen auf der Karte in Jahren. ":"")+[layer.note,s.note].filter(Boolean).join(" ")+(yearsOf(s).length>1?(layer.clock?" Kartenfarben: Spannweite der Bezirke über den ganzen Tag.":" Kartenfarben: Spannweite der Bezirke über alle Jahre."):"");
   const title=layer.subs.length>1&&s.label!==layer.label?`${layer.label} · ${s.label}`:layer.label;
   document.getElementById("ranktitle").textContent=`Rangliste · ${title} · ${layer.clock?hhmm(y)+" Uhr":(layer.fund||layer.live)?"aktuell":y}`;
   const order=[...Array(23)].map((_,i)=>i+1).sort((a,b)=>arr[b]-arr[a]);
