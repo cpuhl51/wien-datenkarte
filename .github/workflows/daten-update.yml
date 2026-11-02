@@ -17,6 +17,9 @@ jobs:
       - name: Daten der Stadt Wien laden
         run: bash scripts/fetch.sh
 
+      - name: Fahrplan auszählen (heute und morgen, Wiener Zeit)
+        run: TZ=Europe/Vienna python3 scripts/gtfs_count.py data/raw/gtfs data/geo/bezirke.json data/raw/fahrten.json
+
       - name: Daten aufbereiten
         run: python3 scripts/build_data.py data/raw data/data.json data/geo/flaechen.json data/fundtiere/archiv.json
 

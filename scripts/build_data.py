@@ -167,14 +167,19 @@ if os.path.exists(tp):
                        "d": re.sub(r"\s+", " ", t.get("description", "")).strip()[:220],
                        "l": t.get("relatedLines") or (t.get("attributes") or {}).get("relatedLines") or [],
                        "b": bez})
-    wl = {"items": active, "fetched": datetime.now().strftime("%Y-%m-%d %H:%M"), "stops": len(stop_bez)}
+    wl = {"items": active, "fetched": datetime.now().strftime("%Y-%m-%d %H:%M"), "stops": len(stop_bez),
+          "stopb": {str(k): v for k, v in stop_bez.items() if v}}
+
+# Fahrplan-Zählung (scripts/gtfs_count.py), optional
+fp = os.path.join(src, "fahrten.json")
+fahrten = json.load(open(fp)) if os.path.exists(fp) else None
 
 clean = {k: {str(y): [round(v, 2) for v in arr] for y, arr in sorted(v.items())} for k, v in S.items()}
 json.dump({"series": clean,
            "dates": {k: {str(y): d for y, d in v.items()} for k, v in D.items()},
            "fund": {"items": items, "from": fund_dates[0] if fund_dates else "", "to": fund_dates[-1] if fund_dates else "",
                     "fetched": date.today().isoformat(), "archived": len(archive)},
-           "wl": wl},
+           "wl": wl, "fahrten": fahrten},
           open(out, "w"), ensure_ascii=False, separators=(",", ":"))
 for k, v in clean.items():
     ys = list(v)

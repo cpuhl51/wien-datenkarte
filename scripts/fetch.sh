@@ -29,3 +29,8 @@ for name in "${!FILES[@]}"; do
   mv "$name.tmp" "$name"
   echo "ok  $name"
 done
+
+# Fahrplan der Wiener Linien (GTFS, ca. 100 MB) – nur für die Fahrplan-Zählung, wird nicht gespeichert
+curl -fsS --retry 3 -m 300 -o gtfs.zip https://www.wienerlinien.at/ogd_realtime/doku/ogd/gtfs/gtfs.zip
+rm -rf gtfs && mkdir gtfs && unzip -q -o gtfs.zip -d gtfs && rm gtfs.zip
+echo "ok  gtfs"
