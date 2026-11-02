@@ -1,0 +1,393 @@
+<title>Wien Datenkarte</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: Kopf mit Ebenen-Chips, Karte links, Detail + Rangliste rechts; am Handy alles untereinander */
+:root{
+  --bg:#f3f5f4; --surface:#ffffff; --ink:#17201e; --muted:#5d6966; --line:#d8dedc;
+  --accent:#c4161c; --nodata:#e4e8e6; --focus:#17201e;
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, "Cascadia Mono", monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111715; --surface:#1a2220; --ink:#e8eeec; --muted:#9aa8a4; --line:#2c3735;
+  --accent:#ff4d52; --nodata:#252f2d; --focus:#e8eeec; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111715; --surface:#1a2220; --ink:#e8eeec; --muted:#9aa8a4; --line:#2c3735;
+  --accent:#ff4d52; --nodata:#252f2d; --focus:#e8eeec; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+header{display:flex;flex-direction:column;gap:6px}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(28px,5vw,44px);line-height:1.05;margin:0;text-wrap:balance}
+.lede{color:var(--muted);max-width:62ch;margin:0}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font:500 14px var(--body);padding:7px 13px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chip:disabled{cursor:not-allowed;color:var(--muted);border-style:dashed;background:transparent}
+.chip:focus-visible,.sub:focus-visible,.row:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.subs{display:flex;flex-wrap:wrap;gap:6px}
+.sub{font:600 13px var(--body);padding:5px 11px;border-radius:6px;border:2px solid var(--pc);background:transparent;color:var(--ink);cursor:pointer}
+.sub[aria-pressed="true"]{background:var(--pc);color:#fff}
+.yearbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ylabel{font:600 12px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.stand{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:6px;padding:9px 12px}
+.stand b{font-weight:600}
+.stand span{color:var(--muted)}
+.stand .warn{color:var(--accent);font-weight:500}
+.grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:820px){.grid{grid-template-columns:minmax(0,1fr)}}
+.mapbox{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:10px;min-width:0}
+svg.map{width:100%;height:auto;display:block;touch-action:manipulation}
+svg.map path{stroke:var(--surface);stroke-width:1.2;cursor:pointer;transition:fill .25s}
+svg.map path.sel{stroke:var(--ink);stroke-width:2.6}
+svg.map text{font:600 11px var(--mono);fill:var(--ink);paint-order:stroke;stroke:var(--surface);stroke-width:3px;pointer-events:none}
+.legend{display:flex;flex-direction:column;gap:4px}
+.ramp{height:10px;border-radius:3px}
+.ticks{display:flex;justify-content:space-between;font:12px var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.side{display:flex;flex-direction:column;gap:16px;min-width:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.card h2{font-family:var(--display);font-weight:600;font-size:22px;margin:0 0 2px}
+.card .sub{font:12px var(--mono);color:var(--muted);margin:0 0 10px}
+dl{display:grid;grid-template-columns:1fr auto;gap:4px 12px;margin:0}
+dt{color:var(--muted)} dd{margin:0;text-align:right;font:500 14px var(--mono);font-variant-numeric:tabular-nums}
+dd.hl{color:var(--accent)}
+.rank h3{font:600 13px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.rows{display:flex;flex-direction:column;gap:3px}
+.row{display:grid;grid-template-columns:2.2em minmax(0,1fr) 5.5em;align-items:center;gap:8px;border:0;background:none;padding:2px 0;color:var(--ink);font:13px var(--body);text-align:left;cursor:pointer}
+.row .n{font:12px var(--mono);color:var(--muted)}
+.row .bar{position:relative;height:18px;min-width:0}
+.row .bar i{position:absolute;inset:0 auto 0 0;border-radius:3px;opacity:.9}
+.row .bar span{position:relative;padding-left:6px;line-height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;font-size:12px}
+.row .v{text-align:right;font:12px var(--mono);font-variant-numeric:tabular-nums}
+.row.sel{font-weight:600}
+.note{font-size:13px;color:var(--muted);max-width:75ch}
+.note b{color:var(--ink);font-weight:600}
+footer{font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:12px;display:flex;flex-direction:column;gap:4px}
+footer a{color:inherit}
+@media (prefers-reduced-motion:reduce){svg.map path{transition:none}}
+.ynav{display:flex;align-items:center;gap:8px;flex:1;min-width:0}
+.ystep{font:600 15px var(--mono);width:34px;height:34px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;flex:none}
+.ystep:disabled{opacity:.35;cursor:default}
+.ystep:focus-visible,#yslider:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+#yslider{flex:1;min-width:0;accent-color:var(--accent)}
+.yval{font:600 20px var(--mono);font-variant-numeric:tabular-nums;min-width:3.2em;text-align:center;color:var(--accent)}
+.yrange{font:12px var(--mono);color:var(--muted);white-space:nowrap}
+.spark{width:100%;height:auto;display:block;margin:4px 0 10px}
+.spark text{font:11px var(--mono);fill:var(--muted)}
+.stack{display:flex;height:22px;border-radius:4px;overflow:hidden;margin:4px 0 6px;border:1px solid var(--line)}
+.stack i{display:block;height:100%;min-width:1px}
+.skey{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:var(--muted);margin-bottom:8px}
+.skey span{display:inline-flex;align-items:center;gap:5px}
+.skey b{display:inline-block;width:10px;height:10px;border-radius:2px}
+.skey em{font-style:normal;color:var(--ink);font-family:var(--mono);font-variant-numeric:tabular-nums}
+.maphead{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.wien{font:600 13px var(--body);padding:6px 12px;border-radius:6px;border:1px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.wien[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.wien:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.hint{font-size:12px;color:var(--muted)}
+svg.map.all path{stroke:var(--ink);stroke-width:.6}
+.row.ref{border-bottom:1px dashed var(--line);padding-bottom:6px;margin-bottom:4px}
+.row.ref .n{color:var(--accent)}
+.flist{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none;max-height:260px;overflow:auto}
+.flist li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:2px 10px;font-size:13px;border-bottom:1px solid var(--line);padding-bottom:5px}
+.flist .fd{font:12px var(--mono);color:var(--muted);grid-row:span 2}
+.flist .fo{color:var(--muted);font-size:12px}
+.card h4{font:600 12px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:12px 0 6px}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Prototyp · Open Data Wien</div>
+    <h1>Wien in 23 Bezirken</h1>
+    <p class="lede">Wähle eine Ebene, schiebe durch die Jahre und tippe auf einen Bezirk oder „Wien gesamt“. Der Datenstand jeder Ebene steht direkt über der Karte. Die Farbskala gilt über alle Jahre, so sieht man Veränderungen.</p>
+  </header>
+
+  <div class="chips" id="layers" role="group" aria-label="Datenebene"></div>
+  <div class="subs" id="subs" role="group" aria-label="Kennzahl"></div>
+  <div class="yearbar">
+    <span class="ylabel">Jahr</span>
+    <div class="ynav">
+      <button class="ystep" id="yprev" aria-label="Vorheriges Jahr">‹</button>
+      <input type="range" id="yslider" min="0" max="0" step="1" value="0" aria-label="Jahr wählen">
+      <button class="ystep" id="ynext" aria-label="Nächstes Jahr">›</button>
+      <span class="yval" id="yval"></span>
+    </div>
+    <span class="yrange" id="yrange"></span>
+  </div>
+  <div class="stand" id="stand" aria-live="polite"></div>
+
+  <div class="grid">
+    <div class="mapbox">
+      <div class="maphead"><button class="wien" id="wien" aria-pressed="false">Wien gesamt</button><span class="hint">oder einen Bezirk antippen</span></div>
+      <svg class="map" id="map" role="img" aria-label="Karte der Wiener Gemeindebezirke"></svg>
+      <div class="legend"><div class="ramp" id="ramp"></div><div class="ticks" id="ticks"></div></div>
+      <p class="note" id="layernote"></p>
+    </div>
+    <div class="side">
+      <div class="card" id="detail"></div>
+      <div class="card rank"><h3 id="ranktitle">Rangliste</h3><div class="rows" id="rows"></div></div>
+    </div>
+  </div>
+
+  <footer>
+    <span>Daten: Stadt Wien – data.wien.gv.at, Lizenz CC BY 4.0 (Aufbereitung MA 23 auf Basis Statistik Austria). Wahl 2025: vienna.at. Fundtiere: Veterinäramt MA 60.</span>
+    <span>Bezirksgrenzen: Statistik Austria, über GitHub ginseng666/GeoJSON-TopoJSON-Austria (Stand 2021, vereinfacht). Flächen daraus berechnet: Summe 414,5 km², offiziell 414,9 km².</span>
+  </footer>
+</div>
+
+<script>
+const GEO = __GEO__;
+const AREA = __AREA__;
+const DATA = __DATA__;
+const ABRUF = "2.11.2026";
+const NAMES = ["Wien gesamt","Innere Stadt","Leopoldstadt","Landstraße","Wieden","Margareten","Mariahilf","Neubau","Josefstadt","Alsergrund","Favoriten","Simmering","Meidling","Hietzing","Penzing","Rudolfsheim-Fünfhaus","Ottakring","Hernals","Währing","Döbling","Brigittenau","Floridsdorf","Donaustadt","Liesing"];
+const AREA_ALL = Object.values(AREA).reduce((a,b)=>a+b,0);
+/* Index 0 = Wien gesamt */
+const FOREIGN = [36.4,31.4,38.5,38.4,37.1,43.5,35.2,33.4,33.8,36.6,45.4,37.7,41.2,25.1,31.1,46.1,41.7,38.0,31.4,31.0,44.8,32.9,29.3,27.1];
+const VOTE = {
+  "SPÖ":[39.4,30.8,40.9,39.8,36.5,39.5,38.4,36.9,35.9,37.6,43.0,42.8,42.1,31.3,38.6,40.3,39.4,35.7,32.3,34.7,43.7,41.9,41.0,39.8],
+  "FPÖ":[20.4,14.6,14.3,14.2,12.1,13.7,10.1,9.0,10.6,10.9,27.5,33.8,20.1,16.4,18.9,16.0,18.1,15.5,12.2,16.8,20.2,30.0,28.0,23.9],
+  "ÖVP":[9.7,22.1,6.7,9.9,10.8,7.1,9.0,7.5,11.9,10.2,8.1,6.3,8.3,18.8,11.0,6.6,8.5,10.3,13.9,17.9,6.8,8.2,8.1,11.0],
+  "Grüne":[14.5,12.1,21.2,17.8,21.1,22.4,24.5,27.6,22.4,21.8,7.9,5.9,13.8,13.9,15.4,21.1,18.0,20.2,21.9,11.8,14.1,7.5,9.5,9.7],
+  "NEOS":[10.0,16.6,9.7,12.2,14.3,9.7,11.7,12.5,14.0,13.7,6.2,5.5,8.5,16.0,10.7,7.2,8.3,11.6,15.0,15.0,6.8,6.9,8.2,10.1]
+};
+const PARTY_COL = {"SPÖ":"#d0021b","FPÖ":"#1f5fbf","ÖVP":"#1a9a9a","Grüne":"#4f9a1f","NEOS":"#d6247f"};
+/* Hundeattacken: nur Wien gesamt, Bissstatistik MA 58 */
+const DOG_ATT = {2022:{all:93,human:74,any:88},2023:{all:105,human:76,any:102}};
+
+const fmtInt = n => Math.round(n).toLocaleString("de-AT");
+const fmt1 = n => n.toLocaleString("de-AT",{minimumFractionDigits:1,maximumFractionDigits:1});
+const S = DATA.series;
+const dmy = s => { s=String(s); if(s.length===8) return `${+s.slice(6)}.${+s.slice(4,6)}.${s.slice(0,4)}`; const m=s.match(/^(\d{4})-(\d\d)-(\d\d)$/); return m?`${+m[3]}.${+m[2]}.${m[1]}`:s; };
+const per = (k,y) => DATA.dates[k] && DATA.dates[k][y];
+
+/* Fundtiere: Zählung pro Bezirk aus dem aktuellen Feed */
+const F = DATA.fund, FY = F.to.slice(0,4);
+const fcount = k => { const a=Array(24).fill(0); F.items.forEach(i=>{ if(!k||i.k===k){a[i.b]++; a[0]++;} }); return {[FY]:a}; };
+
+const SRC = {
+  pop:"Stadt Wien – Bevölkerungsentwicklung nach Geburtsland seit 2002, Bezirke (Datensatz aktualisiert 20.11.2025)",
+  age:"Stadt Wien – Bevölkerung nach 5-Jahres-Altersgruppen seit 2002 und Durchschnittsalter seit 2002, Bezirke (aktualisiert 16.12. bzw. 20.11.2025)",
+  bir:"Stadt Wien – Geburten seit 2002, Bezirke (Datensatz aktualisiert 16.12.2025)",
+  dea:"Stadt Wien – Sterbefälle seit 2002, Bezirke (Datensatz aktualisiert 16.12.2025)",
+  edu:"Stadt Wien – Bildungsstand der Bevölkerung seit 2008, Bezirke (Datensatz aktualisiert 20.11.2025)",
+  dog:"Stadt Wien – Hundebestand seit 2002, Bezirke (Datensatz aktualisiert 20.11.2025)",
+  veh:"Stadt Wien – Zugelassene Kraftfahrzeuge seit 2002, Bezirke (Datensatz aktualisiert 20.11.2025)",
+  fund:"Stadt Wien – Fundtiere Wien, RSS-Feed des Veterinäramts (MA 60), laufend aktualisiert",
+  foreign:"Stadt Wien – Bevölkerung nach Staatsangehörigkeit und Bezirk (wien.gv.at)",
+  vote:"vienna.at – Bezirksergebnisse und amtliches Endergebnis Wien-Wahl 2025"
+};
+const PCT = {fmt:fmt1,unit:" %",max:100};
+const LAYERS = [
+  {id:"pop",label:"Einwohner",color:"#c4161c",src:SRC.pop,stand:y=>`Bevölkerungsstand am ${dmy(per("pop",y))}`,
+   subs:[{id:"abs",label:"Einwohner",data:S.pop,fmt:fmtInt,unit:""},
+         {id:"dens",label:"Dichte",data:S.dens,fmt:fmtInt,unit:" /km²",note:"Fläche aus der Kartengeometrie berechnet (±1 %)."}],
+   note:"Menschen mit Hauptwohnsitz."},
+  {id:"age",label:"Alter",color:"#d17a00",src:SRC.age,stand:y=>`Bevölkerungsstand am 1.1.${y}`,
+   subs:[{id:"kid",label:"Kinder 0–14",data:S.age_kid,...PCT},
+         {id:"sen",label:"65 und älter",data:S.age_sen,...PCT},
+         {id:"avg",label:"Durchschnittsalter",data:S.age_avg,fmt:fmt1,unit:" J.",zero:true}],
+   note:"Anteil an allen Einwohnern bzw. Durchschnittsalter in Jahren."},
+  {id:"cob",label:"Geburtsland",color:"#b5651d",src:SRC.pop,stand:y=>`Bevölkerungsstand am ${dmy(per("cob",y))}`,stack:"cob",
+   subs:[{id:"abroad",label:"Im Ausland geboren",data:S.cob_abroad,...PCT},
+         {id:"aut",label:"Österreich",data:S.cob_aut,...PCT},
+         {id:"eea",label:"EU/EWR/Schweiz",data:S.cob_eea,...PCT},
+         {id:"tcn",label:"Drittstaaten",data:S.cob_tcn,...PCT}],
+   note:"Nach Geburtsland, nicht Staatsbürgerschaft."},
+  {id:"bir",label:"Geburten",color:"#2b7a78",src:SRC.bir,stand:y=>`Lebendgeburten im Kalenderjahr ${y}, nach Wohnsitz der Mutter`,
+   subs:[{id:"rel",label:"pro 1.000 Einw.",data:S.bir_rel,fmt:fmt1,unit:" ‰"},
+         {id:"abs",label:"Anzahl",data:S.bir_abs,fmt:fmtInt,unit:""}],
+   note:"Rate: Geburten geteilt durch die Einwohner am 1.1. desselben Jahres, eigene Berechnung."},
+  {id:"dea",label:"Sterbefälle",color:"#5b5f8f",src:SRC.dea,stand:y=>`Sterbefälle im Kalenderjahr ${y} von in Wien gemeldeten Personen`,
+   subs:[{id:"rel",label:"pro 1.000 Einw.",data:S.dea_rel,fmt:fmt1,unit:" ‰"},
+         {id:"abs",label:"Anzahl",data:S.dea_abs,fmt:fmtInt,unit:""}],
+   note:"Rate nicht altersbereinigt: Bezirke mit älterer Bevölkerung liegen höher."},
+  {id:"edu",label:"Bildungsstand",color:"#7a3db8",src:SRC.edu,stand:y=>`Stichtag ${dmy(per("edu",y))}, Bevölkerung 25–64 Jahre`,stack:"edu",
+   subs:[{id:"aka",label:"Akademiker",data:S.edu_aka,...PCT,note:"Hochschule und hochschulverwandte Lehranstalten."},
+         {id:"mat",label:"Matura (AHS+BHS)",data:S.edu_mat,...PCT},
+         {id:"bms",label:"Fachschule (BMS)",data:S.edu_bms,...PCT},
+         {id:"leh",label:"Lehre",data:S.edu_leh,...PCT},
+         {id:"all",label:"Pflichtschule",data:S.edu_all,...PCT}],
+   note:"Höchste abgeschlossene Ausbildung."},
+  {id:"veh",label:"Kfz",color:"#3d6f9e",src:SRC.veh,stand:y=>`Zugelassene Fahrzeuge am ${dmy(per("veh",y))}`,
+   subs:[{id:"pkw",label:"Pkw pro 1.000 Einw.",data:S.pkw_rel,fmt:fmtInt,unit:" ‰"},
+         {id:"pkwa",label:"Pkw Anzahl",data:S.pkw_abs,fmt:fmtInt,unit:""},
+         {id:"bik",label:"Motorräder pro 1.000 Einw.",data:S.bik_rel,fmt:fmt1,unit:" ‰"}],
+   note:"Pkw inkl. Taxis; Motorräder = Krafträder. Die sehr hohen Werte der Inneren Stadt kommen vermutlich daher, dass Firmenautos am Firmensitz zugelassen sind."},
+  {id:"dog",label:"Hunde",color:"#8a5a2b",src:SRC.dog,stand:y=>`Gemeldete Hunde am ${dmy(per("dog",y))}`,
+   subs:[{id:"rel",label:"pro 1.000 Einw.",data:S.dog_rel,fmt:fmt1,unit:" ‰"},
+         {id:"abs",label:"Anzahl",data:S.dog_abs,fmt:fmtInt,unit:""}],
+   note:"Angemeldete Hunde laut Hundeabgabe. Hundeattacken gibt es nur für ganz Wien, siehe „Wien gesamt“."},
+  {id:"fund",label:"Fundtiere",color:"#a3476b",src:SRC.fund,stand:()=>`Fundmeldungen vom ${dmy(F.from)} bis ${dmy(F.to)} (Feed zeigt jeweils rund 30 Tage), abgerufen ${dmy(F.fetched)}`,fund:true,
+   subs:[{id:"all",label:"Alle",data:fcount(),fmt:fmtInt,unit:""},
+         {id:"cat",label:"Katzen",data:fcount("Katzen"),fmt:fmtInt,unit:""},
+         {id:"dog",label:"Hunde",data:fcount("Hunde"),fmt:fmtInt,unit:""},
+         {id:"oth",label:"Andere Tiere",data:fcount("Andere Tiere"),fmt:fmtInt,unit:""}],
+   note:"Gefundene Tiere nach Bezirk des Fundorts. Ab dem GitHub-Datenjob wird jeder Tag archiviert, dann entstehen Monate und Jahre."},
+  {id:"foreign",label:"Staatsbürgerschaft",color:"#b0476d",src:SRC.foreign,stand:()=>"Bevölkerungsstand am 1.1.2025",
+   subs:[{id:"f",label:"Nicht österreichisch",data:{2025:FOREIGN},...PCT}],
+   note:"Anteil ohne österreichische Staatsbürgerschaft."},
+  {id:"vote",label:"Wien-Wahl",src:SRC.vote,stand:()=>"Wahl vom 27.4.2025 · Bezirke: vorläufiges Ergebnis inkl. Großteil der Wahlkarten · Wien gesamt: amtliches Endergebnis vom 8.5.2025",
+   subs:Object.keys(VOTE).map(p=>({id:p,label:p,color:PARTY_COL[p],data:{2025:VOTE[p]},...PCT})),
+   note:"Gemeinderat, Stimmenanteil der gewählten Partei."}
+];
+const STACKS = {
+  cob:{title:"Zusammensetzung nach Geburtsland",parts:[["Österreich",S.cob_aut,"#b5651d"],["EU/EWR/Schweiz",S.cob_eea,"#e3a15e"],["Drittstaaten",S.cob_tcn,"#6b3a12"]]},
+  edu:{title:"Höchste Ausbildung (25–64 J.)",parts:[["Pflichtschule",S.edu_all,"#d9c4ef"],["Lehre",S.edu_leh,"#b994e3"],["BMS",S.edu_bms,"#9a6bd2"],["AHS",S.edu_ahs,"#7a3db8"],["BHS",S.edu_bhs,"#5d2a92"],["Kolleg",S.edu_kol,"#46206f"],["Akademie",S.edu_aca,"#341853"],["Hochschule",S.edu_uni,"#22103a"]]}
+};
+
+const state = {}; LAYERS.forEach(L=>{state[L.id]={sub:L.subs[0].id,year:null};});
+let layer = LAYERS[0], sel = 0;
+const subOf = L => L.subs.find(s=>s.id===state[L.id].sub);
+const yearsOf = s => Object.keys(s.data).map(Number).sort((a,b)=>a-b);
+const yearOf = L => { const ys=yearsOf(subOf(L)); let y=state[L.id].year; if(!ys.includes(y)) y=ys[ys.length-1]; return y; };
+const colOf = L => subOf(L).color || L.color;
+
+/* Projektion: Länge mit cos(48,2°) gestaucht, Breite gespiegelt */
+const K = Math.cos(48.21*Math.PI/180);
+let minX=1e9,maxX=-1e9,minY=1e9,maxY=-1e9;
+const each=(g,fn)=>{const P=g.type==="MultiPolygon"?g.coordinates:[g.coordinates];P.forEach(p=>p.forEach(r=>r.forEach(fn)));};
+GEO.features.forEach(f=>each(f.geometry,([x,y])=>{x*=K;minX=Math.min(minX,x);maxX=Math.max(maxX,x);minY=Math.min(minY,y);maxY=Math.max(maxY,y);}));
+const W=600, SC=W/(maxX-minX), H=Math.round((maxY-minY)*SC);
+const px=([x,y])=>[((x*K)-minX)*SC,(maxY-y)*SC];
+const svg=document.getElementById("map");
+svg.setAttribute("viewBox",`-4 -4 ${W+8} ${H+8}`);
+const NS="http://www.w3.org/2000/svg";
+const paths={}, labels=[];
+GEO.features.forEach(f=>{
+  const b=f.properties.b, P=f.geometry.type==="MultiPolygon"?f.geometry.coordinates:[f.geometry.coordinates];
+  let d="", cx=0, cy=0, n=0, best=0;
+  P.forEach(poly=>{
+    poly.forEach(ring=>{ring.forEach((c,i)=>{const [x,y]=px(c);d+=(i?"L":"M")+x.toFixed(1)+","+y.toFixed(1);});d+="Z";});
+    if(poly[0].length>best){best=poly[0].length;cx=0;cy=0;n=0;poly[0].forEach(c=>{const [x,y]=px(c);cx+=x;cy+=y;n++;});}
+  });
+  const p=document.createElementNS(NS,"path");
+  p.setAttribute("d",d);p.setAttribute("fill-rule","evenodd");p.setAttribute("tabindex","0");
+  p.setAttribute("aria-label",b+". "+NAMES[b]);
+  p.addEventListener("click",()=>select(b));
+  p.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();select(b);}});
+  svg.appendChild(p);paths[b]=p;labels.push([b,cx/n,cy/n]);
+});
+labels.forEach(([b,x,y])=>{const t=document.createElementNS(NS,"text");t.setAttribute("x",x);t.setAttribute("y",y+4);t.setAttribute("text-anchor","middle");t.textContent=b;svg.appendChild(t);});
+
+const hex=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+const base=()=>getComputedStyle(document.documentElement).getPropertyValue("--nodata").trim()||"#e4e8e6";
+const mix=(a,b,t)=>{const A=hex(a),B=hex(b);return "rgb("+A.map((v,i)=>Math.round(v+(B[i]-v)*t)).join(",")+")";};
+/* Kartenfarben: Spannweite der Bezirke über alle Jahre (ohne Wien gesamt) */
+function scaleOf(s){ let lo=Infinity,hi=-Infinity; Object.values(s.data).forEach(a=>{for(let b=1;b<=23;b++){lo=Math.min(lo,a[b]);hi=Math.max(hi,a[b]);}}); return [lo,hi]; }
+
+function renderControls(){
+  document.querySelectorAll("#layers .chip").forEach(c=>c.setAttribute("aria-pressed",c.dataset.l===layer.id));
+  const sc=document.getElementById("subs");
+  sc.innerHTML=layer.subs.length<2?"":layer.subs.map(s=>`<button class="sub" id="sub-${layer.id}-${s.id}" data-s="${s.id}" style="--pc:${s.color||layer.color}" aria-pressed="${s.id===state[layer.id].sub}">${s.label}</button>`).join("");
+  sc.hidden=layer.subs.length<2;
+  sc.querySelectorAll(".sub").forEach(b=>b.addEventListener("click",()=>{state[layer.id].sub=b.dataset.s;render();}));
+  const s=subOf(layer), ys=yearsOf(s), y=yearOf(layer), i=ys.indexOf(y);
+  const sl=document.getElementById("yslider");
+  sl.max=ys.length-1; sl.value=i; sl.disabled=ys.length<2;
+  document.getElementById("yval").textContent=layer.fund?"aktuell":y;
+  document.getElementById("yprev").disabled=i<=0;
+  document.getElementById("ynext").disabled=i>=ys.length-1;
+  document.getElementById("yrange").textContent=layer.fund?"laufender Feed":ys.length>1?`${ys.length} Jahre: ${ys[0]}–${ys[ys.length-1]}`:"nur dieses Jahr verfügbar";
+  document.getElementById("stand").innerHTML=`<div><b>Datenstand:</b> ${layer.stand(y)}</div><div><span>Quelle:</span> ${layer.src}</div><div><span>Abgerufen:</span> ${ABRUF}</div>`;
+  const w=document.getElementById("wien"); w.setAttribute("aria-pressed",sel===0);
+  svg.classList.toggle("all",sel===0);
+}
+function setYearIdx(i){ const ys=yearsOf(subOf(layer)); i=Math.max(0,Math.min(ys.length-1,i)); state[layer.id].year=ys[i]; render(); }
+document.getElementById("yslider").addEventListener("input",e=>setYearIdx(+e.target.value));
+document.getElementById("yprev").addEventListener("click",()=>setYearIdx(+document.getElementById("yslider").value-1));
+document.getElementById("ynext").addEventListener("click",()=>setYearIdx(+document.getElementById("yslider").value+1));
+document.getElementById("wien").addEventListener("click",()=>select(0));
+
+function render(){
+  renderControls();
+  const s=subOf(layer), y=yearOf(layer), arr=s.data[y], [lo,hi]=scaleOf(s), bg=base(), c=colOf(layer);
+  const t=v=>.12+.88*((v-lo)/(hi-lo||1));
+  for(let b=1;b<=23;b++){paths[b].setAttribute("fill",mix(bg,c,t(arr[b])));paths[b].classList.toggle("sel",b===sel);}
+  document.getElementById("ramp").style.background=`linear-gradient(90deg,${mix(bg,c,.12)},${c})`;
+  document.getElementById("ticks").innerHTML=[lo,(lo+hi)/2,hi].map(v=>`<span>${s.fmt(v)}${s.unit}</span>`).join("");
+  document.getElementById("layernote").textContent=[layer.note,s.note].filter(Boolean).join(" ")+(yearsOf(s).length>1?" Kartenfarben: Spannweite der Bezirke über alle Jahre.":"");
+  const title=layer.subs.length>1&&s.label!==layer.label?`${layer.label} · ${s.label}`:layer.label;
+  document.getElementById("ranktitle").textContent=`Rangliste · ${title} · ${layer.fund?"aktuell":y}`;
+  const order=[...Array(23)].map((_,i)=>i+1).sort((a,b)=>arr[b]-arr[a]);
+  const top=s.max||Math.max(hi,arr[0]);
+  const row=(b,ref)=>{const v=arr[b],w=Math.max(2,(v/top)*100);
+    return `<button class="row${b===sel?" sel":""}${ref?" ref":""}" data-b="${b}"><span class="n">${ref?"Ø":b+"."}</span><span class="bar"><i style="width:${w}%;background:${ref?c:mix(bg,c,t(v))}"></i><span>${NAMES[b]}</span></span><span class="v">${s.fmt(v)}${s.unit}</span></button>`;};
+  document.getElementById("rows").innerHTML=row(0,true)+order.map(b=>row(b)).join("");
+  document.querySelectorAll(".row").forEach(r=>r.addEventListener("click",()=>select(+r.dataset.b)));
+  renderDetail(s,y,order,c);
+}
+
+/* Verlauf: y-Achse beginnt bei 0, Prozentwerte immer 0–100 % */
+function spark(s,b,y,c){
+  const ys=yearsOf(s); if(ys.length<2) return "";
+  const vals=ys.map(k=>s.data[k][b]);
+  const lo=s.zero?Math.floor(Math.min(...vals)-2):0;
+  const hi=s.max||niceMax(Math.max(...vals));
+  const Wd=320,Hd=96,pl=36,pr=6,pt=8,pb=18;
+  const X=i=>pl+i*(Wd-pl-pr)/(ys.length-1), Y=v=>pt+(Hd-pt-pb)*(1-(v-lo)/(hi-lo||1));
+  const line=vals.map((v,i)=>(i?"L":"M")+X(i).toFixed(1)+","+Y(v).toFixed(1)).join("");
+  const area=line+`L${X(ys.length-1).toFixed(1)},${Y(lo)}L${X(0).toFixed(1)},${Y(lo)}Z`;
+  const i=ys.indexOf(y), mid=(lo+hi)/2;
+  const grid=[lo,mid,hi].map(v=>`<line x1="${pl}" x2="${Wd-pr}" y1="${Y(v)}" y2="${Y(v)}" stroke="currentColor" stroke-opacity=".15"/><text x="${pl-4}" y="${Y(v)+4}" text-anchor="end">${s.fmt(v)}</text>`).join("");
+  return `<svg class="spark" viewBox="0 0 ${Wd} ${Hd}" role="img" aria-label="Verlauf ${ys[0]} bis ${ys[ys.length-1]}" style="color:var(--ink)">
+    ${grid}<path d="${area}" fill="${c}" fill-opacity=".14"/><path d="${line}" fill="none" stroke="${c}" stroke-width="2"/>
+    <line x1="${X(i)}" x2="${X(i)}" y1="${pt}" y2="${Hd-pb}" stroke="${c}" stroke-dasharray="2 3"/>
+    <circle cx="${X(i)}" cy="${Y(vals[i])}" r="4" fill="${c}"/>
+    <text x="${pl}" y="${Hd-3}">${ys[0]}</text><text x="${Wd-pr}" y="${Hd-3}" text-anchor="end">${ys[ys.length-1]}</text></svg>`;
+}
+function niceMax(v){ if(v<=0) return 1; const p=Math.pow(10,Math.floor(Math.log10(v))); return [1,2,2.5,5,10].map(m=>m*p).find(m=>m>=v); }
+
+function stackBar(key,b,y){
+  const st=STACKS[key], yy=String(y); if(!st.parts[0][1][yy]) return "";
+  const vals=st.parts.map(([l,d,c])=>[l,d[yy][b],c]), sum=vals.reduce((a,v)=>a+v[1],0);
+  return `<h4>${st.title} ${y} · 100 %</h4>
+    <div class="stack" role="img" aria-label="${vals.map(v=>v[0]+" "+fmt1(v[1])+" %").join(", ")}">${vals.map(([l,v,c])=>`<i style="width:${100*v/sum}%;background:${c}" title="${l}: ${fmt1(v)} %"></i>`).join("")}</div>
+    <div class="skey">${vals.map(([l,v,c])=>`<span><b style="background:${c}"></b>${l} <em>${fmt1(v)} %</em></span>`).join("")}</div>`;
+}
+
+function fundList(b){
+  const it=F.items.filter(i=>(b===0||i.b===b)&&(state.fund.sub==="all"||i.k===subOf(layer).label)).sort((a,c)=>c.d.localeCompare(a.d));
+  if(!it.length) return `<p class="note">Keine Fundmeldung in diesem Zeitraum.</p>`;
+  return `<h4>Gemeldete Tiere (${it.length})</h4><ul class="flist">${it.slice(0,60).map(i=>`<li><span class="fd">${dmy(i.d)}</span><span>${i.t}${i.f?" · "+i.f:""}${i.s&&i.s!=="unbekannt"?" · "+i.s:""}</span><span class="fo">${i.o}</span></li>`).join("")}</ul>
+    <p class="note" style="margin:6px 0 0">Abholung und Kontakt: Seite „Fundtiere“ auf wien.gv.at.</p>`;
+}
+
+function renderDetail(s,y,order,c){
+  const b=sel, ys=yearsOf(s), first=s.data[ys[0]][b], now=s.data[y][b];
+  const others=LAYERS.filter(L=>L!==layer).map(L=>{
+    const ss=subOf(L), yy=yearOf(L), lab=L.subs.length>1&&ss.label!==L.label?" · "+ss.label:"";
+    return `<dt>${L.label}${lab} (${L.fund?"aktuell":yy})</dt><dd>${ss.fmt(ss.data[yy][b])}${ss.unit}</dd>`;
+  }).join("");
+  const lab=layer.subs.length>1&&s.label!==layer.label?" · "+s.label:"";
+  const place=b===0?`<p class="sub">${layer.label}${lab} ${layer.fund?"aktuell":y}: <b>${s.fmt(now)}${s.unit}</b></p>`
+                   :`<p class="sub">${layer.label}${lab} ${layer.fund?"aktuell":y}: <b>${s.fmt(now)}${s.unit}</b> · Platz ${order.indexOf(b)+1} von 23 · Wien: ${s.fmt(s.data[y][0])}${s.unit}</p>`;
+  const dogAtt=b===0?`<h4>Hundeattacken (nur Wien gesamt)</h4><dl>${Object.entries(DOG_ATT).map(([yr,v])=>`<dt>${yr}: Vorfälle gesamt</dt><dd>${v.all}</dd><dt>${yr}: Mensch gebissen</dt><dd>${v.human}</dd>`).join("")}</dl><p class="note" style="margin:4px 0 0">Bissstatistik der MA 58, Vorfälle mit Mehrfachzählung je Kategorie. Für 2024 ist der Download-Link der Stadt derzeit defekt.</p>`:"";
+  document.getElementById("detail").innerHTML=`
+    <h2>${b===0?"Wien gesamt":b+". "+NAMES[b]}</h2>
+    ${place}
+    ${spark(s,b,y,c)}
+    ${ys.length>1&&y!==ys[0]?`<p class="note" style="margin:0 0 4px">Seit ${ys[0]}: von ${s.fmt(first)}${s.unit} auf ${s.fmt(now)}${s.unit}</p>`:""}
+    ${layer.stack?stackBar(layer.stack,b,y):""}
+    ${layer.fund?fundList(b):""}
+    <h4>Weitere Werte</h4>
+    <dl><dt>Fläche</dt><dd>${fmt1(b===0?AREA_ALL:AREA[b])} km²</dd>${others}</dl>
+    ${dogAtt}`;
+}
+function select(b){sel=b;render();}
+
+const lc=document.getElementById("layers");
+LAYERS.forEach(L=>{
+  const btn=document.createElement("button");btn.className="chip";btn.id="layer-"+L.id;btn.dataset.l=L.id;btn.textContent=L.label;
+  btn.addEventListener("click",()=>{layer=L;render();});
+  lc.appendChild(btn);
+});
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",render);
+new MutationObserver(render).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+render();
+</script>
