@@ -64,9 +64,20 @@ POINTS = [
     ("defi", "DEFIBRILLATOROGD", lambda p: " · ".join(filter(None, [clean(p.get("ADRESSE")), clean(p.get("INFO"))]))),
     ("polizei", "POLIZEIOGD", lambda p: " · ".join(filter(None, [clean(p.get("NAME")), clean(p.get("ADRESSE"))]))),
 ]
+# Altstoff-Sammelstellen zusätzlich je Fraktion (eine Sammelstelle kann mehrere haben)
+FRAKTIONEN = [("papier", "FRAKTION_PA"), ("glas", "FRAKTION_G"), ("lvp", "FRAKTION_KV"), ("bio", "FRAKTION_BI")]
+alt_label = POINTS[0][2]
+for k, fld in FRAKTIONEN:
+    POINTS.append((k, ("ALTSTOFFSAMMLUNGOGD", fld), alt_label))
+
 res = {"points": {}, "date": {}}
 for key, layer, label in POINTS:
+    flt = None
+    if isinstance(layer, tuple):
+        layer, flt = layer
     fs = load(layer)
+    if flt:
+        fs = [f for f in fs if str(f["properties"].get(flt)) == "1"]
     if not fs:
         continue
     cnt = [0] * 24

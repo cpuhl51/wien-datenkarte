@@ -127,8 +127,8 @@ dt .pd{display:block;font-size:12px;color:var(--muted)}
 svg.vin{width:100%;height:auto;display:block}
 svg.vin path:hover{stroke-width:2.2}
 svg.vin text.vl{font:600 13px var(--body);fill:#3a2e08;pointer-events:none}
-:root{--vin-via:#d9d2c2;--vin-kas:#8a8170;--vin-bef:#2e7d6f;--road:#8a3b12}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--vin-via:#3f3a30;--vin-kas:#9a907c;--vin-bef:#5fb3a3;--road:#f0a040}}
+:root{--dotline:#1b2421;--vin-via:#d9d2c2;--vin-kas:#8a8170;--vin-bef:#2e7d6f;--road:#8a3b12}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--dotline:#0b0f0e;--vin-via:#3f3a30;--vin-kas:#9a907c;--vin-bef:#5fb3a3;--road:#f0a040}}
 :root[data-theme="dark"]{--vin-via:#3f3a30;--vin-kas:#9a907c;--vin-bef:#5fb3a3;--road:#f0a040}
 .card h4{font:600 12px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:12px 0 6px}
 </style>
@@ -235,10 +235,19 @@ let PT = null, PT_LOADING = null, BEF = null;
 function loadPoints(){ if(PT) return Promise.resolve(PT); if(!PT_LOADING) PT_LOADING = fetch("punkte.json").then(r=>r.json()).then(d=>{PT=d; fillPointLayers(); return d;}); return PT_LOADING; }
 function loadBefunde(){ if(BEF) return Promise.resolve(BEF); return fetch("befunde.json").then(r=>r.json()).then(d=>BEF=d); }
 const POINT_SETS = {
-  waste:[["altstoff","Altstoff-Sammelstellen","Glas, Metall, Papier, Plastik"],["sackerl","Hundekotsackerl-Spender",""],["mist","Mistplätze","Sperrmüll, Elektro, Grünschnitt"],["problem","Problemstoff-Sammelstellen","Batterien, Lacke, Medikamente"]],
-  infra:[["brunnen","Trinkbrunnen",""],["wc","Öffentliche WCs",""],["park","Parks",""],["spiel","Spielplätze",""],["hundezone","Hundezonen",""],["kiga","Kindergärten",""],["schule","Schulen",""],["defi","Defibrillatoren",""],["polizei","Polizei",""]]
+  /* [Schlüssel, Name, Erklärung, Punktfarbe] */
+  waste:[["altstoff","Alle Sammelstellen","Altstoff-Sammelstellen mit mindestens einer Tonne","#1fa38f"],
+         ["papier","Altpapier","Sammelstellen mit Altpapier-Tonne","#e03131"],
+         ["glas","Altglas","Sammelstellen mit Altglas (Weiß- und Buntglas)","#2f9e44"],
+         ["lvp","Plastik & Metall","Leichtverpackungen: Kunststoff und Metall in einer Tonne","#f5c400"],
+         ["bio","Bio","Sammelstellen mit Biotonne","#9c6b3c"],
+         ["mist","Mistplätze","Sperrmüll, Elektro, Grünschnitt","#f08c00"],
+         ["problem","Problemstoffe","Batterien, Lacke, Medikamente","#ae3ec9"],
+         ["sackerl","Sackerl-Spender","Hundekotsackerl","#9aa3a7"]],
+  infra:[["brunnen","Trinkbrunnen","","#1c7ed6"],["wc","Öffentliche WCs","","#e8590c"],["park","Parks","","#37b24d"],["spiel","Spielplätze","","#e64980"],
+         ["hundezone","Hundezonen","","#a07850"],["kiga","Kindergärten","","#f59f00"],["schule","Schulen","","#7048e8"],["defi","Defibrillatoren","","#fa5252"],["polizei","Polizei","","#4dabf7"]]
 };
-const ptSub = ([k,l,n]) => ({id:k,label:l,data:{0:Array(24).fill(0)},fmt:fmtInt,unit:"",note:n?`${l}: ${n}.`:"",pts:k});
+const ptSub = ([k,l,n,c]) => ({id:k,label:l,data:{0:Array(24).fill(0)},fmt:fmtInt,unit:"",note:n?`${l}: ${n}.`:"",pts:k,dot:c,color:c});
 function fillPointLayers(){ LAYERS.filter(L=>L.points).forEach(L=>L.subs.forEach(s=>{ const p=PT.points[s.pts]; if(p) s.data={0:p.count}; })); }
 
 /* Römisches Legionslager Vindobona */
@@ -405,7 +414,7 @@ let layer = LAYERS[0], sel = 0;
 const subOf = L => L.subs.find(s=>s.id===state[L.id].sub);
 const yearsOf = s => Object.keys(s.data).map(Number).sort((a,b)=>a-b);
 const yearOf = L => { const ys=yearsOf(subOf(L)); let y=state[L.id].year; if(!ys.includes(y)) y=ys[ys.length-1]; return y; };
-const colOf = L => subOf(L).color || L.color;
+const colOf = L => L.points ? "#7f8c87" : (subOf(L).color || L.color);
 
 /* Projektion: Länge mit cos(48,2°) gestaucht, Breite gespiegelt */
 const K = Math.cos(48.21*Math.PI/180);
@@ -452,9 +461,9 @@ const overlay=document.createElementNS(NS,"g"); overlay.setAttribute("class","ov
 function drawPoints(key,c){
   overlay.innerHTML="";
   if(!PT||!PT.points[key]) return;
-  const pts=PT.points[key].pts, r=pts.length>2000?1.3:pts.length>500?1.8:3.2;
+  const pts=PT.points[key].pts, r=pts.length>2000?2:pts.length>500?2.6:4.5;
   overlay.innerHTML=pts.map(p=>{const [x,y]=px([p[0],p[1]]);return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r}"/>`;}).join("");
-  overlay.setAttribute("fill",c); overlay.setAttribute("stroke","var(--surface)"); overlay.setAttribute("stroke-width",r>2?".8":".3");
+  overlay.setAttribute("fill",c); overlay.setAttribute("stroke","var(--dotline)"); overlay.setAttribute("stroke-width",r>3?"1":".6");
 }
 function geoPath(g){
   const ring=r=>"M"+r.map(c=>px(c).map(v=>v.toFixed(1)).join(",")).join("L");
@@ -554,14 +563,15 @@ function render(){
   renderControls();
   const s=subOf(layer), y=yearOf(layer), arr=s.data[y], [lo,hi]=scaleOf(s), bg=base(), c=colOf(layer);
   const t=v=>.12+.88*((v-lo)/(hi-lo||1));
-  if(layer.points){ if(!PT){ loadPoints().then(()=>render()).catch(()=>{document.getElementById("layernote").textContent="Standorte konnten nicht geladen werden (nur auf der veröffentlichten Seite verfügbar).";}); } else drawPoints(s.pts,c); }
+  if(layer.points){ if(!PT){ loadPoints().then(()=>render()).catch(()=>{document.getElementById("layernote").textContent="Standorte konnten nicht geladen werden (nur auf der veröffentlichten Seite verfügbar).";}); } else drawPoints(s.pts,s.dot||c); }
   else overlay.innerHTML="";
   mapThousand=s.unit===""&&Math.max(...arr.slice(1))>=1e4;
   for(let b=1;b<=23;b++){paths[b].setAttribute("fill",mix(bg,c,t(arr[b])));paths[b].classList.toggle("sel",b===sel);
     labelEls[b].textContent=mapFmt(arr[b],s);}
   document.getElementById("ramp").style.background=`linear-gradient(90deg,${mix(bg,c,.12)},${c})`;
   document.getElementById("ticks").innerHTML=[lo,(lo+hi)/2,hi].map(v=>`<span>${s.fmt(v)}${s.unit}</span>`).join("");
-  document.getElementById("layernote").textContent=(mapThousand?"Zahlen auf der Karte in Tausend. ":"")+(s.unit.trim()==="J."?"Zahlen auf der Karte in Jahren. ":"")+[layer.note,s.note].filter(Boolean).join(" ")+(yearsOf(s).length>1?(layer.clock?" Kartenfarben: Spannweite der Bezirke über den ganzen Tag.":" Kartenfarben: Spannweite der Bezirke über alle Jahre."):"");
+  const dotNote=layer.points?`● = ein Standort (${s.label}). Bezirksfarbe und Zahl = Anzahl im Bezirk. `:"";
+  document.getElementById("layernote").textContent=dotNote+(mapThousand?"Zahlen auf der Karte in Tausend. ":"")+(s.unit.trim()==="J."?"Zahlen auf der Karte in Jahren. ":"")+[layer.note,s.note].filter(Boolean).join(" ")+(yearsOf(s).length>1?(layer.clock?" Kartenfarben: Spannweite der Bezirke über den ganzen Tag.":" Kartenfarben: Spannweite der Bezirke über alle Jahre."):"");
   const title=layer.subs.length>1&&s.label!==layer.label?`${layer.label} · ${s.label}`:layer.label;
   document.getElementById("ranktitle").textContent=`Rangliste · ${title} · ${layer.clock?hhmm(y)+" Uhr":(layer.fund||layer.live)?"aktuell":y}`;
   const order=[...Array(23)].map((_,i)=>i+1).sort((a,b)=>arr[b]-arr[a]);
