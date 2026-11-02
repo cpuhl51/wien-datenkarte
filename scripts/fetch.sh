@@ -16,6 +16,8 @@ declare -A FILES=(
   [age5.csv]=$MA23/vie-bez-pop-sex-age5-stk-cob-geo4-2002f.csv            # Altersgruppen
   [avgage.csv]=$MA23/vie-bez-biz-pop-age-2002f.csv                        # Durchschnittsalter
   [fund.xml]=https://www.wien.gv.at/fundundvergabetiere/internet/rssfeed.xml  # Fundtiere (30 Tage)
+  [haltepunkte.csv]=https://www.wienerlinien.at/ogd_realtime/doku/ogd/wienerlinien-ogd-haltepunkte.csv  # Haltestellen
+  [trafficinfo.json]=https://www.wienerlinien.at/ogd_realtime/trafficInfoList  # Störungen (Momentaufnahme)
 )
 
 for name in "${!FILES[@]}"; do

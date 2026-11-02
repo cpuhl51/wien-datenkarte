@@ -117,13 +117,67 @@ archive.sort(key=lambda i: (i["d"], i["id"]))
 json.dump(archive, open(archive_path, "w"), ensure_ascii=False, indent=0)
 fund_dates = sorted(i["d"] for i in items if i["d"])
 
+
+# --- Wiener Linien: aktuelle Störungen, Haltestellen per Punkt-in-Fläche den Bezirken zugeordnet ---
+from datetime import datetime, timezone
+geo = json.load(open(os.path.join(os.path.dirname(area_path), "bezirke.json")))
+
+def inside(x, y, ring):
+    c = False
+    for i in range(len(ring)):
+        x1, y1 = ring[i]; x2, y2 = ring[i - 1]
+        if (y1 > y) != (y2 > y) and x < (x2 - x1) * (y - y1) / (y2 - y1) + x1:
+            c = not c
+    return c
+
+def district_of(lon, lat):
+    for f in geo["features"]:
+        g = f["geometry"]
+        for poly in (g["coordinates"] if g["type"] == "MultiPolygon" else [g["coordinates"]]):
+            if inside(lon, lat, poly[0]) and not any(inside(lon, lat, h) for h in poly[1:]):
+                return f["properties"]["b"]
+    return 0
+
+stop_bez = {}
+hp = os.path.join(src, "haltepunkte.csv")
+if os.path.exists(hp):
+    for r in csv.DictReader(open(hp, encoding="utf-8-sig"), delimiter=";"):
+        try:
+            stop_bez[int(r["StopID"])] = district_of(float(r["Longitude"]), float(r["Latitude"]))
+        except (ValueError, KeyError):
+            pass
+
+wl = None
+tp = os.path.join(src, "trafficinfo.json")
+if os.path.exists(tp):
+    d = json.load(open(tp))["data"]
+    cats = {c["id"]: c["name"] for c in d.get("trafficInfoCategories", [])}
+    kind = {"stoerungkurz": "kurz", "stoerunglang": "lang", "aufzugsinfo": "aufzug"}
+    now = datetime.now(timezone.utc)
+    ts = lambda s: datetime.fromisoformat(re.sub(r"([+-]\d\d)(\d\d)$", r"\1:\2", s)) if s else None
+    active = []
+    for t in d["trafficInfos"]:
+        tm = t.get("time") or {}
+        st, en = ts(tm.get("start")), ts(tm.get("end"))
+        if (st and st > now) or (en and en < now):
+            continue                       # nur gerade gültige Meldungen
+        bez = sorted({stop_bez.get(s, 0) for s in (t.get("relatedStops") or [])} - {0})
+        active.append({"k": kind.get(cats.get(t["refTrafficInfoCategoryId"]), "sonst"),
+                       "t": re.sub(r"\s+", " ", t.get("title", "")).strip(),
+                       "d": re.sub(r"\s+", " ", t.get("description", "")).strip()[:220],
+                       "l": t.get("relatedLines") or (t.get("attributes") or {}).get("relatedLines") or [],
+                       "b": bez})
+    wl = {"items": active, "fetched": datetime.now().strftime("%Y-%m-%d %H:%M"), "stops": len(stop_bez)}
+
 clean = {k: {str(y): [round(v, 2) for v in arr] for y, arr in sorted(v.items())} for k, v in S.items()}
 json.dump({"series": clean,
            "dates": {k: {str(y): d for y, d in v.items()} for k, v in D.items()},
            "fund": {"items": items, "from": fund_dates[0] if fund_dates else "", "to": fund_dates[-1] if fund_dates else "",
-                    "fetched": date.today().isoformat(), "archived": len(archive)}},
+                    "fetched": date.today().isoformat(), "archived": len(archive)},
+           "wl": wl},
           open(out, "w"), ensure_ascii=False, separators=(",", ":"))
 for k, v in clean.items():
     ys = list(v)
     print(f"{k:11s} {ys[0]}–{ys[-1]}  Wien {v[ys[-1]][0]:>10}  Bez.6 {v[ys[-1]][6]}")
+print("Störungen aktiv:", len(wl["items"]) if wl else "-", "| Haltestellen zugeordnet:", sum(1 for v in stop_bez.values() if v), "von", len(stop_bez))
 print("Fundtiere:", len(items), "ohne Bezirk:", sum(1 for i in items if not i["b"]), fund_dates[:1], fund_dates[-1:])

@@ -2,7 +2,7 @@
 
 Interaktive Karte der Wiener Gemeindebezirke mit offenen Daten der Stadt Wien:
 Einwohner, Alter, Geburtsland, Geburten, Sterbefälle, Bildungsstand, Kfz, Hunde,
-Fundtiere, Staatsbürgerschaft und Wien-Wahl 2025. Mit Jahresregler, „Wien gesamt“
+Fundtiere, Öffi-Störungen (Wiener Linien), Staatsbürgerschaft und Wien-Wahl 2025. Mit Jahresregler, „Wien gesamt“
 und Datenstand bei jeder Ebene.
 
 Zuerst Web-App (GitHub Pages), später Android-App im Google Play Store.
@@ -39,6 +39,7 @@ python3 scripts/build_page.py
 
 - Die Kurzlinks `wien.gv.at/gogv/…` aus dem Datenkatalog liefern derzeit 404. Das Skript nutzt die direkten Dateipfade.
 - Hundeattacken gibt es nur für ganz Wien (2022, 2023). Der Link für 2024 ist bei der Stadt defekt.
+- Öffi-Störungen sind derzeit eine Momentaufnahme vom letzten Datenlauf. Für echte Live-Werte braucht es einen kleinen Weiterleitungsdienst, weil die Wiener-Linien-Schnittstelle keine direkten Browser-Abfragen erlaubt (kein CORS).
 - Staatsbürgerschaft und Wahl sind noch Einzeljahre und fest in der Vorlage eingetragen.
 
 ## Lizenz

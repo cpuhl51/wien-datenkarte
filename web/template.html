@@ -170,7 +170,13 @@ const per = (k,y) => DATA.dates[k] && DATA.dates[k][y];
 const F = DATA.fund, FY = F.to.slice(0,4);
 const fcount = k => { const a=Array(24).fill(0); F.items.forEach(i=>{ if(!k||i.k===k){a[i.b]++; a[0]++;} }); return {[FY]:a}; };
 
+/* Wiener Linien Störungen: Momentaufnahme, Bezirk über die betroffenen Haltestellen */
+const WL = DATA.wl || {items:[],fetched:""};
+const wcount = k => { const a=Array(24).fill(0); WL.items.forEach(i=>{ if(!k||i.k===k){ a[0]++; i.b.forEach(b=>a[b]++); } }); return {[FY]:a}; };
+const WL_KIND = {kurz:"Störung",lang:"Länger dauernd",aufzug:"Aufzug"};
+
 const SRC = {
+  wl:"Wiener Linien – Echtzeit-Betriebsinfo (trafficInfoList) und Haltestellenliste, Open Data CC BY",
   pop:"Stadt Wien – Bevölkerungsentwicklung nach Geburtsland seit 2002, Bezirke (Datensatz aktualisiert 20.11.2025)",
   age:"Stadt Wien – Bevölkerung nach 5-Jahres-Altersgruppen seit 2002 und Durchschnittsalter seit 2002, Bezirke (aktualisiert 16.12. bzw. 20.11.2025)",
   bir:"Stadt Wien – Geburten seit 2002, Bezirke (Datensatz aktualisiert 16.12.2025)",
@@ -229,6 +235,12 @@ const LAYERS = [
          {id:"dog",label:"Hunde",data:fcount("Hunde"),fmt:fmtInt,unit:""},
          {id:"oth",label:"Andere Tiere",data:fcount("Andere Tiere"),fmt:fmtInt,unit:""}],
    note:"Gefundene Tiere nach Bezirk des Fundorts. Ab dem GitHub-Datenjob wird jeder Tag archiviert, dann entstehen Monate und Jahre."},
+  {id:"wl",label:"Öffi-Störungen",color:"#c4161c",src:SRC.wl,live:true,
+   stand:()=>`Momentaufnahme vom ${WL.fetched.replace(/^(\d{4})-(\d\d)-(\d\d) /,(m,y,mo,d)=>`${+d}.${+mo}.${y}, `)} Uhr · nur gerade gültige Meldungen`,
+   subs:[{id:"all",label:"Alle",data:wcount(),fmt:fmtInt,unit:""},
+         {id:"kurz",label:"Störungen",data:wcount("kurz"),fmt:fmtInt,unit:""},
+         {id:"aufzug",label:"Aufzüge",data:wcount("aufzug"),fmt:fmtInt,unit:""}],
+   note:"Bezirk = Bezirk der betroffenen Haltestellen; eine Meldung kann mehrere Bezirke betreffen. Länger dauernde Störungen nennen nur Linien, keine Haltestellen, und zählen daher nur bei Wien gesamt."},
   {id:"foreign",label:"Staatsbürgerschaft",color:"#b0476d",src:SRC.foreign,stand:()=>"Bevölkerungsstand am 1.1.2025",
    subs:[{id:"f",label:"Nicht österreichisch",data:{2025:FOREIGN},...PCT}],
    note:"Anteil ohne österreichische Staatsbürgerschaft."},
@@ -290,10 +302,10 @@ function renderControls(){
   const s=subOf(layer), ys=yearsOf(s), y=yearOf(layer), i=ys.indexOf(y);
   const sl=document.getElementById("yslider");
   sl.max=ys.length-1; sl.value=i; sl.disabled=ys.length<2;
-  document.getElementById("yval").textContent=layer.fund?"aktuell":y;
+  document.getElementById("yval").textContent=(layer.fund||layer.live)?"aktuell":y;
   document.getElementById("yprev").disabled=i<=0;
   document.getElementById("ynext").disabled=i>=ys.length-1;
-  document.getElementById("yrange").textContent=layer.fund?"laufender Feed":ys.length>1?`${ys.length} Jahre: ${ys[0]}–${ys[ys.length-1]}`:"nur dieses Jahr verfügbar";
+  document.getElementById("yrange").textContent=layer.live?"Momentaufnahme":layer.fund?"laufender Feed":ys.length>1?`${ys.length} Jahre: ${ys[0]}–${ys[ys.length-1]}`:"nur dieses Jahr verfügbar";
   document.getElementById("stand").innerHTML=`<div><b>Datenstand:</b> ${layer.stand(y)}</div><div><span>Quelle:</span> ${layer.src}</div><div><span>Abgerufen:</span> ${ABRUF}</div>`;
   const w=document.getElementById("wien"); w.setAttribute("aria-pressed",sel===0);
   svg.classList.toggle("all",sel===0);
@@ -313,7 +325,7 @@ function render(){
   document.getElementById("ticks").innerHTML=[lo,(lo+hi)/2,hi].map(v=>`<span>${s.fmt(v)}${s.unit}</span>`).join("");
   document.getElementById("layernote").textContent=[layer.note,s.note].filter(Boolean).join(" ")+(yearsOf(s).length>1?" Kartenfarben: Spannweite der Bezirke über alle Jahre.":"");
   const title=layer.subs.length>1&&s.label!==layer.label?`${layer.label} · ${s.label}`:layer.label;
-  document.getElementById("ranktitle").textContent=`Rangliste · ${title} · ${layer.fund?"aktuell":y}`;
+  document.getElementById("ranktitle").textContent=`Rangliste · ${title} · ${(layer.fund||layer.live)?"aktuell":y}`;
   const order=[...Array(23)].map((_,i)=>i+1).sort((a,b)=>arr[b]-arr[a]);
   const top=s.max||Math.max(hi,arr[0]);
   const row=(b,ref)=>{const v=arr[b],w=Math.max(2,(v/top)*100);
@@ -358,15 +370,22 @@ function fundList(b){
     <p class="note" style="margin:6px 0 0">Abholung und Kontakt: Seite „Fundtiere“ auf wien.gv.at.</p>`;
 }
 
+function wlList(b){
+  const k=state.wl.sub;
+  const it=WL.items.filter(i=>(b===0||i.b.includes(b))&&(k==="all"||i.k===k));
+  if(!it.length) return `<p class="note">Gerade keine Meldung für ${b===0?"Wien":"diesen Bezirk"}.</p>`;
+  return `<h4>Aktuelle Meldungen (${it.length})</h4><ul class="flist">${it.map(i=>`<li><span class="fd">${WL_KIND[i.k]||""}</span><span>${i.l.length?"<b>"+i.l.join(", ")+"</b> · ":""}${i.t}</span><span class="fo">${i.d!==i.t?i.d:""}</span></li>`).join("")}</ul>`;
+}
+
 function renderDetail(s,y,order,c){
   const b=sel, ys=yearsOf(s), first=s.data[ys[0]][b], now=s.data[y][b];
   const others=LAYERS.filter(L=>L!==layer).map(L=>{
     const ss=subOf(L), yy=yearOf(L), lab=L.subs.length>1&&ss.label!==L.label?" · "+ss.label:"";
-    return `<dt>${L.label}${lab} (${L.fund?"aktuell":yy})</dt><dd>${ss.fmt(ss.data[yy][b])}${ss.unit}</dd>`;
+    return `<dt>${L.label}${lab} (${(L.fund||L.live)?"aktuell":yy})</dt><dd>${ss.fmt(ss.data[yy][b])}${ss.unit}</dd>`;
   }).join("");
   const lab=layer.subs.length>1&&s.label!==layer.label?" · "+s.label:"";
-  const place=b===0?`<p class="sub">${layer.label}${lab} ${layer.fund?"aktuell":y}: <b>${s.fmt(now)}${s.unit}</b></p>`
-                   :`<p class="sub">${layer.label}${lab} ${layer.fund?"aktuell":y}: <b>${s.fmt(now)}${s.unit}</b> · Platz ${order.indexOf(b)+1} von 23 · Wien: ${s.fmt(s.data[y][0])}${s.unit}</p>`;
+  const place=b===0?`<p class="sub">${layer.label}${lab} ${(layer.fund||layer.live)?"aktuell":y}: <b>${s.fmt(now)}${s.unit}</b></p>`
+                   :`<p class="sub">${layer.label}${lab} ${(layer.fund||layer.live)?"aktuell":y}: <b>${s.fmt(now)}${s.unit}</b> · Platz ${order.indexOf(b)+1} von 23 · Wien: ${s.fmt(s.data[y][0])}${s.unit}</p>`;
   const dogAtt=b===0?`<h4>Hundeattacken (nur Wien gesamt)</h4><dl>${Object.entries(DOG_ATT).map(([yr,v])=>`<dt>${yr}: Vorfälle gesamt</dt><dd>${v.all}</dd><dt>${yr}: Mensch gebissen</dt><dd>${v.human}</dd>`).join("")}</dl><p class="note" style="margin:4px 0 0">Bissstatistik der MA 58, Vorfälle mit Mehrfachzählung je Kategorie. Für 2024 ist der Download-Link der Stadt derzeit defekt.</p>`:"";
   document.getElementById("detail").innerHTML=`
     <h2>${b===0?"Wien gesamt":b+". "+NAMES[b]}</h2>
@@ -375,6 +394,7 @@ function renderDetail(s,y,order,c){
     ${ys.length>1&&y!==ys[0]?`<p class="note" style="margin:0 0 4px">Seit ${ys[0]}: von ${s.fmt(first)}${s.unit} auf ${s.fmt(now)}${s.unit}</p>`:""}
     ${layer.stack?stackBar(layer.stack,b,y):""}
     ${layer.fund?fundList(b):""}
+    ${layer.live?wlList(b):""}
     <h4>Weitere Werte</h4>
     <dl><dt>Fläche</dt><dd>${fmt1(b===0?AREA_ALL:AREA[b])} km²</dd>${others}</dl>
     ${dogAtt}`;
