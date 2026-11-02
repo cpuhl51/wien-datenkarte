@@ -85,19 +85,41 @@ veh = read("veh")
 for k, f in [("pkw_abs", "PKW_VALUE"), ("pkw_rel", "PKW_DENSITY"), ("bik_abs", "BIK_VALUE"), ("bik_rel", "BIK_DENSITY")]:
     S[k], D["veh"] = series(veh, f)
 
-age = read("age5")
-tot = {}
-for grp, sel in [("kid", lambda a: a <= 3), ("sen", lambda a: a >= 14), ("all", lambda a: True)]:
+GROUPS = ["AUT", "EEA", "REU", "TCN"]
+
+
+def agg5(rows, cols=GROUPS, where=None):
+    """Summe über Geschlecht/Altersgruppen; je Jahr [Wien, Bez1..23]."""
     acc = {}
-    for f in ["AUT", "EEA", "REU", "TCN"]:
-        s_, D["age"] = series(age, f, agg=True, where=lambda r, sel=sel: sel(int(r["AGE5"])))
+    for f in cols:
+        s_, _ = series(rows, f, agg=True, where=where)
         for y, arr in s_.items():
             a = acc.setdefault(y, [0.0] * 24)
-            for b in range(24):
-                a[b] += arr[b]
-    tot[grp] = acc
-S["age_kid"] = ratio(tot["kid"], tot["all"])
-S["age_sen"] = ratio(tot["sen"], tot["all"])
+            for i in range(24):
+                a[i] += arr[i]
+    return acc
+
+
+age = read("age5")
+nat = read("nat5")
+_, D["age"] = series(age, "AUT", agg=True)
+kid = lambda r: int(r["AGE5"]) <= 3
+allp = agg5(age)
+S["age_kid"] = ratio(agg5(age, where=kid), allp)
+S["age_sen"] = ratio(agg5(age, where=lambda r: int(r["AGE5"]) >= 14), allp)
+# Geschlecht (1 = Männer, 2 = Frauen) – so in den Daten der Stadt Wien geführt
+S["pop_f"] = agg5(age, where=lambda r: r["SEX"] == "2")
+S["pop_m"] = agg5(age, where=lambda r: r["SEX"] == "1")
+S["pop_fpct"] = ratio(S["pop_f"], allp)
+S["kid_f"] = agg5(age, where=lambda r: kid(r) and r["SEX"] == "2")
+S["kid_m"] = agg5(age, where=lambda r: kid(r) and r["SEX"] == "1")
+# Geburtsland und Nationalität, je 4 Gruppen, Anteil an allen Einwohnern
+for pre, rows in [("cob4", age), ("nat4", nat)]:
+    tot = agg5(rows)
+    for g in GROUPS:
+        S[f"{pre}_{g.lower()}"] = ratio(agg5(rows, [g]), tot)
+    S[f"{pre}_notaut"] = {y: [round(100 - S[f"{pre}_aut"][y][i], 2) for i in range(24)] for y in tot}
+D["nat"] = D["age"]
 S["age_avg"], _ = series(read("avgage"), "AGE_AVE")
 
 # Fundtiere: RSS-Feed, Fundort beginnt mit der Bezirksnummer ("15., Auerwelsbachpark")

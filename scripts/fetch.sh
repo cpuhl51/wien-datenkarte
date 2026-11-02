@@ -14,6 +14,7 @@ declare -A FILES=(
   [vie-bez-biz-spo-dog-2002f.csv]=$MA23/vie-bez-biz-spo-dog-2002f.csv     # Hundebestand
   [veh.csv]=$MA23/vie-bez-biz-tec-veh-2002f.csv                           # Kraftfahrzeuge
   [age5.csv]=$MA23/vie-bez-pop-sex-age5-stk-cob-geo4-2002f.csv            # Altersgruppen
+  [nat5.csv]=$MA23/vie-bez-pop-sex-age5-stk-nat-geo4-2002f.csv              # Nationalität
   [avgage.csv]=$MA23/vie-bez-biz-pop-age-2002f.csv                        # Durchschnittsalter
   [fund.xml]=https://www.wien.gv.at/fundundvergabetiere/internet/rssfeed.xml  # Fundtiere (30 Tage)
   [haltepunkte.csv]=https://www.wienerlinien.at/ogd_realtime/doku/ogd/wienerlinien-ogd-haltepunkte.csv  # Haltestellen

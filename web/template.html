@@ -148,7 +148,6 @@ const ABRUF = "2.11.2026";
 const NAMES = ["Wien gesamt","Innere Stadt","Leopoldstadt","Landstraße","Wieden","Margareten","Mariahilf","Neubau","Josefstadt","Alsergrund","Favoriten","Simmering","Meidling","Hietzing","Penzing","Rudolfsheim-Fünfhaus","Ottakring","Hernals","Währing","Döbling","Brigittenau","Floridsdorf","Donaustadt","Liesing"];
 const AREA_ALL = Object.values(AREA).reduce((a,b)=>a+b,0);
 /* Index 0 = Wien gesamt */
-const FOREIGN = [36.4,31.4,38.5,38.4,37.1,43.5,35.2,33.4,33.8,36.6,45.4,37.7,41.2,25.1,31.1,46.1,41.7,38.0,31.4,31.0,44.8,32.9,29.3,27.1];
 const VOTE = {
   "SPÖ":[39.4,30.8,40.9,39.8,36.5,39.5,38.4,36.9,35.9,37.6,43.0,42.8,42.1,31.3,38.6,40.3,39.4,35.7,32.3,34.7,43.7,41.9,41.0,39.8],
   "FPÖ":[20.4,14.6,14.3,14.2,12.1,13.7,10.1,9.0,10.6,10.9,27.5,33.8,20.1,16.4,18.9,16.0,18.1,15.5,12.2,16.8,20.2,30.0,28.0,23.9],
@@ -200,26 +199,41 @@ const SRC = {
   dog:"Stadt Wien – Hundebestand seit 2002, Bezirke (Datensatz aktualisiert 20.11.2025)",
   veh:"Stadt Wien – Zugelassene Kraftfahrzeuge seit 2002, Bezirke (Datensatz aktualisiert 20.11.2025)",
   fund:"Stadt Wien – Fundtiere Wien, RSS-Feed des Veterinäramts (MA 60), laufend aktualisiert",
-  foreign:"Stadt Wien – Bevölkerung nach Staatsangehörigkeit und Bezirk (wien.gv.at)",
+  nat:"Stadt Wien – Bevölkerung nach Nationalität bzw. nach Geburtsland, 5-Jahres-Altersgruppen und Geschlecht seit 2002, Bezirke (Datensätze aktualisiert 16.12.2025)",
   vote:"vienna.at – Bezirksergebnisse und amtliches Endergebnis Wien-Wahl 2025"
 };
 const PCT = {fmt:fmt1,unit:" %",max:100};
 const LAYERS = [
   {id:"pop",label:"Einwohner",color:"#c4161c",src:SRC.pop,stand:y=>`Bevölkerungsstand am ${dmy(per("pop",y))}`,
+   stack:["sex"],
    subs:[{id:"abs",label:"Einwohner",data:S.pop,fmt:fmtInt,unit:""},
+         {id:"f",label:"Frauen",data:S.pop_f,fmt:fmtInt,unit:"",note:"Geschlecht wie in den Daten der Stadt Wien geführt (Frauen/Männer). Stand jeweils 1.1."},
+         {id:"m",label:"Männer",data:S.pop_m,fmt:fmtInt,unit:"",note:"Geschlecht wie in den Daten der Stadt Wien geführt (Frauen/Männer). Stand jeweils 1.1."},
+         {id:"fpct",label:"Frauenanteil",data:S.pop_fpct,...PCT},
          {id:"dens",label:"Dichte",data:S.dens,fmt:fmtInt,unit:" /km²",note:"Fläche aus der Kartengeometrie berechnet (±1 %)."}],
    note:"Menschen mit Hauptwohnsitz."},
   {id:"age",label:"Alter",color:"#d17a00",src:SRC.age,stand:y=>`Bevölkerungsstand am 1.1.${y}`,
+   stack:["kids"],
    subs:[{id:"kid",label:"Kinder 0–14",data:S.age_kid,...PCT},
+         {id:"girls",label:"Mädchen 0–14",data:S.kid_f,fmt:fmtInt,unit:""},
+         {id:"boys",label:"Buben 0–14",data:S.kid_m,fmt:fmtInt,unit:""},
          {id:"sen",label:"65 und älter",data:S.age_sen,...PCT},
          {id:"avg",label:"Durchschnittsalter",data:S.age_avg,fmt:fmt1,unit:" J.",zero:true}],
    note:"Anteil an allen Einwohnern bzw. Durchschnittsalter in Jahren."},
-  {id:"cob",label:"Geburtsland",color:"#b5651d",src:SRC.pop,stand:y=>`Bevölkerungsstand am ${dmy(per("cob",y))}`,stack:"cob",
-   subs:[{id:"abroad",label:"Im Ausland geboren",data:S.cob_abroad,...PCT},
-         {id:"aut",label:"Österreich",data:S.cob_aut,...PCT},
-         {id:"eea",label:"EU/EWR/Schweiz",data:S.cob_eea,...PCT},
-         {id:"tcn",label:"Drittstaaten",data:S.cob_tcn,...PCT}],
-   note:"Nach Geburtsland, nicht Staatsbürgerschaft."},
+  {id:"cob",label:"Geburtsland",color:"#b5651d",src:SRC.nat,stand:y=>`Bevölkerungsstand am 1.1.${y}`,stack:["cob","nat"],
+   subs:[{id:"abroad",label:"Im Ausland geboren",data:S.cob4_notaut,...PCT},
+         {id:"aut",label:"Österreich",data:S.cob4_aut,...PCT},
+         {id:"eea",label:"EU/EWR/Schweiz/GB",data:S.cob4_eea,...PCT},
+         {id:"reu",label:"Übriges Europa",data:S.cob4_reu,...PCT,note:"Übriges Europa inkl. Russland und Türkei."},
+         {id:"tcn",label:"Drittstaaten",data:S.cob4_tcn,...PCT,note:"Drittstaaten = alle übrigen Länder (ohne die europäischen Gruppen)."}],
+   note:"Nach Geburtsland. Darunter im Bezirk zum Vergleich die Nationalität (Staatsbürgerschaft)."},
+  {id:"nat",label:"Nationalität",color:"#b0476d",src:SRC.nat,stand:y=>`Bevölkerungsstand am 1.1.${y}`,stack:["nat","cob"],
+   subs:[{id:"notaut",label:"Nicht österreichisch",data:S.nat4_notaut,...PCT},
+         {id:"aut",label:"Österreich",data:S.nat4_aut,...PCT},
+         {id:"eea",label:"EU/EWR/Schweiz/GB",data:S.nat4_eea,...PCT},
+         {id:"reu",label:"Übriges Europa",data:S.nat4_reu,...PCT,note:"Übriges Europa inkl. Russland und Türkei."},
+         {id:"tcn",label:"Drittstaaten",data:S.nat4_tcn,...PCT,note:"Drittstaaten = alle übrigen Staatsbürgerschaften (ohne die europäischen Gruppen)."}],
+   note:"Nach Staatsbürgerschaft. Darunter im Bezirk zum Vergleich das Geburtsland."},
   {id:"bir",label:"Geburten",color:"#2b7a78",src:SRC.bir,stand:y=>`Lebendgeburten im Kalenderjahr ${y}, nach Wohnsitz der Mutter`,
    subs:[{id:"rel",label:"pro 1.000 Einw.",data:S.bir_rel,fmt:fmt1,unit:" ‰"},
          {id:"abs",label:"Anzahl",data:S.bir_abs,fmt:fmtInt,unit:""}],
@@ -265,15 +279,15 @@ const LAYERS = [
          {id:"kurz",label:"Störungen",data:wcount("kurz"),fmt:fmtInt,unit:""},
          {id:"aufzug",label:"Aufzüge",data:wcount("aufzug"),fmt:fmtInt,unit:""}],
    note:"Bezirk = Bezirk der betroffenen Haltestellen; eine Meldung kann mehrere Bezirke betreffen. Länger dauernde Störungen nennen nur Linien, keine Haltestellen, und zählen daher nur bei Wien gesamt."},
-  {id:"foreign",label:"Staatsbürgerschaft",color:"#b0476d",src:SRC.foreign,stand:()=>"Bevölkerungsstand am 1.1.2025",
-   subs:[{id:"f",label:"Nicht österreichisch",data:{2025:FOREIGN},...PCT}],
-   note:"Anteil ohne österreichische Staatsbürgerschaft."},
   {id:"vote",label:"Wien-Wahl",src:SRC.vote,stand:()=>"Wahl vom 27.4.2025 · Bezirke: vorläufiges Ergebnis inkl. Großteil der Wahlkarten · Wien gesamt: amtliches Endergebnis vom 8.5.2025",
    subs:Object.keys(VOTE).map(p=>({id:p,label:p,color:PARTY_COL[p],data:{2025:VOTE[p]},...PCT})),
    note:"Gemeinderat, Stimmenanteil der gewählten Partei."}
 ];
 const STACKS = {
-  cob:{title:"Zusammensetzung nach Geburtsland",parts:[["Österreich",S.cob_aut,"#b5651d"],["EU/EWR/Schweiz",S.cob_eea,"#e3a15e"],["Drittstaaten",S.cob_tcn,"#6b3a12"]]},
+  cob:{title:"Geburtsland",parts:[["Österreich",S.cob4_aut,"#b5651d"],["EU/EWR/CH/GB",S.cob4_eea,"#e3a15e"],["Übriges Europa",S.cob4_reu,"#8c4a17"],["Drittstaaten",S.cob4_tcn,"#4e2a0c"]]},
+  nat:{title:"Nationalität",parts:[["Österreich",S.nat4_aut,"#b0476d"],["EU/EWR/CH/GB",S.nat4_eea,"#e08aaa"],["Übriges Europa",S.nat4_reu,"#86304f"],["Drittstaaten",S.nat4_tcn,"#521c30"]]},
+  sex:{title:"Frauen und Männer",parts:[["Frauen",S.pop_f,"#c4161c"],["Männer",S.pop_m,"#6e7d7a"]]},
+  kids:{title:"Kinder 0–14: Mädchen und Buben",parts:[["Mädchen",S.kid_f,"#d17a00"],["Buben",S.kid_m,"#7a5a2b"]]},
   edu:{title:"Höchste Ausbildung (25–64 J.)",parts:[["Pflichtschule",S.edu_all,"#d9c4ef"],["Lehre",S.edu_leh,"#b994e3"],["BMS",S.edu_bms,"#9a6bd2"],["AHS",S.edu_ahs,"#7a3db8"],["BHS",S.edu_bhs,"#5d2a92"],["Kolleg",S.edu_kol,"#46206f"],["Akademie",S.edu_aca,"#341853"],["Hochschule",S.edu_uni,"#22103a"]]}
 };
 
@@ -384,9 +398,10 @@ function niceMax(v){ if(v<=0) return 1; const p=Math.pow(10,Math.floor(Math.log1
 function stackBar(key,b,y){
   const st=STACKS[key], yy=String(y); if(!st.parts[0][1][yy]) return "";
   const vals=st.parts.map(([l,d,c])=>[l,d[yy][b],c]), sum=vals.reduce((a,v)=>a+v[1],0);
+  const abs=st.parts[0][1]===S.pop_f||st.parts[0][1]===S.kid_f;
   return `<h4>${st.title} ${y} · 100 %</h4>
     <div class="stack" role="img" aria-label="${vals.map(v=>v[0]+" "+fmt1(v[1])+" %").join(", ")}">${vals.map(([l,v,c])=>`<i style="width:${100*v/sum}%;background:${c}" title="${l}: ${fmt1(v)} %"></i>`).join("")}</div>
-    <div class="skey">${vals.map(([l,v,c])=>`<span><b style="background:${c}"></b>${l} <em>${fmt1(v)} %</em></span>`).join("")}</div>`;
+    <div class="skey">${vals.map(([l,v,c])=>`<span><b style="background:${c}"></b>${l} <em>${abs?fmtInt(v)+" · "+fmt1(100*v/sum)+" %":fmt1(v)+" %"}</em></span>`).join("")}</div>`;
 }
 
 function fundList(b){
@@ -418,7 +433,7 @@ function renderDetail(s,y,order,c){
     ${place}
     ${spark(s,b,y,c)}
     ${ys.length>1&&y!==ys[0]&&!layer.clock?`<p class="note" style="margin:0 0 4px">Seit ${ys[0]}: von ${s.fmt(first)}${s.unit} auf ${s.fmt(now)}${s.unit}</p>`:""}
-    ${layer.stack?stackBar(layer.stack,b,y):""}
+    ${(layer.stack||[]).map(k=>stackBar(k,b,y)).join("")}
     ${layer.fund?fundList(b):""}
     ${layer.live?wlList(b):""}
     <h4>Weitere Werte</h4>
@@ -430,7 +445,7 @@ function select(b){sel=b;render();}
 const lc=document.getElementById("layers");
 LAYERS.forEach(L=>{
   const btn=document.createElement("button");btn.className="chip";btn.id="layer-"+L.id;btn.dataset.l=L.id;btn.textContent=L.label;
-  btn.addEventListener("click",()=>{layer=L;render();});
+  btn.addEventListener("click",()=>{layer=L;render();maybeLive();});
   lc.appendChild(btn);
 });
 /* Live-Abfrage: gleiche Regeln wie im Datenskript (nur gültige Meldungen, Bezirk über Haltestellen) */
@@ -447,10 +462,13 @@ async function refreshLive(){
     const n=new Date(); WL.fetched=`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,"0")}-${String(n.getDate()).padStart(2,"0")} ${String(n.getHours()).padStart(2,"0")}:${String(n.getMinutes()).padStart(2,"0")}`;
     const L=LAYERS.find(x=>x.id==="wl"); L.subs.forEach(s=>{s.data=wcount(s.id==="all"?null:s.id);}); L.live=true;
     L.stand=()=>`Live, zuletzt aktualisiert ${WL.fetched.slice(11)} Uhr · nur gerade gültige Meldungen`;
-    if(layer.id==="wl") render();
+    render();
   }catch(e){ /* bleibt bei der Momentaufnahme */ }
 }
-refreshLive(); if(LIVE_URL) setInterval(refreshLive,60000);
+/* Sparsam abfragen: nur wenn die Seite sichtbar ist und die Störungs-Ebene gewählt ist, höchstens einmal pro Minute */
+let lastLive=0;
+function maybeLive(){ if(!LIVE_URL||document.hidden||layer.id!=="wl"||Date.now()-lastLive<60000) return; lastLive=Date.now(); refreshLive(); }
+if(LIVE_URL){ setInterval(maybeLive,15000); document.addEventListener("visibilitychange",maybeLive); }
 
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",render);
 new MutationObserver(render).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});

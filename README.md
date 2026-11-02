@@ -1,8 +1,8 @@
 # Wien in 23 Bezirken
 
 Interaktive Karte der Wiener Gemeindebezirke mit offenen Daten der Stadt Wien:
-Einwohner, Alter, Geburtsland, Geburten, Sterbefälle, Bildungsstand, Kfz, Hunde,
-Fundtiere, Öffis unterwegs laut Fahrplan, Öffi-Störungen (Wiener Linien), Staatsbürgerschaft und Wien-Wahl 2025. Mit Jahresregler, „Wien gesamt“
+Einwohner (Frauen/Männer), Alter (Mädchen/Buben), Geburtsland, Nationalität, Geburten, Sterbefälle, Bildungsstand, Kfz, Hunde,
+Fundtiere, Öffis unterwegs laut Fahrplan, Öffi-Störungen (Wiener Linien) und Wien-Wahl 2025. Mit Jahresregler, „Wien gesamt“
 und Datenstand bei jeder Ebene.
 
 Zuerst Web-App (GitHub Pages), später Android-App im Google Play Store.
@@ -44,7 +44,8 @@ python3 scripts/build_page.py
 - Hundeattacken gibt es nur für ganz Wien (2022, 2023). Der Link für 2024 ist bei der Stadt defekt.
 - Öffi-Störungen kommen live über den Cloudflare Worker `wien-stoerungen` (siehe `live/`), weil die Wiener-Linien-Schnittstelle keine direkten Browser-Abfragen erlaubt. Fällt er aus, zeigt die App die Momentaufnahme vom letzten Datenlauf.
 - „Öffis unterwegs“ zeigt Fahrten laut Fahrplan, keine echten Positionen: Die Wiener Linien veröffentlichen keine Fahrzeugpositionen. Ausfälle und Verspätungen sind nicht enthalten.
-- Staatsbürgerschaft und Wahl sind noch Einzeljahre und fest in der Vorlage eingetragen.
+- Die Wien-Wahl ist noch ein Einzeljahr und fest in der Vorlage eingetragen.
+- Live-Störungen werden nur abgefragt, solange die Seite sichtbar und die Störungs-Ebene gewählt ist (höchstens einmal pro Minute), um im Gratis-Kontingent des Workers zu bleiben.
 
 ## Lizenz
 
