@@ -2,7 +2,7 @@
 
 Interaktive Karte der Wiener Gemeindebezirke mit offenen Daten der Stadt Wien:
 Einwohner (Frauen/Männer), Alter (Mädchen/Buben), Geburtsland, Nationalität, Geburten, Sterbefälle, Bildungsstand, Kfz, Hunde,
-Fundtiere, Öffis unterwegs laut Fahrplan, Öffi-Störungen (Wiener Linien) und Wien-Wahl 2025. Mit Jahresregler, „Wien gesamt“
+Fundtiere, Öffis unterwegs laut Fahrplan, Öffi-Störungen (Wiener Linien), Automarken, das römische Legionslager Vindobona und Wien-Wahl 2025. Mit Jahresregler, „Wien gesamt“
 und Datenstand bei jeder Ebene.
 
 Zuerst Web-App (GitHub Pages), später Android-App im Google Play Store.

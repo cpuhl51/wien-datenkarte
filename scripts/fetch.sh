@@ -37,6 +37,13 @@ done
 # Häufigste Staatsangehörigkeiten je Bezirk (HTML-Tabelle der Stadt Wien, keine Prüfung auf HTML)
 curl -fsS --retry 3 -m 60 -o nat_top5.html "https://www.wien.gv.at/spezial/migration-integration-jugendliche/anhang/top-5-bevolkerungsgruppen-nach-staatsangehorigkeit-in-den-wiener-gemeindebezirken-in-absoluten-zahlen-und-in-percent-der-gesamtbevolkerung-des-bezirks/" || echo "Warnung: Staatsangehörigkeits-Tabelle nicht geladen"
 
+# Römisches Legionslager Vindobona (Geodaten, WFS als GeoJSON)
+mkdir -p vindobona
+for L in FORTIFIKATIONOGD HAUPTSTRARCHOGD KASERNEOGD LAGERBAUOGD; do
+  curl -fsS --retry 3 -m 120 -o "vindobona/$L.json" "https://data.wien.gv.at/daten/geo?service=WFS&request=GetFeature&version=1.1.0&typeName=ogdwien:$L&srsName=EPSG:4326&outputFormat=json"
+done
+echo "ok  vindobona"
+
 # Fahrplan der Wiener Linien (GTFS, ca. 100 MB) – nur für die Fahrplan-Zählung, wird nicht gespeichert
 curl -fsS --retry 3 -m 300 -o gtfs.zip https://www.wienerlinien.at/ogd_realtime/doku/ogd/gtfs/gtfs.zip
 rm -rf gtfs && mkdir gtfs && unzip -q -o gtfs.zip -d gtfs && rm gtfs.zip

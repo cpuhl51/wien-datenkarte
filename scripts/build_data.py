@@ -263,6 +263,34 @@ if os.path.exists(tp):
             continue
         nat_top[key] = [[r[0], int(r[1].replace(".", "")), r[2]] for r in rows[1:] if r[1].replace(".", "").isdigit()]
 
+# Römisches Legionslager Vindobona (Stadtarchäologie Wien): Geometrien kompakt, Koordinaten auf ~1 m gerundet
+vin = None
+vd = os.path.join(src, "vindobona")
+if os.path.isdir(vd):
+    def rnd(c):
+        return [rnd(x) for x in c] if isinstance(c[0], list) else [round(c[0], 5), round(c[1], 5)]
+
+    def dedup(c):
+        if isinstance(c[0], list) and not isinstance(c[0][0], list):
+            out = [c[0]]
+            for p in c[1:]:
+                if p != out[-1]:
+                    out.append(p)
+            return out
+        return [dedup(x) for x in c]
+    vin = {"date": ""}
+    for key, layer_name, props in [("fort", "FORTIFIKATIONOGD", ["BEZEICHNUNG", "ANSPRACHE_TXT", "KATEGORIE_TXT"]),
+                                   ("via", "HAUPTSTRARCHOGD", ["BEZEICHNUNG"]),
+                                   ("kas", "KASERNEOGD", ["LAGE_TXT", "KOHORTE_TXT"]),
+                                   ("bau", "LAGERBAUOGD", ["ANSPRACHE_TXT"])]:
+        p = os.path.join(vd, layer_name + ".json")
+        if not os.path.exists(p):
+            continue
+        fs = json.load(open(p))["features"]
+        vin[key] = [{"t": f["geometry"]["type"], "c": dedup(rnd(f["geometry"]["coordinates"])),
+                     "p": [f["properties"].get(k) for k in props]} for f in fs]
+        vin["date"] = max(vin["date"], max((f["properties"].get("UPDATE_DATUM") or "")[:10] for f in fs))
+
 # Fahrplan-Zählung (scripts/gtfs_count.py), optional
 fp = os.path.join(src, "fahrten.json")
 fahrten = json.load(open(fp)) if os.path.exists(fp) else None
@@ -272,7 +300,7 @@ json.dump({"series": clean,
            "dates": {k: {str(y): d for y, d in v.items()} for k, v in D.items()},
            "fund": {"items": items, "from": fund_dates[0] if fund_dates else "", "to": fund_dates[-1] if fund_dates else "",
                     "fetched": date.today().isoformat(), "archived": len(archive)},
-           "wl": wl, "fahrten": fahrten, "dea_month": dea_month, "brands": brands, "nat_top": nat_top},
+           "wl": wl, "fahrten": fahrten, "dea_month": dea_month, "brands": brands, "nat_top": nat_top, "vindobona": vin},
           open(out, "w"), ensure_ascii=False, separators=(",", ":"))
 for k, v in clean.items():
     ys = list(v)
