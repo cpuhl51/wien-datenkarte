@@ -99,6 +99,7 @@ h1{font-family:var(--display);font-weight:800;font-size:clamp(28px,5vw,44px);lin
 .sub[aria-pressed="true"]{background:var(--pc);color:#fff}
 .lgroup .subs{margin-top:9px;padding-top:9px;border-top:1px dashed color-mix(in srgb,var(--gc) 40%,transparent)}
 .sub{display:inline-flex;align-items:center;gap:6px}
+.sub .sico{width:20px;height:20px;margin:-3px 0;flex:none}
 .sub .sdot{width:10px;height:10px;border-radius:50%;flex:none;box-shadow:0 0 0 1.5px #fff}
 .yearbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .ylabel{font:600 12px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
@@ -806,10 +807,10 @@ function fundItems(){ const sub=subOf(LAYERS.find(L=>L.id==="fund")); return F.i
 function drawFund(s){
   if(layer.id!=="fund"){ fundG.innerHTML=""; return; }
   const u=mapUnitsPerPx(), r=(4*Math.min(1.6,1+(zoom.k-1)*.12))*u;
-  const zp=15*Math.min(1.7,1+(zoom.k-1)*.15);
+  const zp=18*Math.min(1.7,1+(zoom.k-1)*.15);
   fundG.innerHTML=fundItems().filter(i=>i.xy).map(i=>{ const [x,y]=px(i.xy), j=10*u, on=fundPick===i.id, z=(on?zp*1.45:zp)*u;
     const X=x+(hash01(i.id,1)-.5)*j*2, Y=y+(hash01(i.id,2)-.5)*j*2;
-    return `<g data-fund="${esc(i.id)}"><title>${esc(i.t)} · ${esc(i.o)}</title>${on?`<rect x="${(X-z*.62).toFixed(2)}" y="${(Y-z*.62).toFixed(2)}" width="${(z*1.24).toFixed(2)}" height="${(z*1.24).toFixed(2)}" rx="${(z*.2).toFixed(2)}" style="fill:var(--ink)"></rect>`:""}<image href="icons/fund/${fkOf(i)}.png" x="${(X-z/2).toFixed(2)}" y="${(Y-z/2).toFixed(2)}" width="${z.toFixed(2)}" height="${z.toFixed(2)}"></image></g>`; }).join("");
+    return `<g data-fund="${esc(i.id)}"><title>${esc(i.t)} · ${esc(i.o)}</title>${on?`<circle cx="${X.toFixed(2)}" cy="${Y.toFixed(2)}" r="${(z*.68).toFixed(2)}" style="fill:none;stroke:var(--ink);stroke-width:${(z*.09).toFixed(2)}"></circle>`:""}<image href="icons/fund/${fkOf(i)}.png" x="${(X-z/2).toFixed(2)}" y="${(Y-z/2).toFixed(2)}" width="${z.toFixed(2)}" height="${z.toFixed(2)}"></image></g>`; }).join("");
 }
 svg.addEventListener("click",e=>{ const el=e.target.closest&&e.target.closest("[data-fund]"); if(!el||layer.id!=="fund") return; e.stopPropagation(); fundPick=el.dataset.fund; render();
   const c=document.getElementById("fundpick"); if(c) c.scrollIntoView({block:"nearest",behavior:"smooth"}); },true);
@@ -838,8 +839,8 @@ function drawWl(s){
         +`<path d="${d}" style="pointer-events:none;fill:none;stroke:${c};stroke-width:${w.toFixed(2)};stroke-linecap:round;stroke-dasharray:0 ${(2*g).toFixed(2)};stroke-dashoffset:${(-g).toFixed(2)}"></path>`;
     }); }
     if(HS) i.s.forEach(id=>{ const h=HS[id]; if(!h) return; const [x,y]=px([h[0],h[1]]);
-      wlDrawn.c.add(causeOf(i)); const zp=16*Math.min(1.7,1+(zoom.k-1)*.15), z=(on?zp*1.45:zp)*mapUnitsPerPx();
-      dots+=`<g data-wl="${n}"><title>${esc(causeLabel(i))}: ${esc(h[2])}</title>${on?`<rect x="${(x-z/2-z*.12).toFixed(2)}" y="${(y-z/2-z*.12).toFixed(2)}" width="${(z*1.24).toFixed(2)}" height="${(z*1.24).toFixed(2)}" rx="${(z*.2).toFixed(2)}" style="fill:var(--ink)"></rect>`:""}<image href="${CAUSE_ICON(causeOf(i))}" x="${(x-z/2).toFixed(2)}" y="${(y-z/2).toFixed(2)}" width="${z.toFixed(2)}" height="${z.toFixed(2)}"></image></g>`; });
+      wlDrawn.c.add(causeOf(i)); const zp=19*Math.min(1.7,1+(zoom.k-1)*.15), z=(on?zp*1.45:zp)*mapUnitsPerPx();
+      dots+=`<g data-wl="${n}"><title>${esc(causeLabel(i))}: ${esc(h[2])}</title>${on?`<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${(z*.68).toFixed(2)}" style="fill:none;stroke:var(--ink);stroke-width:${(z*.09).toFixed(2)}"></circle>`:""}<image href="${CAUSE_ICON(causeOf(i))}" x="${(x-z/2).toFixed(2)}" y="${(y-z/2).toFixed(2)}" width="${z.toFixed(2)}" height="${z.toFixed(2)}"></image></g>`; });
     if(HS&&PT&&lines.length+dots.length===before) wlDrawn.off++;
   });
   wlG.innerHTML=lines+dots;
@@ -885,7 +886,8 @@ function renderControls(){
   if(grp&&sc.parentNode!==grp) grp.appendChild(sc);
   const gc=grp?grp.style.getPropertyValue("--gc"):layer.color;
   const key=s=>s.dot||(layer.id==="vote"&&s.id!=="all"?s.color:null);
-  sc.innerHTML=layer.subs.length<2?"":layer.subs.map(s=>`<button class="sub" id="sub-${layer.id}-${s.id}" data-s="${s.id}" style="--pc:${gc}" aria-pressed="${s.id===state[layer.id].sub}">${key(s)?`<b class="sdot" style="background:${key(s)}"></b>`:""}${s.label}</button>`).join("");
+  const icon=s=>layer.id==="fund"&&FUND_KIND[s.id]?`icons/fund/${s.id}.png`:layer.id==="wl"&&CAUSE_COL[s.id]?`icons/stoerung/${s.id}.png`:null;
+  sc.innerHTML=layer.subs.length<2?"":layer.subs.map(s=>`<button class="sub" id="sub-${layer.id}-${s.id}" data-s="${s.id}" style="--pc:${gc}" aria-pressed="${s.id===state[layer.id].sub}">${icon(s)?`<img class="sico" src="${icon(s)}" alt="">`:key(s)?`<b class="sdot" style="background:${key(s)}"></b>`:""}${s.label}</button>`).join("");
   sc.hidden=layer.subs.length<2;
   sc.querySelectorAll(".sub").forEach(b=>b.addEventListener("click",()=>{state[layer.id].sub=b.dataset.s;render();}));
   const s=subOf(layer), ys=yearsOf(s), y=yearOf(layer), i=ys.indexOf(y);
