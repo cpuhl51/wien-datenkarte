@@ -99,7 +99,8 @@ svg.map .orient{pointer-events:none}
 svg.map .ovl{pointer-events:none}
 svg.map .bars,svg.map .barlab{pointer-events:none}
 svg.map .barlab text{font-family:var(--mono);font-weight:600;fill:#fff;paint-order:stroke;stroke:rgba(0,0,0,.6);text-anchor:start}
-svg.map.barmode > path{stroke:var(--surface);stroke-width:1.4px}
+svg#map.barmode > path{stroke:#fff;stroke-width:3px;stroke-linejoin:round}
+svg#map.barmode > path.sel{stroke:#111;stroke-width:4px}
 .ticks.blg{display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:flex-start}
 .ticks .lg{display:inline-flex;align-items:center;gap:5px;font:12px var(--body);color:var(--ink)}
 .ticks .lg b{width:11px;height:11px;border-radius:2px}
