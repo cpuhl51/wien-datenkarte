@@ -169,7 +169,7 @@ svg.vin text.vl{font:600 13px var(--body);fill:#3a2e08;pointer-events:none}
   <div class="chips" id="layers" role="group" aria-label="Datenebene"></div>
   <div class="subs" id="subs" role="group" aria-label="Kennzahl"></div>
   <div class="yearbar">
-    <span class="ylabel">Jahr</span>
+    <span class="ylabel" id="ylabel">Jahr</span>
     <div class="ynav">
       <button class="ystep" id="yprev" aria-label="Vorheriges Jahr">‹</button>
       <input type="range" id="yslider" min="0" max="0" step="1" value="0" aria-label="Jahr wählen">
@@ -604,6 +604,7 @@ function renderControls(){
   const s=subOf(layer), ys=yearsOf(s), y=yearOf(layer), i=ys.indexOf(y);
   const sl=document.getElementById("yslider");
   sl.max=ys.length-1; sl.value=i; sl.disabled=ys.length<2;
+  document.getElementById("ylabel").textContent=layer.clock?"Uhrzeit":(layer.fund||layer.live)?"Stand":"Jahr";
   document.getElementById("yval").textContent=layer.clock?hhmm(y):(layer.fund||layer.live)?"aktuell":y;
   document.getElementById("yprev").disabled=i<=0;
   document.getElementById("ynext").disabled=i>=ys.length-1;
