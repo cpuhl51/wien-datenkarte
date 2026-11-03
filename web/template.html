@@ -310,7 +310,7 @@ const WL_CAUSE = [["bau","Bauarbeiten",/bau(arbeit|stelle)|gleisbau|gleisarbeit|
   ["verkehr","Verkehrsbehinderung",/falschpark|parkend|verkehrsbehinder|stau|verkehrsüberlast|verkehrsaufkommen|hindernis|blockier/i],
   ["veranst","Veranstaltung/Demo",/demonstr|veranstalt|kundgebung|marathon|umzug|parade|\blauf\b/i]];
 const causeOf = i => { if(i.k==="aufzug") return "aufzug"; const s=i.t+" "+i.d; const c=WL_CAUSE.find(([,,r])=>r.test(s)); return c?c[0]:"sonst"; };
-const CAUSE_COL = {bau:"#f08c00",einsatz:"#1c7ed6",unfall:"#e03131",technik:"#7048e8",verkehr:"#2b8a3e",veranst:"#e64980",sonst:"#5c6670",aufzug:"#0ca678"};
+const CAUSE_COL = {bau:"#1a1a1a",einsatz:"#1c5fd6",unfall:"#c4161c",technik:"#5c6670",verkehr:"#c4161c",veranst:"#c4161c",sonst:"#e0a800",aufzug:"#3fa9e0"};
 /* Piktogramme je Ursache */
 const CAUSE_ICON = c => `icons/stoerung/${CAUSE_COL[c]?c:"sonst"}.png`;
 let HS=null, HS_LOADING=null, wlPick=null, wlDrawn={c:new Set(),lines:false,off:0};
