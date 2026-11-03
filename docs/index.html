@@ -118,7 +118,7 @@ svg.map text.stat{font-family:var(--body);font-weight:500;fill:var(--ink);paint-
 svg.map .orient{pointer-events:none}
 svg.map .ovl{pointer-events:none}
 svg.map .bars,svg.map .barlab{pointer-events:none}
-svg.map .wlg circle,svg.map .wlg path{cursor:pointer}
+svg.map .wlg g,svg.map .wlg path{cursor:pointer}
 #wlleg:empty{display:none}
 #wlleg{margin-top:8px}
 svg.map .barlab text{font-family:var(--mono);font-weight:600;fill:#fff;paint-order:stroke;stroke:rgba(0,0,0,.6);text-anchor:start}
@@ -322,13 +322,15 @@ const wcount = k => { const f=typeof k==="function"?k:(i=>!k||i.k===k); const a=
 const WL_KIND = {kurz:"Störung",lang:"Länger dauernd",aufzug:"Aufzug"};
 /* Ursache aus dem Meldungstext (die Wiener Linien liefern nur die Arten kurz/lang/Aufzug; die Ursache steht im Text) */
 const WL_CAUSE = [["bau","Bauarbeiten",/bau(arbeit|stelle)|gleisbau|gleisarbeit|umbau|sanierung/i],
-  ["einsatz","Polizei/Rettung/Feuerwehr",/polizei|rettung|feuerwehr|einsatz|erkrank|notfall|verletz/i],
+  ["einsatz","Einsatzkräfte",/polizei|rettung|feuerwehr|einsatz|erkrank|notfall|verletz/i],
   ["unfall","Unfall",/unfall|kollision|zusammensto/i],
   ["technik","Technische Störung",/schadhaft|technisch|gebrechen|weiche|signal|strom|fahrleitung|oberleitung|panne|defekt/i],
   ["verkehr","Verkehrsbehinderung",/falschpark|parkend|verkehrsbehinder|stau|verkehrsüberlast|verkehrsaufkommen|hindernis|blockier/i],
   ["veranst","Veranstaltung/Demo",/demonstr|veranstalt|kundgebung|marathon|umzug|parade|\blauf\b/i]];
 const causeOf = i => { if(i.k==="aufzug") return "aufzug"; const s=i.t+" "+i.d; const c=WL_CAUSE.find(([,,r])=>r.test(s)); return c?c[0]:"sonst"; };
 const CAUSE_COL = {bau:"#f08c00",einsatz:"#1c7ed6",unfall:"#e03131",technik:"#7048e8",verkehr:"#2b8a3e",veranst:"#e64980",sonst:"#5c6670",aufzug:"#0ca678"};
+/* Piktogramme je Ursache; Unfall, Verkehr und Veranstaltung haben (noch) kein eigenes und zeigen das Warndreieck */
+const CAUSE_ICON = c => `icons/stoerung/${["aufzug","einsatz","technik","bau"].includes(c)?c:"sonst"}.png`;
 let HS=null, HS_LOADING=null, wlPick=null, wlDrawn={c:new Set(),lines:false,off:0};
 function loadStops(){ if(HS) return Promise.resolve(HS); if(!HS_LOADING) HS_LOADING=fetch("haltestellen.json").then(r=>r.json()).then(d=>HS=d); return HS_LOADING; }
 const causeLabel = i => { const c=causeOf(i); return c==="aufzug"?"Aufzug":c==="sonst"?"Sonstiges":WL_CAUSE.find(x=>x[0]===c)[1]; };
@@ -753,7 +755,8 @@ function drawWl(s){
     if(!i.s.length&&PT&&PT.orient){ (i.l||[]).forEach(l=>{ const m=/^U(\d)$/.exec(l); if(!m) return;
       PT.orient.ubahn.filter(g=>g.l===m[1]).forEach(g=>{ wlDrawn.c.add(causeOf(i)); wlDrawn.lines=true; lines+=`<path d="${geoPath(g)}" data-wl="${n}" style="fill:none;stroke:${c};stroke-width:${(on?9:6)/k};stroke-opacity:.85;stroke-dasharray:${8/k} ${5/k};stroke-linecap:round"></path>`; }); }); }
     if(HS) i.s.forEach(id=>{ const h=HS[id]; if(!h) return; const [x,y]=px([h[0],h[1]]);
-      wlDrawn.c.add(causeOf(i)); dots+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(on?r*1.6:r).toFixed(2)}" data-wl="${n}" style="fill:${c};stroke:${on?"var(--ink)":"#fff"};stroke-width:${(on?sw*2:sw).toFixed(2)}"><title>${esc(causeLabel(i))}: ${esc(h[2])}</title></circle>`; });
+      wlDrawn.c.add(causeOf(i)); const z=(on?27:19)*mapUnitsPerPx();
+      dots+=`<g data-wl="${n}"><title>${esc(causeLabel(i))}: ${esc(h[2])}</title>${on?`<rect x="${(x-z/2-z*.12).toFixed(2)}" y="${(y-z/2-z*.12).toFixed(2)}" width="${(z*1.24).toFixed(2)}" height="${(z*1.24).toFixed(2)}" rx="${(z*.2).toFixed(2)}" style="fill:var(--ink)"></rect>`:""}<image href="${CAUSE_ICON(causeOf(i))}" x="${(x-z/2).toFixed(2)}" y="${(y-z/2).toFixed(2)}" width="${z.toFixed(2)}" height="${z.toFixed(2)}"></image></g>`; });
     if(HS&&PT&&lines.length+dots.length===before) wlDrawn.off++;
   });
   wlG.innerHTML=lines+dots;
@@ -891,8 +894,9 @@ function render2(){
   document.getElementById("ramp").style.height=s.bars?"0":"";
   document.getElementById("ticks").innerHTML=s.bars?barLegend(s,y):[lo,(lo+hi)/2,hi].map(v=>`<span>${s.fmt(v)}${s.unit}</span>`).join("");
   document.getElementById("ticks").classList.toggle("blg",!!s.bars);
-  if(layer.id==="wl"){ const used=[...wlDrawn.c];
-    document.getElementById("wlleg").innerHTML=(used.length?used.map(c=>`<span class="lg"><b style="background:${CAUSE_COL[c]};border-radius:50%"></b>${c==="aufzug"?"Aufzug":c==="sonst"?"Sonstiges":WL_CAUSE.find(x=>x[0]===c)[1]}</span>`).join("")+`<span class="lg" style="color:var(--muted)">Punkt${wlDrawn.lines?" oder Linie":""} antippen für die Meldung${wlDrawn.lines?" · gestrichelt = ganze U-Bahn-Linie betroffen":""}</span>`:"")
+  if(layer.id==="wl"){ const raw=[...wlDrawn.c], extra=raw.filter(c=>["unfall","verkehr","veranst"].includes(c));
+    const used=[...new Set(raw.map(c=>extra.includes(c)?"sonst":c))];
+    document.getElementById("wlleg").innerHTML=(used.length?used.map(c=>`<span class="lg"><img src="${CAUSE_ICON(c)}" alt="" style="width:18px;height:18px;outline:none">${c==="aufzug"?"Aufzug":c==="sonst"?"Sonstiges"+(extra.length?" (auch "+extra.map(e=>WL_CAUSE.find(x=>x[0]===e)[1]).join(", ")+")":""):WL_CAUSE.find(x=>x[0]===c)[1]}</span>`).join("")+`<span class="lg" style="color:var(--muted)">Symbol${wlDrawn.lines?" oder Linie":""} antippen für die Meldung${wlDrawn.lines?" · gestrichelt = ganze U-Bahn-Linie betroffen":""}</span>`:"")
       +(wlDrawn.off?`<span class="lg" style="color:var(--muted)">${wlDrawn.off} Meldung${wlDrawn.off>1?"en nennen":" nennt"} nur Straßenbahn- oder Buslinien ohne Haltestellen und ${wlDrawn.off>1?"sind":"ist"} daher nicht auf der Karte – siehe Liste unten.</span>`:"");
   } else document.getElementById("wlleg").innerHTML="";
   const dotNote=layer.points?`● = ein Standort (${s.label}). Bezirksfarbe und Zahl = Anzahl im Bezirk. `:"";
