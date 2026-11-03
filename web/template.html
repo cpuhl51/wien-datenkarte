@@ -492,8 +492,8 @@ const LAYERS = [
          {id:"u",label:"U-Bahn",data:fslots("1"),fmt:fmtInt,unit:""},
          {id:"tram",label:"Straßenbahn",data:fslots("0"),fmt:fmtInt,unit:""},
          {id:"bus",label:"Bus",data:fslots("3"),fmt:fmtInt,unit:""},
-         {id:"rel",label:"Fzge/1000 Einw.",data:perK(fslots()),fmt:fmt2,unit:" ‰",
-          note:`Fahrzeuge unterwegs je 1.000 Einwohner (Einwohner am 1.1.${POP_LAST.y}). Bezirke mit wenig Bewohnern, aber vielen Durchfahrten wie die Innere Stadt liegen dadurch weit vorne.`},
+         {id:"rel",label:"Fzge/1000 Einw.",data:perK(fslots()),fmt:fmt2,unit:" Fzg.",
+          note:`Fahrzeuge unterwegs je 1.000 Einwohner, z. B. 0,35 = 0,35 Fahrzeuge je 1.000 Einwohner, also rund 1 Fahrzeug je 2.900 Einwohner (Einwohner am 1.1.${POP_LAST.y}). Bezirke mit wenig Bewohnern, aber vielen Durchfahrten wie die Innere Stadt liegen dadurch weit vorne.`},
          {id:"ppv",label:"Einw./Fzg.",data:perVeh(fslots()),fmt:fmtNull,unit:"",range:dayRange(perVeh(fslots())),
           note:`Theoretischer Wert: alle Einwohner des Bezirks (1.1.${POP_LAST.y}) gleichmäßig auf alle Fahrzeuge verteilt, die gerade im Bezirk unterwegs sind. Weniger = mehr Öffis je Bewohner. „–“ = gerade kein Fahrzeug im Bezirk. Kartenfarben: Spannweite der Bezirke von 6 bis 22 Uhr (nachts fahren so wenige Fahrzeuge, dass die Werte die Skala sprengen würden).`}],
    note:"Fahrten, die laut Plan gerade unterwegs sind oder an einer Haltestelle stehen. Zwischen zwei Haltestellen wird die Position geschätzt. Wien gesamt enthält auch Fahrten knapp außerhalb der Stadtgrenze."},
@@ -573,6 +573,7 @@ let mapThousand=false;
 function mapFmt(v,s){
   if(s.unit===" %"||s.unit===" ‰"){ const a=Math.abs(v); return (a>=10?fmtInt(v):a>=1?fmt1(v):v.toLocaleString("de-AT",{maximumFractionDigits:2}))+s.unit.trim(); }
   if(s.unit.trim()==="J.") return fmtInt(v);
+  if(s.unit.trim()==="Fzg.") return s.fmt(v);
   if(mapThousand) return v>=1e4?fmtInt(v/1e3):fmt1(v/1e3);
   return fmtInt(v);
 }
