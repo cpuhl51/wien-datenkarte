@@ -26,12 +26,14 @@ declare -A FILES=(
 
 for name in "${!FILES[@]}"; do
   url=${FILES[$name]}
-  curl -fsS --retry 3 -m 60 -o "$name.tmp" "$url"
-  if head -c 400 "$name.tmp" | grep -qi "<!DOCTYPE html"; then
-    echo "FEHLER: $url liefert eine HTML-Seite statt Daten" >&2; rm -f "$name.tmp"; exit 1
+  # Fehlerseite (HTML) oder Abbruch: alte Datei behalten; nur wenn es keine gibt, abbrechen
+  if curl -fsS --connect-timeout 20 --retry 3 -m 60 -o "$name.tmp" "$url" && ! head -c 400 "$name.tmp" | grep -qiE "<!DOCTYPE html|<html"; then
+    mv "$name.tmp" "$name"; echo "ok  $name"
+  else
+    rm -f "$name.tmp"
+    if [ -s "$name" ]; then echo "Warnung: $url liefert gerade keine Daten, alte Datei bleibt"
+    else echo "FEHLER: $url liefert keine Daten" >&2; exit 1; fi
   fi
-  mv "$name.tmp" "$name"
-  echo "ok  $name"
 done
 
 # Häufigste Staatsangehörigkeiten je Bezirk (HTML-Tabelle der Stadt Wien, keine Prüfung auf HTML)

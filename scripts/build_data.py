@@ -137,6 +137,14 @@ known = {a["id"] for a in archive}
 archive += [i for i in items if i["id"] not in known]
 archive.sort(key=lambda i: (i["d"], i["id"]))
 json.dump(archive, open(archive_path, "w"), ensure_ascii=False, indent=0)
+fund_stale = False
+if not items and archive:
+    # Feed gerade leer oder gestört: die letzten 30 Tage aus dem Archiv zeigen
+    from datetime import timedelta
+    last = max(a["d"][:10] for a in archive if a["d"])
+    cut = (date.fromisoformat(last) - timedelta(days=30)).isoformat()
+    items = [a for a in archive if a["d"][:10] >= cut]
+    fund_stale = True
 fund_dates = sorted(i["d"] for i in items if i["d"])
 
 
@@ -333,7 +341,7 @@ clean = {k: {str(y): [round(v, 2) for v in arr] for y, arr in sorted(v.items())}
 json.dump({"series": clean,
            "dates": {k: {str(y): d for y, d in v.items()} for k, v in D.items()},
            "fund": {"items": items, "from": fund_dates[0] if fund_dates else "", "to": fund_dates[-1] if fund_dates else "",
-                    "fetched": date.today().isoformat(), "archived": len(archive)},
+                    "fetched": date.today().isoformat(), "archived": len(archive), "stale": fund_stale},
            "wl": wl, "fahrten": fahrten, "dea_month": dea_month, "brands": brands, "nat_top": nat_top, "vindobona": vin, "votes": votes},
           open(out, "w"), ensure_ascii=False, separators=(",", ":"))
 for k, v in clean.items():

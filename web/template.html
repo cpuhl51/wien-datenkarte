@@ -293,7 +293,7 @@ const dmy = s => { s=String(s); if(s.length===8) return `${+s.slice(6)}.${+s.sli
 const per = (k,y) => DATA.dates[k] && DATA.dates[k][y];
 
 /* Fundtiere: Zählung pro Bezirk aus dem aktuellen Feed */
-const F = DATA.fund, FY = F.to.slice(0,4);
+const F = DATA.fund, FY = (F.to||F.fetched||String(new Date().getFullYear())).slice(0,4);
 const fcount = k => { const a=Array(24).fill(0); F.items.forEach(i=>{ if(!k||i.k===k){a[i.b]++; a[0]++;} }); return {[FY]:a}; };
 
 /* Wiener Linien Störungen: Momentaufnahme, Bezirk über die betroffenen Haltestellen */
@@ -726,6 +726,27 @@ function drawPoints(key,c){
 /* Störungen auf der Karte: Punkt je betroffener Haltestelle, U-Bahn-Linie hervorgehoben, wenn nur die Linie genannt ist */
 const wlG=document.createElementNS(NS,"g"); wlG.setAttribute("class","wlg"); svg.appendChild(wlG);
 function wlItems(s){ return WL.items.map((i,n)=>[i,n]).filter(([i])=>!s.calc||s.id==="all"||(s.id==="fb"?i.k!=="aufzug":s.id==="aufzug"?i.k==="aufzug":causeOf(i)===s.id)); }
+/* Betroffener Abschnitt einer U-Bahn-Linie: „zwischen A und B“ aus dem Meldungstext, sonst die ganze Linie.
+   Näherung: Linienstücke, die zwischen den beiden Stationen liegen (Projektion auf die Verbindung A–B). */
+const normSt = s => String(s||"").toLowerCase().replace(/^u\d\s*/,"").replace(/[^a-zäöüß0-9]/g,"");
+function findStation(name,line){
+  const q=normSt(name); if(!q) return null;
+  const st=(PT.orient.stat||[]).filter(s=>{const n=normSt(s[2]); return n===q||n.startsWith(q)||q.startsWith(n);});
+  const best=st.find(s=>String(s[3]).includes(line))||st[0];
+  if(best) return px([best[0],best[1]]);
+  if(HS){ const h=Object.values(HS).find(h=>normSt(h[2])===q); if(h) return px([h[0],h[1]]); }
+  return null;
+}
+function uSection(line,text){
+  const parts=PT.orient.ubahn.filter(g=>g.l===line).flatMap(g=>g.t==="MultiLineString"?g.c:[g.c]).map(r=>r.map(px));
+  const m=/zwischen\s+(.+?)\s+und\s+(.+?)(?:[.,;:]|\s+in\s|\s+Richtung|$)/i.exec(text||"");
+  const A=m&&findStation(m[1],line), B=m&&findStation(m[2],line);
+  if(!A||!B) return parts;
+  const dx=B[0]-A[0], dy=B[1]-A[1], L2=dx*dx+dy*dy||1, L=Math.sqrt(L2), tol=Math.max(.3*L,8);
+  const inside=p=>{ const tt=((p[0]-A[0])*dx+(p[1]-A[1])*dy)/L2, dist=Math.abs((p[0]-A[0])*dy-(p[1]-A[1])*dx)/L; return tt>=-.02&&tt<=1.02&&dist<=tol; };
+  const out=[]; parts.forEach(r=>{ let run=[]; r.forEach(p=>{ if(inside(p)) run.push(p); else { if(run.length>1) out.push(run); run=[]; } }); if(run.length>1) out.push(run); });
+  return out.length?out:parts;
+}
 function drawWl(s){
   if(layer.id!=="wl"){ wlG.innerHTML=""; return; }
   if(!HS){ loadStops().then(()=>render()).catch(()=>{}); }
@@ -735,7 +756,14 @@ function drawWl(s){
   wlItems(s).forEach(([i,n])=>{
     const c=CAUSE_COL[causeOf(i)], on=wlPick===n, before=lines.length+dots.length;
     if(!i.s.length&&PT&&PT.orient){ (i.l||[]).forEach(l=>{ const m=/^U(\d)$/.exec(l); if(!m) return;
-      PT.orient.ubahn.filter(g=>g.l===m[1]).forEach(g=>{ wlDrawn.c.add(causeOf(i)); wlDrawn.lines=true; lines+=`<path d="${geoPath(g)}" data-wl="${n}" style="fill:none;stroke:${c};stroke-width:${(on?9:6)/k};stroke-opacity:.85;stroke-dasharray:${8/k} ${5/k};stroke-linecap:round"></path>`; }); }); }
+      const segs=uSection(m[1],i.t+" "+i.d); if(!segs.length) return;
+      wlDrawn.c.add(causeOf(i)); wlDrawn.lines=true;
+      const u=mapUnitsPerPx(), w=(on?7:5)*u, g=w*1.35, d=segs.map(s=>"M"+s.map(p=>p[0].toFixed(1)+","+p[1].toFixed(1)).join("L")).join("");
+      /* Punkte abwechselnd in Linienfarbe und Störungsfarbe */
+      lines+=`<path d="${d}" data-wl="${n}" style="fill:none;stroke:transparent;stroke-width:${(w*3).toFixed(2)}"></path>`
+        +`<path d="${d}" style="pointer-events:none;fill:none;stroke:${UCOL[m[1]]};stroke-width:${w.toFixed(2)};stroke-linecap:round;stroke-dasharray:0 ${(2*g).toFixed(2)}"></path>`
+        +`<path d="${d}" style="pointer-events:none;fill:none;stroke:${c};stroke-width:${w.toFixed(2)};stroke-linecap:round;stroke-dasharray:0 ${(2*g).toFixed(2)};stroke-dashoffset:${(-g).toFixed(2)}"></path>`;
+    }); }
     if(HS) i.s.forEach(id=>{ const h=HS[id]; if(!h) return; const [x,y]=px([h[0],h[1]]);
       wlDrawn.c.add(causeOf(i)); const z=(on?20:13)*mapUnitsPerPx();
       dots+=`<g data-wl="${n}"><title>${esc(causeLabel(i))}: ${esc(h[2])}</title>${on?`<rect x="${(x-z/2-z*.12).toFixed(2)}" y="${(y-z/2-z*.12).toFixed(2)}" width="${(z*1.24).toFixed(2)}" height="${(z*1.24).toFixed(2)}" rx="${(z*.2).toFixed(2)}" style="fill:var(--ink)"></rect>`:""}<image href="${CAUSE_ICON(causeOf(i))}" x="${(x-z/2).toFixed(2)}" y="${(y-z/2).toFixed(2)}" width="${z.toFixed(2)}" height="${z.toFixed(2)}"></image></g>`; });
@@ -877,7 +905,7 @@ function render2(){
   document.getElementById("ticks").innerHTML=s.bars?barLegend(s,y):[lo,(lo+hi)/2,hi].map(v=>`<span>${s.fmt(v)}${s.unit}</span>`).join("");
   document.getElementById("ticks").classList.toggle("blg",!!s.bars);
   if(layer.id==="wl"){ const used=[...wlDrawn.c];
-    document.getElementById("wlleg").innerHTML=(used.length?used.map(c=>`<span class="lg"><img src="${CAUSE_ICON(c)}" alt="" style="width:18px;height:18px;outline:none">${c==="aufzug"?"Aufzug":c==="sonst"?"Sonstiges":WL_CAUSE.find(x=>x[0]===c)[1]}</span>`).join("")+`<span class="lg" style="color:var(--muted)">Symbol${wlDrawn.lines?" oder Linie":""} antippen für die Meldung${wlDrawn.lines?" · gestrichelt = ganze U-Bahn-Linie betroffen":""}</span>`:"")
+    document.getElementById("wlleg").innerHTML=(used.length?used.map(c=>`<span class="lg"><img src="${CAUSE_ICON(c)}" alt="" style="width:18px;height:18px;outline:none">${c==="aufzug"?"Aufzug":c==="sonst"?"Sonstiges":WL_CAUSE.find(x=>x[0]===c)[1]}</span>`).join("")+`<span class="lg" style="color:var(--muted)">Symbol${wlDrawn.lines?" oder Linie":""} antippen für die Meldung${wlDrawn.lines?" · punktiert = betroffener U-Bahn-Abschnitt (abwechselnd Linien- und Störungsfarbe)":""}</span>`:"")
       +(wlDrawn.off?`<span class="lg" style="color:var(--muted)">${wlDrawn.off} Meldung${wlDrawn.off>1?"en nennen":" nennt"} nur Straßenbahn- oder Buslinien ohne Haltestellen und ${wlDrawn.off>1?"sind":"ist"} daher nicht auf der Karte – siehe Liste unten.</span>`:"");
   } else document.getElementById("wlleg").innerHTML="";
   const dotNote=layer.points?`● = ein Standort (${s.label}). Bezirksfarbe und Zahl = Anzahl im Bezirk. `:"";
