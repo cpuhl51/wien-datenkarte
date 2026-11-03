@@ -336,6 +336,13 @@ const per = (k,y) => DATA.dates[k] && DATA.dates[k][y];
 
 /* Fundtiere: Zählung pro Bezirk aus dem aktuellen Feed */
 const F = DATA.fund, FY = (F.to||F.fetched||String(new Date().getFullYear())).slice(0,4);
+/* Fundtiere feiner als die Stadt (Katzen/Hunde/Andere): Art aus dem Tiernamen, z. B. „Wellensittich“ → Vogel */
+const FUND_KIND = {katze:["Katzen","#9a3b1e"],hund:["Hunde","#1a1a1a"],vogel:["Vögel","#3fa9e0"],kleintier:["Kleintiere","#8a5a2b"],reptil:["Reptilien & Amphibien","#1f6b3a"],andere:["Andere","#5c6670"]};
+const fkOf = i => i.k==="Katzen"?"katze":i.k==="Hunde"?"hund":
+  /sittich|taube|vogel|vögel|fink|kanarien|agapornid|huhn|hahn|ente|gans|papagei|amsel|krähe|meise|wachtel|pfau|kakadu|ara\b|spatz|star\b/i.test(i.t)?"vogel":
+  /kaninchen|hase|hamster|meerschwein|chinchilla|ratte|maus|mäuse|frettchen|degu|igel|rennmaus|streifenhörnchen/i.test(i.t)?"kleintier":
+  /schildkröte|schlange|natter|python|echse|gecko|leguan|agame|frosch|kröte|molch|axolotl|chamäleon|reptil|amphib/i.test(i.t)?"reptil":"andere";
+const fcountK = k => { const a=Array(24).fill(0); F.items.forEach(i=>{ if(!k||fkOf(i)===k){a[i.b]++; a[0]++;} }); return {[FY]:a}; };
 const fcount = k => { const a=Array(24).fill(0); F.items.forEach(i=>{ if(!k||i.k===k){a[i.b]++; a[0]++;} }); return {[FY]:a}; };
 
 /* Wiener Linien Störungen: Momentaufnahme, Bezirk über die betroffenen Haltestellen */
@@ -533,11 +540,9 @@ const LAYERS = [
          ...POINT_SETS.dog.map(ptSub)],
    note:"Angemeldete Hunde laut Hundeabgabe. Hundeattacken gibt es nur für ganz Wien, siehe „Wien gesamt“."},
   {id:"fund",label:"Fundtiere",color:"#a3476b",src:SRC.fund,stand:()=>`Fundmeldungen vom ${dmy(F.from)} bis ${dmy(F.to)} (Feed zeigt jeweils rund 30 Tage), abgerufen ${dmy(F.fetched)}`,fund:true,
-   subs:[{id:"all",label:"Alle",data:fcount(),fmt:fmtInt,unit:""},
-         {id:"cat",label:"Katzen",data:fcount("Katzen"),fmt:fmtInt,unit:""},
-         {id:"dog",label:"Hunde",data:fcount("Hunde"),fmt:fmtInt,unit:""},
-         {id:"oth",label:"Andere Tiere",data:fcount("Andere Tiere"),fmt:fmtInt,unit:""}],
-   note:"Gefundene Tiere nach Bezirk des Fundorts. Ab dem GitHub-Datenjob wird jeder Tag archiviert, dann entstehen Monate und Jahre."},
+   subs:[{id:"all",label:"Alle",data:fcountK(),fmt:fmtInt,unit:""},
+         ...Object.entries(FUND_KIND).map(([id,[label,col]])=>({id,label,data:fcountK(id),fmt:fmtInt,unit:"",dot:col}))],
+   note:"Gefundene Tiere nach Bezirk des Fundorts. Die Stadt unterscheidet nur Katzen, Hunde und andere Tiere; Vögel, Kleintiere und Reptilien/Amphibien leitet die App aus dem Tiernamen ab (z. B. „Wellensittich“ → Vogel). Jeder Tag wird archiviert, so entstehen Monate und Jahre."},
   {id:"fp",label:"Öffis unterwegs",color:"#e0651b",src:SRC.fp,clock:true,
    stand:i=>`Laut Fahrplan am ${dmy(FP_DAY)} um ${hhmm(i)} Uhr · keine Live-Positionen · Fahrplanstand ${dmy(FP?FP.feed:"")}`,
    subs:[{id:"all",label:"Alle",data:fslots(),fmt:fmtInt,unit:""},
@@ -797,19 +802,20 @@ const FUND_COL={"Katzen":"#e8590c","Hunde":"#8a5a2b","Andere Tiere":"#2b8a3e"};
 const fundG=document.createElementNS(NS,"g"); fundG.setAttribute("class","wlg"); svg.appendChild(fundG);
 let fundPick=null;
 const hash01=(s,k)=>{ let h=2166136261^k; for(const ch of String(s)) h=Math.imul(h^ch.charCodeAt(0),16777619); return ((h>>>0)%1000)/1000; };
-function fundItems(){ const sub=subOf(LAYERS.find(L=>L.id==="fund")); return F.items.filter(i=>sub.id==="all"||i.k===sub.label); }
+function fundItems(){ const sub=subOf(LAYERS.find(L=>L.id==="fund")); return F.items.filter(i=>sub.id==="all"||fkOf(i)===sub.id); }
 function drawFund(s){
   if(layer.id!=="fund"){ fundG.innerHTML=""; return; }
   const u=mapUnitsPerPx(), r=(4*Math.min(1.6,1+(zoom.k-1)*.12))*u;
-  fundG.innerHTML=fundItems().filter(i=>i.xy).map(i=>{ const [x,y]=px(i.xy), j=10*u, on=fundPick===i.id;
+  const zp=15*Math.min(1.7,1+(zoom.k-1)*.15);
+  fundG.innerHTML=fundItems().filter(i=>i.xy).map(i=>{ const [x,y]=px(i.xy), j=10*u, on=fundPick===i.id, z=(on?zp*1.45:zp)*u;
     const X=x+(hash01(i.id,1)-.5)*j*2, Y=y+(hash01(i.id,2)-.5)*j*2;
-    return `<circle data-fund="${esc(i.id)}" cx="${X.toFixed(1)}" cy="${Y.toFixed(1)}" r="${(on?r*1.6:r).toFixed(2)}" style="fill:${FUND_COL[i.k]||"#7f8c87"};stroke:${on?"var(--ink)":"#fff"};stroke-width:${(on?2.2:1.3)*u}"><title>${esc(i.t)} · ${esc(i.o)}</title></circle>`; }).join("");
+    return `<g data-fund="${esc(i.id)}"><title>${esc(i.t)} · ${esc(i.o)}</title>${on?`<rect x="${(X-z*.62).toFixed(2)}" y="${(Y-z*.62).toFixed(2)}" width="${(z*1.24).toFixed(2)}" height="${(z*1.24).toFixed(2)}" rx="${(z*.2).toFixed(2)}" style="fill:var(--ink)"></rect>`:""}<image href="icons/fund/${fkOf(i)}.png" x="${(X-z/2).toFixed(2)}" y="${(Y-z/2).toFixed(2)}" width="${z.toFixed(2)}" height="${z.toFixed(2)}"></image></g>`; }).join("");
 }
 svg.addEventListener("click",e=>{ const el=e.target.closest&&e.target.closest("[data-fund]"); if(!el||layer.id!=="fund") return; e.stopPropagation(); fundPick=el.dataset.fund; render();
   const c=document.getElementById("fundpick"); if(c) c.scrollIntoView({block:"nearest",behavior:"smooth"}); },true);
 function fundPickCard(){
   if(layer.id!=="fund"||!fundPick) return ""; const i=F.items.find(x=>x.id===fundPick); if(!i) return "";
-  return `<div class="pick" id="fundpick"><div class="pk-h"><b class="sw" style="background:${FUND_COL[i.k]||"#7f8c87"}"></b>${esc(i.k)} · gefunden am ${dmy(i.d)}</div>
+  return `<div class="pick" id="fundpick"><div class="pk-h"><img src="icons/fund/${fkOf(i)}.png" alt="" style="width:20px;height:20px;vertical-align:-5px;margin-right:6px">${esc(FUND_KIND[fkOf(i)][0])} · gefunden am ${dmy(i.d)}</div>
     <div class="pk-a">${esc(i.t)}${i.f?" · "+esc(i.f):""}${i.s&&i.s!=="unbekannt"?" · "+esc(i.s):""}</div>
     <div class="pk-m" style="font-family:var(--body)">Fundort: ${esc(i.o)} – ungefähre Lage, die Stadt nennt nur Straße oder Park</div>
     <div class="pk-b"><button class="wien" id="fundpick-x">Schließen</button></div></div>`;
@@ -981,8 +987,8 @@ function render2(){
     document.getElementById("wlleg").innerHTML=(used.length?used.map(c=>`<span class="lg"><img src="${CAUSE_ICON(c)}" alt="" style="width:18px;height:18px;outline:none">${c==="aufzug"?"Aufzug":c==="sonst"?"Sonstiges":WL_CAUSE.find(x=>x[0]===c)[1]}</span>`).join("")+`<span class="lg" style="color:var(--muted)">Symbol${wlDrawn.lines?" oder Linie":""} antippen für die Meldung${wlDrawn.lines?" · punktiert = betroffener U-Bahn-Abschnitt (abwechselnd Linien- und Störungsfarbe)":""}</span>`:"")
       +(wlDrawn.off?`<span class="lg" style="color:var(--muted)">${wlDrawn.off} Meldung${wlDrawn.off>1?"en nennen":" nennt"} nur Straßenbahn- oder Buslinien ohne Haltestellen und ${wlDrawn.off>1?"sind":"ist"} daher nicht auf der Karte – siehe Liste unten.</span>`:"");
   } else if(layer.id==="fund"){ const it=fundItems(), n=it.filter(i=>i.xy).length;
-    document.getElementById("wlleg").innerHTML=Object.entries(FUND_COL).filter(([k])=>it.some(i=>i.k===k)).map(([k,c])=>`<span class="lg"><b style="background:${c};border-radius:50%"></b>${k}</span>`).join("")
-      +`<span class="lg" style="color:var(--muted)">Punkt = ungefähre Lage (Mitte der Straße bzw. des Parks) · ${n} von ${it.length} Meldungen verortet · antippen für Details</span>`;
+    document.getElementById("wlleg").innerHTML=Object.entries(FUND_KIND).filter(([k])=>it.some(i=>fkOf(i)===k)).map(([k,[l]])=>`<span class="lg"><img src="icons/fund/${k}.png" alt="" style="width:18px;height:18px;outline:none">${l}</span>`).join("")
+      +`<span class="lg" style="color:var(--muted)">Symbol = ungefähre Lage (Mitte der Straße bzw. des Parks) · ${n} von ${it.length} Meldungen verortet · antippen für Details</span>`;
   } else document.getElementById("wlleg").innerHTML="";
   const dotNote=isPts(layer)?`● = ein Standort (${s.label}). Bezirksfarbe und Zahl = Anzahl im Bezirk. `:"";
   document.getElementById("layernote").textContent=dotNote+(mapThousand?"Zahlen auf der Karte in Tausend. ":"")+(s.unit.trim()==="J."?"Zahlen auf der Karte in Jahren. ":"")+[layer.note,s.note].filter(Boolean).join(" ")+(!s.bars&&!s.range&&yearsOf(s).length>1?(layer.clock?" Kartenfarben: Spannweite der Bezirke über den ganzen Tag.":" Kartenfarben: Spannweite der Bezirke über alle Jahre."):"");
@@ -1073,7 +1079,7 @@ function listBox(key,title,count,inner,L){
 document.addEventListener("toggle",e=>{ const d=e.target; if(d.classList&&d.classList.contains("lbox")) openBox[d.dataset.key]=d.open; },true);
 let showAllPts=null;
 function fundList(b,L){
-  const FL=L||layer, it=F.items.filter(i=>(b===0||i.b===b)&&(state.fund.sub==="all"||i.k===subOf(FL).label)).sort((a,c)=>c.d.localeCompare(a.d));
+  const FL=L||layer, it=F.items.filter(i=>(b===0||i.b===b)&&(state.fund.sub==="all"||fkOf(i)===state.fund.sub)).sort((a,c)=>c.d.localeCompare(a.d));
   if(!it.length) return `<p class="note">Keine Fundmeldung in diesem Zeitraum.</p>`;
   if(!L) return listBox("fund","Gemeldete Tiere",it.length,fundList(b,layer).replace(/^<h4>[^<]*<\/h4>/,""));
   return `<h4>Gemeldete Tiere (${it.length})</h4><ul class="flist">${it.slice(0,60).map(i=>`<li><span class="fd">${dmy(i.d)}</span><span>${i.t}${i.f?" · "+i.f:""}${i.s&&i.s!=="unbekannt"?" · "+i.s:""}</span><span class="fo">${i.o}</span></li>`).join("")}</ul>
