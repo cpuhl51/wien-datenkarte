@@ -57,6 +57,7 @@ header{display:flex;flex-direction:column;gap:6px}
 .info td,.info th{text-align:left;vertical-align:top;padding:6px 8px 6px 0;border-bottom:1px solid var(--line)}
 .info th{font-weight:600}
 .tree{font:13px/1.55 var(--mono);margin:8px 0}
+.tree .tg{font:500 11px var(--mono);letter-spacing:.07em;text-transform:uppercase;margin:18px 0 -2px}
 .tree .tl{display:flex;align-items:center;gap:8px;font:600 15px var(--body);margin-top:10px}
 .tree .tl small{font:400 12px var(--mono);color:var(--muted)}
 .tree .sq{width:13px;height:13px;border-radius:3px;flex:none}
@@ -69,6 +70,11 @@ footer .credit a{color:inherit}
 h1{font-family:var(--display);font-weight:800;font-size:clamp(28px,5vw,44px);line-height:1.05;margin:0;text-wrap:balance}
 .lede{color:var(--muted);max-width:62ch;margin:0}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
+.lgroups{display:flex;flex-direction:column;gap:8px}
+.lgroup{background:color-mix(in srgb,var(--gc) 7%,transparent);border-left:3px solid color-mix(in srgb,var(--gc) 65%,transparent);border-radius:0;padding:7px 10px 9px}
+.lgname{display:block;font:500 11px var(--mono);letter-spacing:.07em;text-transform:uppercase;color:color-mix(in srgb,var(--gc) 70%,var(--ink));margin-bottom:6px}
+.lgroup .chip{border-color:color-mix(in srgb,var(--gc) 30%,var(--line))}
+.lgroup .chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink)}
 .chip{font:500 14px var(--body);padding:7px 13px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
 .chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .chip:disabled{cursor:not-allowed;color:var(--muted);border-style:dashed;background:transparent}
@@ -222,7 +228,7 @@ svg.vin text.vl{font:600 13px var(--body);fill:#3a2e08;pointer-events:none}
 
   <section class="info" id="info" hidden aria-labelledby="info-h"></section>
   <div id="app">
-  <div class="chips" id="layers" role="group" aria-label="Datenebene"></div>
+  <div class="lgroups" id="layers" aria-label="Datenebene"></div>
   <div class="subs" id="subs" role="group" aria-label="Kennzahl"></div>
   <div class="yearbar">
     <span class="ylabel" id="ylabel">Jahr</span>
@@ -361,13 +367,14 @@ const POINT_SETS = {
          ["lvp","Plastik & Metall","Leichtverpackungen: Kunststoff und Metall in einer Tonne","#f5c400"],
          ["bio","Bio","Sammelstellen mit Biotonne","#9c6b3c"],
          ["mist","Mistplätze","Sperrmüll, Elektro, Grünschnitt","#f08c00"],
-         ["problem","Problemstoffe","Batterien, Lacke, Medikamente","#ae3ec9"],
-         ["sackerl","Sackerl-Spender","Hundekotsackerl","#9aa3a7"]],
-  infra:[["brunnen","Trinkbrunnen","","#1c7ed6"],["wc","Öffentliche WCs","","#e8590c"],["park","Parks","","#37b24d"],["spiel","Spielplätze","","#e64980"],
-         ["hundezone","Hundezonen","","#a07850"],["defi","Defibrillatoren","","#fa5252"],["polizei","Polizei","","#4dabf7"]]
+         ["problem","Problemstoffe","Batterien, Lacke, Medikamente","#ae3ec9"]],
+  infra:[["brunnen","Trinkbrunnen","","#1c7ed6"],["wc","Öffentliche WCs","","#a07850"],["park","Parks","","#37b24d"],["spiel","Spielplätze","","#e64980"],
+         ["defi","Defibrillatoren","","#fa5252"],["polizei","Polizei","","#4dabf7"]],
+  dog:[["hundezone","Hundezonen","","#a07850"],["sackerl","Sackerl-Spender","Hundekotsackerl","#9aa3a7"]]
 };
-const ptSub = ([k,l,n,c]) => ({id:k,label:l,data:{0:Array(24).fill(0)},fmt:fmtInt,unit:"",note:n?`${l}: ${n}.`:"",pts:k,dot:c,color:c});
-function fillPointLayers(){ LAYERS.filter(L=>L.points).forEach(L=>L.subs.forEach(s=>{ const p=PT.points[s.pts]; if(p) s.data={0:p.count}; })); }
+const isPts = L => !!(subOf(L)&&subOf(L).pts);
+const ptSub = ([k,l,n,c]) => ({src:SRC.pts,id:k,label:l,data:{0:Array(24).fill(0)},fmt:fmtInt,unit:"",note:n?`${l}: ${n}.`:"",pts:k,dot:c,color:c});
+function fillPointLayers(){ LAYERS.forEach(L=>L.subs.filter(s=>s.pts).forEach(s=>{ const p=PT.points[s.pts]; if(p) s.data={0:p.count}; })); }
 
 /* Römisches Legionslager Vindobona */
 const VIN = DATA.vindobona;
@@ -484,9 +491,10 @@ const LAYERS = [
            note:"Die drei häufigsten Marken im Bezirk, oben die häufigste. Die drei Streifen füllen den Bezirk gemeinsam aus, die Zahlen zeigen den echten Anteil am Pkw-Bestand. Rangliste = Anteil der häufigsten Marke."},
          ...BR.top.slice(0,8).map(k=>({id:k.toLowerCase(),label:brandName(k),data:BR.share[k],fmt:fmt1,unit:" %"}))],
    note:"Anteil der Marke an allen Pkw im Bezirk. Wien gesamt = Summe der 23 Bezirke (Fahrzeuge ohne Bezirkszuordnung sind nicht enthalten)."}]:[]),
-  {id:"dog",label:"Hunde",color:"#8a5a2b",src:SRC.dog,stand:y=>`Gemeldete Hunde am ${dmy(per("dog",y))}`,
+  {id:"dog",label:"Hunde",color:"#8a5a2b",src:SRC.dog,stand:y=>isPts(LAYERS.find(L=>L.id==="dog"))?`Standorte laut Stadt Wien, abgerufen ${ABRUF}`:`Gemeldete Hunde am ${dmy(per("dog",y))}`,
    subs:[{id:"rel",label:"pro 1.000 Einw.",data:S.dog_rel,fmt:fmt1,unit:" ‰"},
-         {id:"abs",label:"Anzahl",data:S.dog_abs,fmt:fmtInt,unit:""}],
+         {id:"abs",label:"Anzahl",data:S.dog_abs,fmt:fmtInt,unit:""},
+         ...POINT_SETS.dog.map(ptSub)],
    note:"Angemeldete Hunde laut Hundeabgabe. Hundeattacken gibt es nur für ganz Wien, siehe „Wien gesamt“."},
   {id:"fund",label:"Fundtiere",color:"#a3476b",src:SRC.fund,stand:()=>`Fundmeldungen vom ${dmy(F.from)} bis ${dmy(F.to)} (Feed zeigt jeweils rund 30 Tage), abgerufen ${dmy(F.fetched)}`,fund:true,
    subs:[{id:"all",label:"Alle",data:fcount(),fmt:fmtInt,unit:""},
@@ -538,11 +546,12 @@ const STACKS = {
 
 const state = {}; LAYERS.forEach(L=>{state[L.id]={sub:L.subs[0].id,year:null};});
 if(FP) state.fp.year = FP_DAY===viennaNow().day ? Math.floor(viennaNow().min/FP.step) : Math.floor(8*60/FP.step);
-let layer = LAYERS[0], sel = 0;
+let layer = LAYERS.find(L=>L.id==="infra")||LAYERS[0], sel = 0;
+if(layer.id==="infra") state.infra.sub="defi";
 const subOf = L => L.subs.find(s=>s.id===state[L.id].sub);
 const yearsOf = s => Object.keys(s.data).map(Number).sort((a,b)=>a-b);
 const yearOf = L => { const ys=yearsOf(subOf(L)); let y=state[L.id].year; if(!ys.includes(y)) y=ys[ys.length-1]; return y; };
-const colOf = L => L.points ? "#7f8c87" : (subOf(L).color || L.color);
+const colOf = L => isPts(L) ? "#7f8c87" : (subOf(L).color || L.color);
 
 /* Projektion: Länge mit cos(48,2°) gestaucht, Breite gespiegelt */
 const K = Math.cos(48.21*Math.PI/180);
@@ -636,7 +645,7 @@ const unpx=(X,Y)=>[((X/SC)+minX)/K, maxY-(Y/SC)];
 const lon2x=(lon,z)=>(lon+180)/360*2**z, lat2y=(lat,z)=>(1-Math.log(Math.tan(lat*Math.PI/180)+1/Math.cos(lat*Math.PI/180))/Math.PI)/2*2**z;
 const x2lon=(x,z)=>x/2**z*360-180, y2lat=(y,z)=>{const n=Math.PI-2*Math.PI*y/2**z;return 180/Math.PI*Math.atan(.5*(Math.exp(n)-Math.exp(-n)));};
 function drawTiles(){
-  const on=baseOn===null?!!layer.points:baseOn;
+  const on=baseOn===null?isPts(layer):baseOn;
   svg.classList.toggle("base",on);
   document.getElementById("basebtn").setAttribute("aria-pressed",on);
   document.getElementById("baseop").hidden=!on;
@@ -813,12 +822,12 @@ function renderControls(){
   const s=subOf(layer), ys=yearsOf(s), y=yearOf(layer), i=ys.indexOf(y);
   const sl=document.getElementById("yslider");
   sl.max=ys.length-1; sl.value=i; sl.disabled=ys.length<2;
-  document.getElementById("ylabel").textContent=layer.clock?"Uhrzeit":(layer.fund||layer.live)?"Stand":"Jahr";
+  document.getElementById("ylabel").textContent=layer.clock?"Uhrzeit":(layer.fund||layer.live||isPts(layer))?"Stand":"Jahr";
   document.getElementById("yval").textContent=layer.clock?hhmm(y):(layer.fund||layer.live)?"aktuell":y;
   document.getElementById("yprev").disabled=i<=0;
   document.getElementById("ynext").disabled=i>=ys.length-1;
   document.getElementById("yrange").textContent=layer.clock?`Uhrzeit · ${dmy(FP_DAY)}`:layer.live?"Momentaufnahme":layer.fund?"laufender Feed":ys.length>1?`${ys.length} Jahre: ${ys[0]}–${ys[ys.length-1]}`:"nur dieses Jahr verfügbar";
-  document.getElementById("stand").innerHTML=`<div><b>Datenstand:</b> ${layer.stand(y)}</div><div><span>Quelle:</span> ${layer.src}</div><div><span>Abgerufen:</span> ${ABRUF}</div>`;
+  document.getElementById("stand").innerHTML=`<div><b>Datenstand:</b> ${layer.stand(y)}</div><div><span>Quelle:</span> ${subOf(layer).src||layer.src}</div><div><span>Abgerufen:</span> ${ABRUF}</div>`;
   const w=document.getElementById("wien"); w.setAttribute("aria-pressed",sel===0);
   svg.classList.toggle("all",sel===0);
 }
@@ -827,8 +836,8 @@ document.getElementById("yslider").addEventListener("input",e=>setYearIdx(+e.tar
 document.getElementById("yprev").addEventListener("click",()=>setYearIdx(+document.getElementById("yslider").value-1));
 document.getElementById("ynext").addEventListener("click",()=>setYearIdx(+document.getElementById("yslider").value+1));
 document.getElementById("wien").addEventListener("click",()=>select(0));
-document.getElementById("locate").addEventListener("click",()=>{ if(!layer.points){ layer=LAYERS.find(L=>L.id==="infra"); } locate(); });
-document.getElementById("basebtn").addEventListener("click",()=>{ const on=baseOn===null?!!layer.points:baseOn; baseOn=!on; render(); });
+document.getElementById("locate").addEventListener("click",()=>{ if(!isPts(layer)){ layer=LAYERS.find(L=>L.id==="infra"); } locate(); });
+document.getElementById("basebtn").addEventListener("click",()=>{ const on=baseOn===null?isPts(layer):baseOn; baseOn=!on; render(); });
 document.getElementById("baseopr").addEventListener("input",e=>{ baseOpacity=+e.target.value; tilesG.style.opacity=baseOpacity; });
 document.getElementById("zin").addEventListener("click",()=>{ if(zoom.k===1&&sel>0){ const L=labels.find(l=>l[0]===sel); if(L){zoom.cx=L[1];zoom.cy=L[2];} } zoom.k=Math.min(16,zoom.k*2); applyZoom(); render(); });
 document.getElementById("zoutb").addEventListener("click",()=>{ zoom.k=Math.max(1,zoom.k/2); if(zoom.k===1){zoom.cx=W/2;zoom.cy=H/2;} applyZoom(); render(); });
@@ -892,8 +901,8 @@ function render2(){
   renderControls();
   const s=subOf(layer), y=yearOf(layer), arr=s.data[y], [lo,hi]=scaleOf(s), bg=base(), c=colOf(layer);
   const t=v=>.12+.88*Math.max(0,Math.min(1,(v-lo)/(hi-lo||1)));
-  drawOrient(layer.points);
-  if(layer.points){ if(!PT){ loadPoints().then(()=>render()).catch(()=>{document.getElementById("layernote").textContent="Standorte konnten nicht geladen werden (nur auf der veröffentlichten Seite verfügbar).";}); } else drawPoints(s.pts,s.dot||c); }
+  drawOrient(isPts(layer));
+  if(isPts(layer)){ if(!PT){ loadPoints().then(()=>render()).catch(()=>{document.getElementById("layernote").textContent="Standorte konnten nicht geladen werden (nur auf der veröffentlichten Seite verfügbar).";}); } else drawPoints(s.pts,s.dot||c); }
   else overlay.innerHTML="";
   drawWl(s);
   mapThousand=s.unit===""&&Math.max(...arr.slice(1).filter(v=>v!=null))>=1e4;
@@ -908,7 +917,7 @@ function render2(){
     document.getElementById("wlleg").innerHTML=(used.length?used.map(c=>`<span class="lg"><img src="${CAUSE_ICON(c)}" alt="" style="width:18px;height:18px;outline:none">${c==="aufzug"?"Aufzug":c==="sonst"?"Sonstiges":WL_CAUSE.find(x=>x[0]===c)[1]}</span>`).join("")+`<span class="lg" style="color:var(--muted)">Symbol${wlDrawn.lines?" oder Linie":""} antippen für die Meldung${wlDrawn.lines?" · punktiert = betroffener U-Bahn-Abschnitt (abwechselnd Linien- und Störungsfarbe)":""}</span>`:"")
       +(wlDrawn.off?`<span class="lg" style="color:var(--muted)">${wlDrawn.off} Meldung${wlDrawn.off>1?"en nennen":" nennt"} nur Straßenbahn- oder Buslinien ohne Haltestellen und ${wlDrawn.off>1?"sind":"ist"} daher nicht auf der Karte – siehe Liste unten.</span>`:"");
   } else document.getElementById("wlleg").innerHTML="";
-  const dotNote=layer.points?`● = ein Standort (${s.label}). Bezirksfarbe und Zahl = Anzahl im Bezirk. `:"";
+  const dotNote=isPts(layer)?`● = ein Standort (${s.label}). Bezirksfarbe und Zahl = Anzahl im Bezirk. `:"";
   document.getElementById("layernote").textContent=dotNote+(mapThousand?"Zahlen auf der Karte in Tausend. ":"")+(s.unit.trim()==="J."?"Zahlen auf der Karte in Jahren. ":"")+[layer.note,s.note].filter(Boolean).join(" ")+(!s.bars&&!s.range&&yearsOf(s).length>1?(layer.clock?" Kartenfarben: Spannweite der Bezirke über den ganzen Tag.":" Kartenfarben: Spannweite der Bezirke über alle Jahre."):"");
   const title=layer.subs.length>1&&s.label!==layer.label?`${layer.label} · ${s.label}`:layer.label;
   document.getElementById("ranktitle").textContent=`Rangliste · ${title} · ${layer.clock?hhmm(y)+" Uhr":(layer.fund||layer.live)?"aktuell":y}`;
@@ -992,7 +1001,7 @@ function ptList(s,b){
 
 function renderDetail(s,y,order,c){
   const b=sel, ys=yearsOf(s), first=s.data[ys[0]][b], now=s.data[y][b];
-  const others=LAYERS.filter(L=>L!==layer&&!L.points&&!L.special).map(L=>{
+  const others=LAYERS.filter(L=>L!==layer&&!isPts(L)&&!L.special).map(L=>{
     const ss=subOf(L), yy=yearOf(L), lab=L.subs.length>1&&ss.label!==L.label?" · "+ss.label:"";
     const name=`${L.label}${lab} (${L.clock?hhmm(yy)+" Uhr":(L.fund||L.live)?"aktuell":yy})`, val=`${ss.fmt(ss.data[yy][b])}${ss.unit}`;
     if(L.fund||L.id==="wl") return `<details class="exp" id="exp-${L.id}"${openExp[L.id]?" open":""}><summary><span>${name}</span><b>${val}</b></summary>${L.fund?fundList(b,L):wlList(b)}</details>`;
@@ -1010,7 +1019,7 @@ function renderDetail(s,y,order,c){
   document.getElementById("detail").innerHTML=`
     <h2>${b===0?"Wien gesamt":b+". "+NAMES[b]}</h2>
     ${place}${pd}
-    ${layer.points&&PT&&PT.points[s.pts]?pickCard(s):""}${wlPickCard()}
+    ${isPts(layer)&&PT&&PT.points[s.pts]?pickCard(s):""}${wlPickCard()}
     ${spark(s,b,y,c)}
     ${layer.id==="dea"?(b===0?monthChart(y,c):`<p class="note">Monatswerte gibt es nur für ganz Wien: oben auf „Wien gesamt“ tippen.</p>`):""}
     ${layer.id==="bir"?`<p class="note">Monatswerte für Geburten veröffentlichen weder die Stadt Wien noch Statistik Austria als offene Daten.</p>`:""}
@@ -1019,7 +1028,7 @@ function renderDetail(s,y,order,c){
     ${(layer.id==="nat"||layer.id==="cob")&&NT&&NT[b]?rankList(b===0?"Häufigste Staatsangehörigkeiten (Top 10)":"Häufigste Staatsangehörigkeiten (Top 5)",NT[b].map(r=>[r[0].replace(" - Arabische Republik","").replace("Russische Föderation","Russland"),r[1],r[2]]),"Stand 1.1.2025, Bericht „Wiener Bevölkerung“ der Stadt Wien. Andere Jahre und weitere Länder veröffentlicht die Stadt nicht als offene Daten."):""}
     ${layer.id==="brand"&&BR?rankList(`Top 10 Marken ${BR.year}`,BR.ranking[b].map(r=>[brandName(r[0]),r[1],fmt1(r[2])+" %"]),"Pkw-Bestand am 31.12., nicht Neuzulassungen."):""}
     ${layer.fund?fundList(b):""}
-    ${layer.points&&PT&&PT.points[s.pts]?nearList(s)+ptList(s,b):""}
+    ${isPts(layer)&&PT&&PT.points[s.pts]?nearList(s)+ptList(s,b):""}
     ${layer.id==="wl"?wlList(b):""}
     <h4>Weitere Werte</h4>
     <dl><dt>Fläche</dt><dd>${fmt1(b===0?AREA_ALL:AREA[b])} km²</dd>${others}</dl>
@@ -1051,14 +1060,15 @@ function select(b){sel=b;render();}
 const LINKS={mail:"mailto:apps@puhl.ch",donate:"https://paypal.me/PuhlChristoph",github:"https://github.com/cpuhl51/wien-datenkarte",author:"https://de.wikipedia.org/wiki/Christoph_Puhl",comics:"https://www.diezöno.se",puhl:"https://www.puhl.ch"};
 const a_=(u,t)=>`<a href="${u}" target="_blank" rel="noopener">${t}</a>`;
 const creditHtml=()=>`Diese kostenlose App wurde von ${a_(LINKS.mail,"Christoph Puhl")} entwickelt und von Claude.ai umgesetzt. Wenn Du möchtest, kannst Du ${a_(LINKS.donate,"hier")} gerne für einen Kaffee, ein Mohnbeugerl oder ein KI-Monatsabo spenden. Dieses Projekt auf ${a_(LINKS.github,"GitHub")} ansehen. Mehr über den ${a_(LINKS.author,"Autor")}, weitere Apps, ${a_(LINKS.comics,"Comics")} und Tools findest Du auf ${a_(LINKS.puhl,"puhl.ch")}.`;
-function sliderName(L){ return L.clock?"Uhrzeit":(L.points||L.special)?"Stand":L.id==="wl"?"live":L.fund?"laufend":"Jahr"; }
+function sliderName(L){ return L.clock?"Uhrzeit":(L.subs.every(s=>s.pts)||L.special)?"Stand":L.id==="wl"?"live":L.fund?"laufend":"Jahr"; }
 function layerTree(){
-  return LAYERS.map(L=>{
+  const order=LGROUPS.flatMap(([name,col,ids])=>ids.map((id,i)=>[LAYERS.find(L=>L.id===id),i===0?[name,col]:null])).filter(x=>x[0]);
+  return order.map(([L,head])=>(head?`<div class="tg" style="color:color-mix(in srgb,${head[1]} 70%,var(--ink))">${esc(head[0])}</div>`:"")+(()=>{
     const subs=L.special?Object.entries(SIED_COL).map(([n,c])=>({label:n,dot:c})).concat([{label:"Römerstraßen und mittelalterliche Befestigung"},{label:"Lagerplan Vindobona mit Grabungsbefunden"}]):(L.subs||[]);
     const col=L.color||"var(--accent)";
     return `<div class="tl"><span class="sq" style="background:${col}"></span>${esc(L.label)} <small>· ${sliderName(L)}</small></div>`
       +subs.map((s,i)=>{ const c=s.dot||(L.id==="vote"&&s.id!=="all"?s.color:L.id==="brand"&&BRAND_COL[s.id.toUpperCase()]?BRAND_COL[s.id.toUpperCase()]:null); return `<div class="ts">${i===subs.length-1?"└─":"├─"} ${c?`<b style="background:${c}"></b>`:""}<span>${esc(s.label)}</span></div>`; }).join("");
-  }).join("");
+  })()).join("");
 }
 function renderInfo(){
   document.getElementById("info").innerHTML=`<a class="back" href="#">‹ Zurück zur Karte</a>
@@ -1126,7 +1136,7 @@ document.querySelectorAll(".themesw button").forEach(b=>b.addEventListener("clic
 document.getElementById("credit-foot").innerHTML=creditHtml();
 const pointers=new Map(); let drag=null, moved=false, tileTimer=null;
 function mapUnitsPerPx(){ const vb=svg.getAttribute("viewBox").split(" ").map(Number); return vb[2]/(svg.clientWidth||vb[2]); }
-function scheduleTiles(){ clearTimeout(tileTimer); tileTimer=setTimeout(()=>{ try{drawOrient(layer.points);drawTiles();if(!layer.special){drawBars(subOf(layer),yearOf(layer));drawWl(subOf(layer));}}catch(e){} },120); }
+function scheduleTiles(){ clearTimeout(tileTimer); tileTimer=setTimeout(()=>{ try{drawOrient(isPts(layer));drawTiles();if(!layer.special){drawBars(subOf(layer),yearOf(layer));drawWl(subOf(layer));}}catch(e){} },120); }
 svg.addEventListener("pointerdown",e=>{
   pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
   if(zoom.k>1||pointers.size===2){ drag={cx:zoom.cx,cy:zoom.cy,x:e.clientX,y:e.clientY,k:zoom.k,dist:null}; moved=false; }
@@ -1156,7 +1166,7 @@ svg.addEventListener("pointerup",endPointer); svg.addEventListener("pointercance
 window.addEventListener("click",e=>{ if(moved&&svg.contains(e.target)){ e.stopPropagation(); e.preventDefault(); moved=false; } },true);
 /* Antippen eines Punktes auf der Karte: nächster Punkt im Umkreis von ~14 Bildschirmpixeln */
 svg.addEventListener("click",e=>{
-  if(!layer.points||!PT) return;
+  if(!isPts(layer)||!PT) return;
   const s=subOf(layer), set=PT.points[s.pts]; if(!set) return;
   const m=svg.getScreenCTM&&svg.getScreenCTM(); if(!m) return;
   const inv=m.inverse(), q=(window.DOMPoint?new DOMPoint(e.clientX,e.clientY):Object.assign(svg.createSVGPoint(),{x:e.clientX,y:e.clientY})).matrixTransform(inv);
@@ -1166,10 +1176,22 @@ svg.addEventListener("click",e=>{
 },true);
 
 const lc=document.getElementById("layers");
-LAYERS.forEach(L=>{
-  const btn=document.createElement("button");btn.className="chip";btn.id="layer-"+L.id;btn.dataset.l=L.id;btn.textContent=L.label;
-  btn.addEventListener("click",()=>{layer=L;render();maybeLive();});
-  lc.appendChild(btn);
+const LGROUPS=[["Demografie","#c4161c",["pop","age","cob","bir","dea","edu"]],
+  ["Mobilität","#3d6f9e",["fp","wl","veh","brand"]],
+  ["Infrastruktur","#4f7d3a",["infra","waste"]],
+  ["Tiere","#8a5a2b",["dog","fund"]],
+  ["Politik & Geschichte","#7a3db8",["vote","antik"]]];
+const inGroup=new Set(LGROUPS.flatMap(g=>g[2]));
+LGROUPS.concat([["Weitere","#7f8c87",LAYERS.map(L=>L.id).filter(id=>!inGroup.has(id))]]).forEach(([name,col,ids])=>{
+  const Ls=ids.map(id=>LAYERS.find(L=>L.id===id)).filter(Boolean); if(!Ls.length) return;
+  const g=document.createElement("div"); g.className="lgroup"; g.style.setProperty("--gc",col); g.setAttribute("role","group"); g.setAttribute("aria-label",name);
+  g.innerHTML=`<span class="lgname">${name}</span><div class="chips"></div>`;
+  Ls.forEach(L=>{
+    const btn=document.createElement("button");btn.className="chip";btn.id="layer-"+L.id;btn.dataset.l=L.id;btn.textContent=L.label;
+    btn.addEventListener("click",()=>{layer=L;render();maybeLive();});
+    g.querySelector(".chips").appendChild(btn);
+  });
+  lc.appendChild(g);
 });
 /* Live-Abfrage: gleiche Regeln wie im Datenskript (nur gültige Meldungen, Bezirk über Haltestellen) */
 async function refreshLive(){
