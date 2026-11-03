@@ -35,6 +35,11 @@ for name in "${!FILES[@]}"; do
 done
 
 # Häufigste Staatsangehörigkeiten je Bezirk (HTML-Tabelle der Stadt Wien, keine Prüfung auf HTML)
+# Gemeinderatswahlen 2005–2020 je Wahlsprengel (MA 62)
+mkdir -p wahl
+for y in 051 101 151 201; do
+  [ -s wahl/gr$y.csv ] || curl -fsS --retry 3 -m 60 -o wahl/gr$y.csv "https://www.wien.gv.at/data/ogd/ma62/gr${y}_99999999_9999_spr.csv" || echo "Warnung: Wahl $y nicht geladen"
+done
 curl -fsS --retry 3 -m 60 -o nat_top5.html "https://www.wien.gv.at/spezial/migration-integration-jugendliche/anhang/top-5-bevolkerungsgruppen-nach-staatsangehorigkeit-in-den-wiener-gemeindebezirken-in-absoluten-zahlen-und-in-percent-der-gesamtbevolkerung-des-bezirks/" || echo "Warnung: Staatsangehörigkeits-Tabelle nicht geladen"
 
 # Römisches Legionslager Vindobona (Geodaten, WFS als GeoJSON)

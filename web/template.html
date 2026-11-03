@@ -97,6 +97,13 @@ svg.map > path{vector-effect:non-scaling-stroke}
 svg.map text.stat{font-family:var(--body);font-weight:500;fill:var(--ink);paint-order:stroke;stroke:var(--surface)}
 svg.map .orient{pointer-events:none}
 svg.map .ovl{pointer-events:none}
+svg.map .bars,svg.map .barlab{pointer-events:none}
+svg.map .barlab text{font-family:var(--mono);font-weight:600;fill:#fff;paint-order:stroke;stroke:rgba(0,0,0,.6);text-anchor:start}
+svg.map.barmode > path{stroke:var(--surface);stroke-width:1.4px}
+.ticks.blg{display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:flex-start}
+.ticks .lg{display:inline-flex;align-items:center;gap:5px;font:12px var(--body);color:var(--ink)}
+.ticks .lg b{width:11px;height:11px;border-radius:2px}
+.ticks .lg img{width:16px;height:12px;border-radius:1px;outline:1px solid var(--line)}
 svg.map .ovl path{cursor:pointer}
 .hlp{stroke:var(--ink)!important;stroke-width:3!important;fill-opacity:.9!important}
 svg.vin .hlp{stroke-width:2.5!important}
@@ -259,7 +266,14 @@ const VOTE = {
   "Grüne":[14.5,12.1,21.2,17.8,21.1,22.4,24.5,27.6,22.4,21.8,7.9,5.9,13.8,13.9,15.4,21.1,18.0,20.2,21.9,11.8,14.1,7.5,9.5,9.7],
   "NEOS":[10.0,16.6,9.7,12.2,14.3,9.7,11.7,12.5,14.0,13.7,6.2,5.5,8.5,16.0,10.7,7.2,8.3,11.6,15.0,15.0,6.8,6.9,8.2,10.1]
 };
-const PARTY_COL = {"SPÖ":"#d0021b","FPÖ":"#1f5fbf","ÖVP":"#1a9a9a","Grüne":"#4f9a1f","NEOS":"#d6247f"};
+const PARTY_COL = {"SPÖ":"#d0021b","FPÖ":"#1f5fbf","ÖVP":"#1a9a9a","Grüne":"#4f9a1f","NEOS":"#d6247f","Sonstige":"#9aa3a7"};
+/* Gemeinderatswahlen: 2005–2020 amtliche Endergebnisse (MA 62, je Wahlsprengel summiert), 2025 wie oben */
+const VOTE_DATE = {2005:"23.10.2005",2010:"10.10.2010",2015:"11.10.2015",2020:"11.10.2020",2025:"27.4.2025"};
+const VOTES = (()=>{ const o={}, V=DATA.votes||{};
+  ["SPÖ","FPÖ","ÖVP","Grüne","NEOS","Sonstige"].forEach(p=>{ o[p]={};
+    Object.entries(V[p]||{}).forEach(([y,a])=>{ if(a.every(v=>v!=null)) o[p][y]=a; });
+    o[p][2025]= p==="Sonstige" ? VOTE["SPÖ"].map((_,b)=>Math.round(10*(100-["SPÖ","FPÖ","ÖVP","Grüne","NEOS"].reduce((s,q)=>s+VOTE[q][b],0)))/10) : VOTE[p]; });
+  return o; })();
 /* Hundeattacken: nur Wien gesamt, Bissstatistik MA 58 */
 const DOG_ATT = {2022:{all:93,human:74,any:88},2023:{all:105,human:76,any:102}};
 
@@ -277,8 +291,17 @@ const fcount = k => { const a=Array(24).fill(0); F.items.forEach(i=>{ if(!k||i.k
 const WL = DATA.wl || {items:[],fetched:""};
 /* Live-Störungen: Adresse des Cloudflare Workers eintragen (siehe live/README.md). Leer = Momentaufnahme vom Datenlauf. */
 const LIVE_URL = "https://wien-stoerungen.cpuhl51.workers.dev/";
-const wcount = k => { const a=Array(24).fill(0); WL.items.forEach(i=>{ if(!k||i.k===k){ a[0]++; i.b.forEach(b=>a[b]++); } }); return {[FY]:a}; };
+const wcount = k => { const f=typeof k==="function"?k:(i=>!k||i.k===k); const a=Array(24).fill(0); WL.items.forEach(i=>{ if(f(i)){ a[0]++; i.b.forEach(b=>a[b]++); } }); return {[FY]:a}; };
 const WL_KIND = {kurz:"Störung",lang:"Länger dauernd",aufzug:"Aufzug"};
+/* Ursache aus dem Meldungstext (die Wiener Linien liefern nur die Arten kurz/lang/Aufzug; die Ursache steht im Text) */
+const WL_CAUSE = [["bau","Bauarbeiten",/bau(arbeit|stelle)|gleisbau|gleisarbeit|umbau|sanierung/i],
+  ["einsatz","Polizei/Rettung/Feuerwehr",/polizei|rettung|feuerwehr|einsatz|erkrank|notfall|verletz/i],
+  ["unfall","Unfall",/unfall|kollision|zusammensto/i],
+  ["technik","Technische Störung",/schadhaft|technisch|gebrechen|weiche|signal|strom|fahrleitung|oberleitung|panne|defekt/i],
+  ["verkehr","Verkehrsbehinderung",/falschpark|parkend|verkehrsbehinder|stau|verkehrsüberlast|verkehrsaufkommen|hindernis|blockier/i],
+  ["veranst","Veranstaltung/Demo",/demonstr|veranstalt|kundgebung|marathon|umzug|parade|\blauf\b/i]];
+const causeOf = i => { if(i.k==="aufzug") return "aufzug"; const s=i.t+" "+i.d; const c=WL_CAUSE.find(([,,r])=>r.test(s)); return c?c[0]:"sonst"; };
+const causeLabel = i => { const c=causeOf(i); return c==="aufzug"?"Aufzug":c==="sonst"?"Sonstiges":WL_CAUSE.find(x=>x[0]===c)[1]; };
 
 /* Fahrplan-Zählung: Fahrten laut Plan je 10 Minuten, Tag = heute (Wiener Zeit), sonst erster verfügbarer Tag */
 const FP = DATA.fahrten;
@@ -289,11 +312,22 @@ const fslots = typ => { const o={}; if(!FP) return {0:Array(24).fill(0)}; const 
 /* Fahrten je 1.000 Einwohner (Bevölkerungsstand des letzten verfügbaren Jahres) */
 const POP_LAST = (()=>{ const ys=Object.keys(S.pop).sort(); return {y:ys[ys.length-1], a:S.pop[ys[ys.length-1]]}; })();
 const perK = o => Object.fromEntries(Object.entries(o).map(([k,a])=>[k,a.map((v,b)=>POP_LAST.a[b]?Math.round(1e5*v/POP_LAST.a[b])/100:0)]));
+const perVeh = o => Object.fromEntries(Object.entries(o).map(([k,a])=>[k,a.map((v,b)=>v>0?Math.round(POP_LAST.a[b]/v):null)]));
+/* Farbskala nur über den Tag (6–22 Uhr): nachts fahren kaum Fahrzeuge, die Werte würden die Skala sprengen */
+const dayRange = o => { const step=FP?FP.step:10; let lo=Infinity,hi=-Infinity; Object.entries(o).forEach(([k,a])=>{ const m=+k*step; if(m<360||m>=1320) return; for(let b=1;b<=23;b++){ if(a[b]==null) continue; lo=Math.min(lo,a[b]); hi=Math.max(hi,a[b]); } }); return isFinite(lo)?[lo,hi]:[0,1]; };
+const fmtNull = n => n==null||!isFinite(n) ? "–" : fmtInt(n);
 const fmt2 = n => n.toLocaleString("de-AT",{minimumFractionDigits:2,maximumFractionDigits:2});
 const hhmm = i => { const m=i*(FP?FP.step:10); return `${String(Math.floor(m/60)).padStart(2,"0")}:${String(m%60).padStart(2,"0")}`; };
 
 /* Automarken und häufigste Staatsangehörigkeiten */
 const BR = DATA.brands, NT = DATA.nat_top;
+const BRAND_COL = {VW:"#2b6cb0",BMW:"#5aa0d8",MERCEDES:"#6b7a86",AUDI:"#b8202f",SKODA:"#3f9b4f",FORD:"#7b5ea7",OPEL:"#c9a300",TOYOTA:"#e8590c",RENAULT:"#f2c230",HYUNDAI:"#00897b"};
+/* Staatsangehörigkeit → Flagge (flag-icons, MIT) */
+const FLAG = {"Deutschland":"de","Italien":"it","Kroatien":"hr","Polen":"pl","Rumänien":"ro","Russische Föderation":"ru","Serbien":"rs","Syrien - Arabische Republik":"sy","Türkei":"tr","Ukraine":"ua","Ungarn":"hu","Bosnien und Herzegowina":"ba","Bulgarien":"bg","Afghanistan":"af","Slowakei":"sk","Schweiz":"ch","Tschechien":"cz","Slowenien":"si","Nordmazedonien":"mk","Kosovo":"xk","Albanien":"al","Iran":"ir","Irak":"iq","Indien":"in","China":"cn","Ägypten":"eg","Nigeria":"ng","Philippinen":"ph"};
+const natShort = n => n.replace(" - Arabische Republik","").replace("Russische Föderation","Russland").replace("Bosnien und Herzegowina","Bosnien");
+const NAT_COL = {"Deutschland":"#6b5b95","Serbien":"#b0476d","Syrien - Arabische Republik":"#2f8f6f","Ukraine":"#d4a017","Türkei":"#c0392b","Russische Föderation":"#3d6f9e","Ungarn":"#7a9a3a","Polen":"#d17a00","Rumänien":"#8a5a2b","Kroatien":"#2b7a78","Italien":"#5b8c5a"};
+const pctNum = s => parseFloat(String(s).replace(",",".").replace(/[^\d.]/g,""));
+const natTop3 = b => (NT&&NT[b]?NT[b]:[]).filter(r=>r[0]!=="Österreich").slice(0,3);
 const brandName = k => ({VW:"VW",BMW:"BMW",MERCEDES:"Mercedes",SKODA:"Škoda",AUDI:"Audi",FORD:"Ford",OPEL:"Opel",TOYOTA:"Toyota",RENAULT:"Renault",HYUNDAI:"Hyundai",SEAT:"Seat",MAZDA:"Mazda",PEUGEOT:"Peugeot",KIA:"Kia",FIAT:"Fiat",CITROEN:"Citroën",TESLA:"Tesla",VOLVO:"Volvo",NISSAN:"Nissan",DACIA:"Dacia",SUZUKI:"Suzuki",HONDA:"Honda",MINI:"Mini",PORSCHE:"Porsche"}[k] || k.charAt(0)+k.slice(1).toLowerCase());
 function rankList(title,rows,note){
   if(!rows||!rows.length) return "";
@@ -377,7 +411,7 @@ const SRC = {
   veh:"Stadt Wien – Zugelassene Kraftfahrzeuge seit 2002, Bezirke (Datensatz aktualisiert 20.11.2025)",
   fund:"Stadt Wien – Fundtiere Wien, RSS-Feed des Veterinäramts (MA 60), laufend aktualisiert",
   nat:"Stadt Wien – Bevölkerung nach Nationalität bzw. nach Geburtsland, 5-Jahres-Altersgruppen und Geschlecht seit 2002, Bezirke (Datensätze aktualisiert 16.12.2025)",
-  vote:"vienna.at – Bezirksergebnisse und amtliches Endergebnis Wien-Wahl 2025"
+  vote:"Stadt Wien (MA 62) – Gemeinderatswahlen 2005–2020 je Wahlsprengel, amtliche Endergebnisse inkl. Wahlkarten (Open Data CC BY 4.0); 2025: vienna.at – Bezirksergebnisse und amtliches Endergebnis"
 };
 const PCT = {fmt:fmt1,unit:" %",max:100};
 const perHundred = o => Object.fromEntries(Object.entries(o).map(([y,a])=>[y,a.map(v=>Math.round(v*10)/100)]));
@@ -403,7 +437,11 @@ const LAYERS = [
          {id:"notaut",label:"Staatsbürgerschaft: nicht AT",data:S.nat4_notaut,...PCT,note:"Anteil der Menschen ohne österreichische Staatsbürgerschaft – egal wo sie geboren sind (auch in Wien geborene Kinder ausländischer Eltern zählen dazu). Die drei Knöpfe darunter teilen diesen Anteil nach Staatsbürgerschaft auf."},
          {id:"eea",label:"EU/EWR/Schweiz/GB",data:S.nat4_eea,...PCT,note:"Staatsbürger aus EU, EWR, Schweiz und Großbritannien."},
          {id:"reu",label:"Übriges Europa",data:S.nat4_reu,...PCT,note:"Staatsbürger aus dem übrigen Europa inkl. Russland und Türkei."},
-         {id:"tcn",label:"Drittstaaten",data:S.nat4_tcn,...PCT,note:"Staatsbürger aller übrigen Staaten."}],
+         {id:"tcn",label:"Drittstaaten",data:S.nat4_tcn,...PCT,note:"Staatsbürger aller übrigen Staaten."},
+              ...(NT?[{id:"top3",label:"Top 3 Staaten",color:"#b0476d",fmt:fmt1,unit:" %",norm:true,
+                data:{2025:[...Array(24)].map((_,b)=>natTop3(b).length?pctNum(natTop3(b)[0][2]):0)},
+                bars:(b)=>natTop3(b).map((r,i)=>({l:natShort(r[0]),v:pctNum(r[2]),c:NAT_COL[r[0]]||"#9aa3a7",img:FLAG[r[0]]?`flags/${FLAG[r[0]]}.svg`:null})),
+                note:"Die drei häufigsten Staatsangehörigkeiten nach Österreich, oben die häufigste, mit Landesflagge. Die drei Streifen füllen den Bezirk gemeinsam aus, die Zahlen zeigen den echten Anteil an der Bevölkerung. Stand 1.1.2025 – für andere Jahre veröffentlicht die Stadt diese Liste nicht. Rangliste = Anteil der häufigsten."}]:[])],
    note:"Unten im Bezirk: Zusammensetzung nach Staatsbürgerschaft und nach Geburtsland sowie die häufigsten Staatsangehörigkeiten."},
   {id:"bir",label:"Geburten",color:"#2b7a78",src:SRC.bir,stand:y=>`Lebendgeburten im Kalenderjahr ${y}, nach Wohnsitz der Mutter`,
    subs:[{id:"rel",label:"pro 1.000 Einw.",data:S.bir_rel,fmt:fmt1,unit:" ‰"},
@@ -426,7 +464,11 @@ const LAYERS = [
          {id:"bik",label:"Motorräder je 100 Einw.",data:perHundred(S.bik_rel),fmt:fmt1,unit:" %",note:"5,0 % heißt: 5 Motorräder je 100 Einwohner."}],
    note:"Pkw inkl. Taxis; Motorräder = Krafträder. Die sehr hohen Werte der Inneren Stadt kommen vermutlich daher, dass Firmenautos am Firmensitz zugelassen sind."},
   ...(BR?[{id:"brand",label:"Automarken",color:"#2f6f8f",src:SRC.brand,stand:y=>`Pkw-Bestand am 31.12.${y}`,
-   subs:BR.top.slice(0,8).map(k=>({id:k.toLowerCase(),label:brandName(k),data:BR.share[k],fmt:fmt1,unit:" %"})),
+   subs:[{id:"top3",label:"Top 3",color:"#2f6f8f",fmt:fmt1,unit:" %",norm:true,
+           data:Object.fromEntries(Object.keys(BR.share[BR.top[0]]).map(y=>[y,BR.share[BR.top[0]][y].map((_,b)=>Math.max(...BR.top.filter(k=>BR.share[k][y]).map(k=>BR.share[k][y][b])))])),
+           bars:(b,y)=>BR.top.filter(k=>BR.share[k][y]).map(k=>({l:brandName(k),v:BR.share[k][y][b],c:BRAND_COL[k]||"#7f8c87"})).sort((a,c)=>c.v-a.v).slice(0,3),
+           note:"Die drei häufigsten Marken im Bezirk, oben die häufigste. Die drei Streifen füllen den Bezirk gemeinsam aus, die Zahlen zeigen den echten Anteil am Pkw-Bestand. Rangliste = Anteil der häufigsten Marke."},
+         ...BR.top.slice(0,8).map(k=>({id:k.toLowerCase(),label:brandName(k),data:BR.share[k],fmt:fmt1,unit:" %"}))],
    note:"Anteil der Marke an allen Pkw im Bezirk. Wien gesamt = Summe der 23 Bezirke (Fahrzeuge ohne Bezirkszuordnung sind nicht enthalten)."}]:[]),
   {id:"dog",label:"Hunde",color:"#8a5a2b",src:SRC.dog,stand:y=>`Gemeldete Hunde am ${dmy(per("dog",y))}`,
    subs:[{id:"rel",label:"pro 1.000 Einw.",data:S.dog_rel,fmt:fmt1,unit:" ‰"},
@@ -444,14 +486,18 @@ const LAYERS = [
          {id:"u",label:"U-Bahn",data:fslots("1"),fmt:fmtInt,unit:""},
          {id:"tram",label:"Straßenbahn",data:fslots("0"),fmt:fmtInt,unit:""},
          {id:"bus",label:"Bus",data:fslots("3"),fmt:fmtInt,unit:""},
-         {id:"rel",label:"pro 1.000 Einw.",data:perK(fslots()),fmt:fmt2,unit:" ‰",
-          note:`Fahrzeuge unterwegs je 1.000 Einwohner (Einwohner am 1.1.${POP_LAST.y}). Bezirke mit wenig Bewohnern, aber vielen Durchfahrten wie die Innere Stadt liegen dadurch weit vorne.`}],
+         {id:"rel",label:"Fzge/1000 Einw.",data:perK(fslots()),fmt:fmt2,unit:" ‰",
+          note:`Fahrzeuge unterwegs je 1.000 Einwohner (Einwohner am 1.1.${POP_LAST.y}). Bezirke mit wenig Bewohnern, aber vielen Durchfahrten wie die Innere Stadt liegen dadurch weit vorne.`},
+         {id:"ppv",label:"Einw./Fzg.",data:perVeh(fslots()),fmt:fmtNull,unit:"",range:dayRange(perVeh(fslots())),
+          note:`Theoretischer Wert: alle Einwohner des Bezirks (1.1.${POP_LAST.y}) gleichmäßig auf alle Fahrzeuge verteilt, die gerade im Bezirk unterwegs sind. Weniger = mehr Öffis je Bewohner. „–“ = gerade kein Fahrzeug im Bezirk. Kartenfarben: Spannweite der Bezirke von 6 bis 22 Uhr (nachts fahren so wenige Fahrzeuge, dass die Werte die Skala sprengen würden).`}],
    note:"Fahrten, die laut Plan gerade unterwegs sind oder an einer Haltestelle stehen. Zwischen zwei Haltestellen wird die Position geschätzt. Wien gesamt enthält auch Fahrten knapp außerhalb der Stadtgrenze."},
   {id:"wl",label:"Öffi-Störungen",color:"#c4161c",src:SRC.wl,live:true,
    stand:()=>`Momentaufnahme vom ${WL.fetched.replace(/^(\d{4})-(\d\d)-(\d\d) /,(m,y,mo,d)=>`${+d}.${+mo}.${y}, `)} Uhr · nur gerade gültige Meldungen`,
-   subs:[{id:"all",label:"Alle",data:wcount(),fmt:fmtInt,unit:""},
-         {id:"kurz",label:"Störungen",data:wcount("kurz"),fmt:fmtInt,unit:""},
-         {id:"aufzug",label:"Aufzüge",data:wcount("aufzug"),fmt:fmtInt,unit:""}],
+   subs:[{id:"all",label:"Alle",calc:()=>wcount(),fmt:fmtInt,unit:""},
+         {id:"fb",label:"Fahrbetrieb",calc:()=>wcount(i=>i.k!=="aufzug"),fmt:fmtInt,unit:"",note:"Alle Meldungen zum Fahrbetrieb (kurze und länger dauernde Störungen), ohne Aufzüge."},
+         ...WL_CAUSE.concat([["sonst","Sonstiges"]]).map(([id,label])=>({id,label,calc:()=>wcount(i=>causeOf(i)===id),fmt:fmtInt,unit:"",
+           note:"Ursache aus dem Meldungstext abgeleitet (Stichwörter wie „Polizeieinsatz“, „Schadhaftes Fahrzeug“, „Gleisbauarbeiten“). Vermutung: Einzelne Meldungen können falsch eingeordnet sein, weil die Wiener Linien die Ursache nicht als eigenes Feld liefern."})),
+         {id:"aufzug",label:"Aufzüge",calc:()=>wcount("aufzug"),fmt:fmtInt,unit:""}].map(s=>(s.data=s.calc(),s)),
    note:"Bezirk = Bezirk der betroffenen Haltestellen; eine Meldung kann mehrere Bezirke betreffen. Länger dauernde Störungen nennen nur Linien, keine Haltestellen, und zählen daher nur bei Wien gesamt."},
   {id:"waste",label:"Müll",color:"#4f7d3a",src:SRC.pts,points:true,live:true,stand:()=>`Standorte laut Stadt Wien, abgerufen ${ABRUF}`,
    subs:POINT_SETS.waste.map(ptSub),note:"Anzahl je Bezirk, jeder Punkt auf der Karte ist ein Standort."},
@@ -459,11 +505,16 @@ const LAYERS = [
    subs:POINT_SETS.infra.map(ptSub),note:"Anzahl je Bezirk, jeder Punkt auf der Karte ist ein Standort."},
   {id:"antik",label:"Römisches Wien",special:true,color:"#8a5a2b",src:SRC.antik,stand:()=>"Rekonstruktion der Stadtarchäologie Wien nach Grabungen und Funden",
    subs:[{id:"x",label:"Antike",data:{0:Array(24).fill(0)},fmt:fmtInt,unit:""}],note:""},
-  {id:"vote",label:"Wien-Wahl",src:SRC.vote,stand:()=>"Wahl vom 27.4.2025 · Bezirke: vorläufiges Ergebnis inkl. Großteil der Wahlkarten · Wien gesamt: amtliches Endergebnis vom 8.5.2025",
-   subs:Object.keys(VOTE).map(p=>({id:p,label:p,color:PARTY_COL[p],data:{2025:VOTE[p]},...PCT})),
+  {id:"vote",label:"Wien-Wahl",color:"#d0021b",src:SRC.vote,stack:["vote"],
+   stand:y=>+y===2025?"Wahl vom 27.4.2025 · Bezirke: vorläufiges Ergebnis inkl. Großteil der Wahlkarten · Wien gesamt: amtliches Endergebnis vom 8.5.2025":`Gemeinderatswahl vom ${VOTE_DATE[y]} · amtliches Endergebnis inkl. Wahlkarten`,
+   subs:[{id:"all",label:"Alle Parteien",color:"#d0021b",...PCT,data:Object.fromEntries(Object.keys(VOTES["SPÖ"]).map(y=>[y,VOTES["SPÖ"][y].map((_,b)=>Math.max(...Object.keys(VOTES).filter(p=>p!=="Sonstige"&&VOTES[p][y]).map(p=>VOTES[p][y][b])))])),
+          bars:(b,y)=>Object.keys(VOTES).filter(p=>VOTES[p][y]).map(p=>({l:p,v:VOTES[p][y][b],c:PARTY_COL[p]})).sort((a,c)=>(a.l==="Sonstige")-(c.l==="Sonstige")||c.v-a.v),
+          note:"Jeder Bezirk ist ein Säulendiagramm: oben die stärkste Partei, darunter die nächsten, ganz unten Sonstige. Rangliste = Anteil der stärksten Partei. NEOS traten erst 2015 an."},
+         ...["SPÖ","FPÖ","ÖVP","Grüne","NEOS"].map(p=>({id:p,label:p,color:PARTY_COL[p],data:VOTES[p],...PCT}))],
    note:"Gemeinderat, Stimmenanteil der gewählten Partei."}
 ];
 const STACKS = {
+  vote:{title:"Stimmenanteile",parts:Object.keys(VOTES).map(p=>[p,Object.fromEntries(Object.keys(VOTES["SPÖ"]).map(y=>[y,VOTES[p][y]||Array(24).fill(0)])),PARTY_COL[p]])},
   cob:{title:"Geburtsland",parts:[["Österreich",S.cob4_aut,"#b5651d"],["EU/EWR/CH/GB",S.cob4_eea,"#e3a15e"],["Übriges Europa",S.cob4_reu,"#8c4a17"],["Drittstaaten",S.cob4_tcn,"#4e2a0c"]]},
   nat:{title:"Nationalität",parts:[["Österreich",S.nat4_aut,"#b0476d"],["EU/EWR/CH/GB",S.nat4_eea,"#e08aaa"],["Übriges Europa",S.nat4_reu,"#86304f"],["Drittstaaten",S.nat4_tcn,"#521c30"]]},
   sex:{title:"Frauen und Männer",parts:[["Frauen",S.pop_f,"#c4161c"],["Männer",S.pop_m,"#6e7d7a"]]},
@@ -489,7 +540,7 @@ const px=([x,y])=>[((x*K)-minX)*SC,(maxY-y)*SC];
 const svg=document.getElementById("map");
 svg.setAttribute("viewBox",`-4 -4 ${W+8} ${H+8}`);
 const NS="http://www.w3.org/2000/svg";
-const paths={}, labels=[];
+const paths={}, labels=[], RINGS={};
 GEO.features.forEach(f=>{
   const b=f.properties.b, P=f.geometry.type==="MultiPolygon"?f.geometry.coordinates:[f.geometry.coordinates];
   let d="", cx=0, cy=0, n=0, best=0;
@@ -505,6 +556,7 @@ GEO.features.forEach(f=>{
   p.addEventListener("click",()=>select(b));
   p.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();select(b);}});
   svg.appendChild(p);paths[b]=p;labels.push([b,cx/n,cy/n]);
+  RINGS[b]=P.flatMap(poly=>poly.map(r=>r.map(px)));
 });
 const labelEls={};
 labels.forEach(([b,x,y])=>{const t=document.createElementNS(NS,"text");t.setAttribute("x",x);t.setAttribute("y",y+4);t.setAttribute("text-anchor","middle");
@@ -522,6 +574,48 @@ function mapFmt(v,s){
 const esc=s=>String(s==null?"":s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");
 /* Stadtplan als Grundkarte (basemap.at, Kacheln in Web-Mercator, jede Kachel über ihre Eckpunkte eingepasst) */
 const tilesG=document.createElementNS(NS,"g"); tilesG.setAttribute("class","tiles"); svg.insertBefore(tilesG, svg.firstChild);
+/* Säulendiagramm in Bezirksform: Streifen unter den (dann durchsichtigen) Bezirksflächen, Beschriftung ganz oben */
+const barsG=document.createElementNS(NS,"g"); barsG.setAttribute("class","bars"); svg.insertBefore(barsG, tilesG.nextSibling);
+const barDefs=document.createElementNS(NS,"defs"); svg.insertBefore(barDefs, barsG);
+const barLab=document.createElementNS(NS,"g"); barLab.setAttribute("class","barlab"); svg.appendChild(barLab);
+function bbOf(b){ let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9; RINGS[b].forEach(r=>r.forEach(([x,y])=>{x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y);})); return {x0,y0,x1,y1}; }
+const BB={}; for(let b=1;b<=23;b++) BB[b]=bbOf(b);
+/* breitestes Stück des Bezirks auf Höhe y (für die Beschriftung) */
+function spanAt(b,y){ const xs=[]; RINGS[b].forEach(r=>{ for(let i=0;i<r.length-1;i++){ const [ax,ay]=r[i],[bx,by]=r[i+1]; if((ay>y)!==(by>y)) xs.push(ax+(y-ay)*(bx-ax)/(by-ay)); } });
+  xs.sort((a,c)=>a-c); let best=null; for(let i=0;i+1<xs.length;i+=2){ const w=xs[i+1]-xs[i]; if(!best||w>best[1]) best=[(xs[i]+xs[i+1])/2,w]; } return best; }
+function barLegend(s,y){
+  const seen=new Map(); for(let b=0;b<=23;b++) (s.bars(b,y)||[]).forEach(p=>{ if(!seen.has(p.l)) seen.set(p.l,p); });
+  return [...seen.values()].map(p=>`<span class="lg"><b style="background:${p.c}"></b>${p.img?`<img src="${p.img}" alt="">`:""}${esc(p.l)}</span>`).join("");
+}
+function drawBars(s,y){
+  if(!s.bars){ barsG.innerHTML=""; barLab.innerHTML=""; barDefs.innerHTML=""; svg.classList.remove("barmode"); return; }
+  svg.classList.add("barmode");
+  const zk=Math.max(1,zoom.k*0.75), fs=10.5/zk;
+  let defs="", g="", lab="";
+  for(let b=1;b<=23;b++){
+    const parts=(s.bars(b,y)||[]).filter(p=>p.v>0); if(!parts.length) continue;
+    const {y0,y1}=BB[b], H_=y1-y0, sum=s.norm?parts.reduce((a,p)=>a+p.v,0):Math.max(100,parts.reduce((a,p)=>a+p.v,0));
+    defs+=`<clipPath id="cb${b}"><path d="${paths[b].getAttribute("d")}" clip-rule="evenodd"></path></clipPath>`;
+    let yy=y0; g+=`<g clip-path="url(#cb${b})">`;
+    parts.forEach(p=>{
+      const h=H_*p.v/sum;
+      g+=`<rect x="${BB[b].x0-1}" y="${yy.toFixed(2)}" width="${(BB[b].x1-BB[b].x0+2).toFixed(2)}" height="${(h+.05).toFixed(2)}" style="fill:${p.c}"></rect>`;
+      const cy=yy+h/2, sp=spanAt(b,cy);
+      if(sp&&h>=fs*1.15){
+        const pct=fmt1(p.v).replace(/,0$/,"")+"%", flagW=p.img?fs*1.35:0, gap=p.img?fs*.3:0;
+        const opts=[`${p.l} ${pct}`,pct], cw=fs*.62;
+        const txt=opts.find(o=>o.length*cw+flagW+gap<=sp[1]*.92);
+        if(txt){ const w=txt.length*cw+flagW+gap, x0=sp[0]-w/2;
+          if(p.img) lab+=`<rect x="${x0.toFixed(2)}" y="${(cy-fs*.5).toFixed(2)}" width="${flagW.toFixed(2)}" height="${fs.toFixed(2)}" style="fill:none;stroke:rgba(0,0,0,.45);stroke-width:${(fs*.08).toFixed(2)}px"></rect>`;
+          if(p.img) lab+=`<image href="${p.img}" x="${x0.toFixed(2)}" y="${(cy-fs*.5).toFixed(2)}" width="${flagW.toFixed(2)}" height="${fs.toFixed(2)}" preserveAspectRatio="none"></image>`;
+          lab+=`<text x="${(x0+flagW+gap).toFixed(2)}" y="${(cy+fs*.36).toFixed(2)}" style="font-size:${fs.toFixed(2)}px;stroke-width:${(fs*.28).toFixed(2)}px">${esc(txt)}</text>`; }
+      }
+      yy+=h;
+    });
+    g+=`</g>`;
+  }
+  barDefs.innerHTML=defs; barsG.innerHTML=g; barLab.innerHTML=lab;
+}
 let baseOn=null, baseOpacity=0.6;
 const unpx=(X,Y)=>[((X/SC)+minX)/K, maxY-(Y/SC)];
 const lon2x=(lon,z)=>(lon+180)/360*2**z, lat2y=(lat,z)=>(1-Math.log(Math.tan(lat*Math.PI/180)+1/Math.cos(lat*Math.PI/180))/Math.PI)/2*2**z;
@@ -635,7 +729,7 @@ const hex=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
 const base=()=>getComputedStyle(document.documentElement).getPropertyValue("--nodata").trim()||"#e4e8e6";
 const mix=(a,b,t)=>{const A=hex(a),B=hex(b);return "rgb("+A.map((v,i)=>Math.round(v+(B[i]-v)*t)).join(",")+")";};
 /* Kartenfarben: Spannweite der Bezirke über alle Jahre (ohne Wien gesamt) */
-function scaleOf(s){ let lo=Infinity,hi=-Infinity; Object.values(s.data).forEach(a=>{for(let b=1;b<=23;b++){lo=Math.min(lo,a[b]);hi=Math.max(hi,a[b]);}}); return [lo,hi]; }
+function scaleOf(s){ if(s.range) return s.range; let lo=Infinity,hi=-Infinity; Object.values(s.data).forEach(a=>{for(let b=1;b<=23;b++){ if(a[b]==null) continue; lo=Math.min(lo,a[b]);hi=Math.max(hi,a[b]);}}); return [lo,hi]; }
 
 function renderControls(){
   document.querySelectorAll("#layers .chip").forEach(c=>c.setAttribute("aria-pressed",c.dataset.l===layer.id));
@@ -724,23 +818,26 @@ function render2(){
   document.querySelector(".yearbar").hidden=false; document.querySelector(".rank").hidden=false;
   renderControls();
   const s=subOf(layer), y=yearOf(layer), arr=s.data[y], [lo,hi]=scaleOf(s), bg=base(), c=colOf(layer);
-  const t=v=>.12+.88*((v-lo)/(hi-lo||1));
+  const t=v=>.12+.88*Math.max(0,Math.min(1,(v-lo)/(hi-lo||1)));
   drawOrient(layer.points);
   if(layer.points){ if(!PT){ loadPoints().then(()=>render()).catch(()=>{document.getElementById("layernote").textContent="Standorte konnten nicht geladen werden (nur auf der veröffentlichten Seite verfügbar).";}); } else drawPoints(s.pts,s.dot||c); }
   else overlay.innerHTML="";
-  mapThousand=s.unit===""&&Math.max(...arr.slice(1))>=1e4;
-  for(let b=1;b<=23;b++){paths[b].setAttribute("fill",mix(bg,c,t(arr[b])));paths[b].classList.toggle("sel",b===sel);
-    labelEls[b].textContent=mapFmt(arr[b],s);}
-  document.getElementById("ramp").style.background=`linear-gradient(90deg,${mix(bg,c,.12)},${c})`;
-  document.getElementById("ticks").innerHTML=[lo,(lo+hi)/2,hi].map(v=>`<span>${s.fmt(v)}${s.unit}</span>`).join("");
+  mapThousand=s.unit===""&&Math.max(...arr.slice(1).filter(v=>v!=null))>=1e4;
+  for(let b=1;b<=23;b++){paths[b].setAttribute("fill",s.bars?"transparent":arr[b]==null?bg:mix(bg,c,t(arr[b])));paths[b].classList.toggle("sel",b===sel);
+    labelEls[b].textContent=s.bars?"":arr[b]==null?"–":mapFmt(arr[b],s);}
+  drawBars(s,y);
+  document.getElementById("ramp").style.background=s.bars?"none":`linear-gradient(90deg,${mix(bg,c,.12)},${c})`;
+  document.getElementById("ramp").style.height=s.bars?"0":"";
+  document.getElementById("ticks").innerHTML=s.bars?barLegend(s,y):[lo,(lo+hi)/2,hi].map(v=>`<span>${s.fmt(v)}${s.unit}</span>`).join("");
+  document.getElementById("ticks").classList.toggle("blg",!!s.bars);
   const dotNote=layer.points?`● = ein Standort (${s.label}). Bezirksfarbe und Zahl = Anzahl im Bezirk. `:"";
-  document.getElementById("layernote").textContent=dotNote+(mapThousand?"Zahlen auf der Karte in Tausend. ":"")+(s.unit.trim()==="J."?"Zahlen auf der Karte in Jahren. ":"")+[layer.note,s.note].filter(Boolean).join(" ")+(yearsOf(s).length>1?(layer.clock?" Kartenfarben: Spannweite der Bezirke über den ganzen Tag.":" Kartenfarben: Spannweite der Bezirke über alle Jahre."):"");
+  document.getElementById("layernote").textContent=dotNote+(mapThousand?"Zahlen auf der Karte in Tausend. ":"")+(s.unit.trim()==="J."?"Zahlen auf der Karte in Jahren. ":"")+[layer.note,s.note].filter(Boolean).join(" ")+(!s.bars&&!s.range&&yearsOf(s).length>1?(layer.clock?" Kartenfarben: Spannweite der Bezirke über den ganzen Tag.":" Kartenfarben: Spannweite der Bezirke über alle Jahre."):"");
   const title=layer.subs.length>1&&s.label!==layer.label?`${layer.label} · ${s.label}`:layer.label;
   document.getElementById("ranktitle").textContent=`Rangliste · ${title} · ${layer.clock?hhmm(y)+" Uhr":(layer.fund||layer.live)?"aktuell":y}`;
-  const order=[...Array(23)].map((_,i)=>i+1).sort((a,b)=>arr[b]-arr[a]);
+  const order=[...Array(23)].map((_,i)=>i+1).sort((a,b)=>(arr[b]??-1)-(arr[a]??-1));
   const top=s.max||Math.max(hi,arr[0]);
-  const row=(b,ref)=>{const v=arr[b],w=Math.max(2,(v/top)*100);
-    return `<button class="row${b===sel?" sel":""}${ref?" ref":""}" data-b="${b}"><span class="n">${ref?"Ø":b+"."}</span><span class="bar"><i style="width:${w}%;background:${ref?c:mix(bg,c,t(v))}"></i><span>${NAMES[b]}</span></span><span class="v">${s.fmt(v)}${s.unit}</span></button>`;};
+  const row=(b,ref)=>{const v=arr[b],w=v==null?0:Math.max(2,(v/top)*100);
+    return `<button class="row${b===sel?" sel":""}${ref?" ref":""}" data-b="${b}"><span class="n">${ref?"Ø":b+"."}</span><span class="bar"><i style="width:${w}%;background:${ref?c:v==null?bg:mix(bg,c,t(v))}"></i><span>${NAMES[b]}</span></span><span class="v">${s.fmt(v)}${s.unit}</span></button>`;};
   document.getElementById("rows").innerHTML=row(0,true)+order.map(b=>row(b)).join("");
   document.querySelectorAll(".row").forEach(r=>r.addEventListener("click",()=>select(+r.dataset.b)));
   renderDetail(s,y,order,c);
@@ -786,7 +883,7 @@ function niceMax(v){ if(v<=0) return 1; const p=Math.pow(10,Math.floor(Math.log1
 
 function stackBar(key,b,y){
   const st=STACKS[key], yy=String(y); if(!st.parts[0][1][yy]) return "";
-  const vals=st.parts.map(([l,d,c])=>[l,d[yy][b],c]), sum=vals.reduce((a,v)=>a+v[1],0);
+  const vals=st.parts.map(([l,d,c])=>[l,d[yy][b],c]).filter(v=>v[1]>0), sum=vals.reduce((a,v)=>a+v[1],0);
   const abs=st.parts[0][1]===S.pop_f||st.parts[0][1]===S.kid_f;
   return `<h4>${st.title} ${y} · 100 %</h4>
     <div class="stack" role="img" aria-label="${vals.map(v=>v[0]+" "+fmt1(v[1])+" %").join(", ")}">${vals.map(([l,v,c])=>`<i style="width:${100*v/sum}%;background:${c}" title="${l}: ${fmt1(v)} %"></i>`).join("")}</div>
@@ -804,7 +901,7 @@ function wlList(b){
   const k=state.wl.sub;
   const it=WL.items.filter(i=>(b===0||i.b.includes(b))&&(k==="all"||i.k===k));
   if(!it.length) return `<p class="note">Gerade keine Meldung für ${b===0?"Wien":"diesen Bezirk"}.</p>`;
-  return `<h4>Aktuelle Meldungen (${it.length})</h4><ul class="flist">${it.map(i=>`<li><span class="fd">${WL_KIND[i.k]||""}</span><span>${i.l.length?"<b>"+i.l.join(", ")+"</b> · ":""}${i.t}</span><span class="fo">${i.d!==i.t?i.d:""}</span></li>`).join("")}</ul>`;
+  return `<h4>Aktuelle Meldungen (${it.length})</h4><ul class="flist">${it.map(i=>`<li><span class="fd">${causeLabel(i)}</span><span>${i.l.length?"<b>"+i.l.join(", ")+"</b> · ":""}${i.t}</span><span class="fo">${i.d!==i.t?i.d:""}</span></li>`).join("")}</ul>`;
 }
 
 function ptList(s,b){
@@ -875,13 +972,13 @@ function select(b){sel=b;render();}
 const LINKS={mail:"mailto:apps@puhl.ch",donate:"https://paypal.me/PuhlChristoph",github:"https://github.com/cpuhl51/wien-datenkarte",author:"https://de.wikipedia.org/wiki/Christoph_Puhl",comics:"https://www.diezöno.se",puhl:"https://www.puhl.ch"};
 const a_=(u,t)=>`<a href="${u}" target="_blank" rel="noopener">${t}</a>`;
 const creditHtml=()=>`Diese kostenlose App wurde von ${a_(LINKS.mail,"Christoph Puhl")} entwickelt und von Claude.ai umgesetzt. Wenn Du möchtest, kannst Du ${a_(LINKS.donate,"hier")} gerne für einen Kaffee, ein Mohnbeugerl oder ein KI-Monatsabo spenden. Dieses Projekt auf ${a_(LINKS.github,"GitHub")} ansehen. Mehr über den ${a_(LINKS.author,"Autor")}, weitere Apps, ${a_(LINKS.comics,"Comics")} und Tools findest Du auf ${a_(LINKS.puhl,"puhl.ch")}.`;
-function sliderName(L){ return L.clock?"Uhrzeit":(L.points||L.special)?"Stand":L.id==="wl"?"live":L.fund?"laufend":L.id==="vote"?"27.4.2025":"Jahr"; }
+function sliderName(L){ return L.clock?"Uhrzeit":(L.points||L.special)?"Stand":L.id==="wl"?"live":L.fund?"laufend":"Jahr"; }
 function layerTree(){
   return LAYERS.map(L=>{
     const subs=L.special?Object.entries(SIED_COL).map(([n,c])=>({label:n,dot:c})).concat([{label:"Römerstraßen und mittelalterliche Befestigung"},{label:"Lagerplan Vindobona mit Grabungsbefunden"}]):(L.subs||[]);
     const col=L.color||"var(--accent)";
     return `<div class="tl"><span class="sq" style="background:${col}"></span>${esc(L.label)} <small>· ${sliderName(L)}</small></div>`
-      +subs.map((s,i)=>{ const c=s.dot||(L.id==="vote"||L.id==="brand"?s.color:null); return `<div class="ts">${i===subs.length-1?"└─":"├─"} ${c?`<b style="background:${c}"></b>`:""}<span>${esc(s.label)}</span></div>`; }).join("");
+      +subs.map((s,i)=>{ const c=s.dot||(L.id==="vote"&&s.id!=="all"?s.color:L.id==="brand"&&BRAND_COL[s.id.toUpperCase()]?BRAND_COL[s.id.toUpperCase()]:null); return `<div class="ts">${i===subs.length-1?"└─":"├─"} ${c?`<b style="background:${c}"></b>`:""}<span>${esc(s.label)}</span></div>`; }).join("");
   }).join("");
 }
 function renderInfo(){
@@ -925,7 +1022,7 @@ function renderInfo(){
   <p class="note">Die Datenquellen (Stadt Wien – data.wien.gv.at, Statistik Austria, Wiener Linien, Veterinäramt MA 60, Stadtarchäologie Wien, vienna.at) werden nicht von deinem Gerät abgerufen, sondern jede Nacht von GitHub aus. Die genaue Quelle steht bei jeder Ebene über der Karte.</p>
 
   <h3>Lizenzen</h3>
-  <p>Daten der Stadt Wien und basemap.at: CC BY 4.0. Schriften Bricolage Grotesque und IBM Plex: SIL Open Font License. Programmcode: MIT-Lizenz, offen auf ${a_(LINKS.github,"GitHub")}.</p>
+  <p>Daten der Stadt Wien und basemap.at: CC BY 4.0. Schriften Bricolage Grotesque und IBM Plex: SIL Open Font License. Flaggen: flag-icons (MIT-Lizenz), Serbien als Flagge ohne Wappen. Programmcode: MIT-Lizenz, offen auf ${a_(LINKS.github,"GitHub")}.</p>
   <p>Fehler gefunden oder eine Idee? Schreib an ${a_(LINKS.mail,"apps@puhl.ch")}.</p>
   <a class="back" href="#">‹ Zurück zur Karte</a>`;
 }
@@ -940,7 +1037,7 @@ window.addEventListener("hashchange",route);
 document.getElementById("credit-foot").innerHTML=creditHtml();
 const pointers=new Map(); let drag=null, moved=false, tileTimer=null;
 function mapUnitsPerPx(){ const vb=svg.getAttribute("viewBox").split(" ").map(Number); return vb[2]/(svg.clientWidth||vb[2]); }
-function scheduleTiles(){ clearTimeout(tileTimer); tileTimer=setTimeout(()=>{ try{drawOrient(layer.points);drawTiles();}catch(e){} },120); }
+function scheduleTiles(){ clearTimeout(tileTimer); tileTimer=setTimeout(()=>{ try{drawOrient(layer.points);drawTiles();if(!layer.special)drawBars(subOf(layer),yearOf(layer));}catch(e){} },120); }
 svg.addEventListener("pointerdown",e=>{
   pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
   if(zoom.k>1||pointers.size===2){ drag={cx:zoom.cx,cy:zoom.cy,x:e.clientX,y:e.clientY,k:zoom.k,dist:null}; moved=false; }
@@ -997,7 +1094,7 @@ async function refreshLive(){
       .map(t=>({k:kind[cats[t.refTrafficInfoCategoryId]]||"sonst",t:(t.title||"").replace(/\s+/g," ").trim(),d:(t.description||"").replace(/\s+/g," ").trim().slice(0,220),
         l:t.relatedLines||(t.attributes&&t.attributes.relatedLines)||[],b:[...new Set((t.relatedStops||[]).map(s=>WL.stopb[s]).filter(Boolean))].sort((a,b)=>a-b)}));
     const n=new Date(); WL.fetched=`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,"0")}-${String(n.getDate()).padStart(2,"0")} ${String(n.getHours()).padStart(2,"0")}:${String(n.getMinutes()).padStart(2,"0")}`;
-    const L=LAYERS.find(x=>x.id==="wl"); L.subs.forEach(s=>{s.data=wcount(s.id==="all"?null:s.id);}); L.live=true;
+    const L=LAYERS.find(x=>x.id==="wl"); L.subs.forEach(s=>{s.data=s.calc();}); L.live=true;
     L.stand=()=>`Live, zuletzt aktualisiert ${WL.fetched.slice(11)} Uhr · nur gerade gültige Meldungen`;
     render();
   }catch(e){ /* bleibt bei der Momentaufnahme */ }

@@ -265,6 +265,34 @@ if os.path.exists(tp):
 
 # Römisches Legionslager Vindobona (Stadtarchäologie Wien): Geometrien kompakt, Koordinaten auf ~1 m gerundet
 vin = None
+# Gemeinderatswahlen 2005–2020: Stadt Wien (MA 62), Ergebnisse je Wahlsprengel inkl. Wahlkarten, je Bezirk summiert
+VOTE_KEYS = {"SPOE": "SPÖ", "FPOE": "FPÖ", "OEVP": "ÖVP", "GRUE": "Grüne", "NEOS": "NEOS"}
+votes = {}
+for code, year in [("051", 2005), ("101", 2010), ("151", 2015), ("201", 2020)]:
+    fp_ = os.path.join(src, "wahl", f"gr{code}.csv")
+    if not os.path.exists(fp_):
+        continue
+    rows = list(csv.reader(open(fp_, encoding="latin1"), delimiter=";"))
+    h = [c.strip() for c in rows[0]]
+    gi, pi = h.index("ABG."), h.index("UNG.")
+    parties = [(i, c) for i, c in enumerate(h) if i > pi and c]
+    tot = [dict() for _ in range(24)]
+    for r in rows[1:]:
+        if len(r) <= pi or not r[7].strip():
+            continue
+        b = int(r[7])
+        for i, c in parties:
+            v = int(r[i] or 0) if r[i].strip() else 0
+            for k in (0, b):
+                tot[k][c] = tot[k].get(c, 0) + v
+    for k, name in list(VOTE_KEYS.items()) + [("_", "Sonstige")]:
+        arr = []
+        for b in range(24):
+            g = sum(tot[b].values())
+            v = sum(x for c, x in tot[b].items() if c not in VOTE_KEYS) if k == "_" else tot[b].get(k)
+            arr.append(round(100 * v / g, 1) if g and v is not None else None)
+        votes.setdefault(name, {})[str(year)] = arr
+
 vd = os.path.join(src, "vindobona")
 if os.path.isdir(vd):
     def rnd(c):
@@ -300,7 +328,7 @@ json.dump({"series": clean,
            "dates": {k: {str(y): d for y, d in v.items()} for k, v in D.items()},
            "fund": {"items": items, "from": fund_dates[0] if fund_dates else "", "to": fund_dates[-1] if fund_dates else "",
                     "fetched": date.today().isoformat(), "archived": len(archive)},
-           "wl": wl, "fahrten": fahrten, "dea_month": dea_month, "brands": brands, "nat_top": nat_top, "vindobona": vin},
+           "wl": wl, "fahrten": fahrten, "dea_month": dea_month, "brands": brands, "nat_top": nat_top, "vindobona": vin, "votes": votes},
           open(out, "w"), ensure_ascii=False, separators=(",", ":"))
 for k, v in clean.items():
     ys = list(v)
