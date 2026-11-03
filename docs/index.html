@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#111715" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#f3f5f4" media="(prefers-color-scheme: light)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="48x48" href="icons/favicon-48.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Wien Daten">
+<script>try{var th=localStorage.getItem("theme");if(th==="light"||th==="dark")document.documentElement.setAttribute("data-theme",th)}catch(e){}</script>
 <meta name="description" content="Wiens 23 Bezirke als Karte: Einwohner, Alter, Geburten, Bildung, Öffis und mehr – offene Daten der Stadt Wien.">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>Wien Datenkarte</title>
@@ -46,6 +52,11 @@ body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15p
 #app{display:flex;flex-direction:column;gap:18px}
 @media (max-width:560px){.yearbar .yrange{flex-basis:100%}.yearbar .ynav{flex-basis:calc(100% - 60px)}}
 header{display:flex;flex-direction:column;gap:6px}
+.tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.themesw{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.themesw button{font:500 13px var(--body);color:var(--muted);background:transparent;border:0;padding:5px 11px;cursor:pointer}
+.themesw button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.themesw button:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
 .topline{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
 .infobtn{font:500 13px var(--body);color:var(--ink);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:5px 12px}
 .infobtn:focus-visible,.info a:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
@@ -219,7 +230,7 @@ svg.vin text.vl{font:600 13px var(--body);fill:#3a2e08;pointer-events:none}
 
 <div class="wrap">
   <header>
-    <div class="topline"><div class="eyebrow">Prototyp · Open Data Wien</div><a class="infobtn" id="infobtn" href="#info">Info &amp; Datenschutz</a></div>
+    <div class="topline"><div class="eyebrow">Prototyp · Open Data Wien</div><div class="tools"><div class="themesw" role="group" aria-label="Darstellung"><button data-th="auto" aria-pressed="true">Auto</button><button data-th="light" aria-pressed="false">Hell</button><button data-th="dark" aria-pressed="false">Dunkel</button></div><a class="infobtn" id="infobtn" href="#info">Info &amp; Datenschutz</a></div></div>
     <h1>Wien in 23 Bezirken</h1>
     <p class="lede">Wähle eine Ebene, schiebe durch die Jahre und tippe auf einen Bezirk oder „Wien gesamt“. Der Datenstand jeder Ebene steht direkt über der Karte. Die Farbskala gilt über alle Jahre, so sieht man Veränderungen.</p>
   </header>
@@ -1016,9 +1027,10 @@ function renderInfo(){
 
   <h3>Datenschutz</h3>
   <ul>
-    <li><b>Kein Konto, keine Cookies, kein Tracking, keine Werbung.</b> Die App sammelt und speichert keine personenbezogenen Daten.</li>
+    <li><b>Kein Konto, keine Cookies, kein Tracking, keine Werbung.</b> Die App sammelt keine personenbezogenen Daten.</li>
     <li><b>Standort:</b> Nur wenn du „Mein Standort“ antippst, fragt dein Browser um Erlaubnis. Der Standort wird ausschließlich auf deinem Gerät verwendet, um die Karte zu zentrieren und Entfernungen zu berechnen. Er wird nicht gespeichert und nirgendwohin gesendet.</li>
     <li><b>Server-Protokolle:</b> Wie bei jeder Webseite sehen die Server, von denen Inhalte geladen werden, technisch deine IP-Adresse und deinen Browsertyp. Welche das sind, steht unten. Die App selbst wertet nichts davon aus.</li>
+    <li><b>Darstellung:</b> Deine Wahl Auto/Hell/Dunkel wird nur in deinem Browser gespeichert (lokaler Speicher), nicht übertragen.</li>
     <li><b>Schriften</b> werden von dieser Seite selbst geladen, nicht von Google Fonts.</li>
     <li><b>Navigation:</b> „Hin navigieren“ öffnet Google Maps mit der Zieladresse. Erst dann gelten die Datenschutzbestimmungen von Google.</li>
   </ul>
@@ -1047,6 +1059,15 @@ function route(){
   if(on) window.scrollTo(0,0); else { try{render();}catch(e){} }
 }
 window.addEventListener("hashchange",route);
+/* Darstellung: Auto (wie das Gerät), Hell, Dunkel – Wahl bleibt nur in diesem Browser gespeichert */
+function applyTheme(v){
+  if(v==="light"||v==="dark") document.documentElement.setAttribute("data-theme",v); else document.documentElement.removeAttribute("data-theme");
+  document.querySelectorAll(".themesw button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.th===(v||"auto")));
+  document.querySelectorAll('meta[name="theme-color"]').forEach(m=>{ if(!m.dataset.orig) m.dataset.orig=m.content; m.content=v==="dark"?"#111715":v==="light"?"#f3f5f4":m.dataset.orig; });
+  try{ v&&v!=="auto"?localStorage.setItem("theme",v):localStorage.removeItem("theme"); }catch(e){}
+}
+document.querySelectorAll(".themesw button").forEach(b=>b.addEventListener("click",()=>applyTheme(b.dataset.th)));
+(()=>{ let v=null; try{ v=localStorage.getItem("theme"); }catch(e){} applyTheme(v||"auto"); })();
 document.getElementById("credit-foot").innerHTML=creditHtml();
 const pointers=new Map(); let drag=null, moved=false, tileTimer=null;
 function mapUnitsPerPx(){ const vb=svg.getAttribute("viewBox").split(" ").map(Number); return vb[2]/(svg.clientWidth||vb[2]); }
