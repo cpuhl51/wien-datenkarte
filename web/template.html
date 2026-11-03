@@ -97,6 +97,9 @@ h1{font-family:var(--display);font-weight:800;font-size:clamp(28px,5vw,44px);lin
 svg.map{width:100%;height:auto;display:block;touch-action:manipulation}
 svg.map path{stroke:var(--surface);stroke-width:1.2;cursor:pointer;transition:fill .25s}
 svg.map path.sel{stroke:var(--ink);stroke-width:2.6}
+/* kein rechteckiger Fokusrahmen beim Antippen; Tastatur-Fokus über die Umrisslinie */
+svg.map path{outline:none;-webkit-tap-highlight-color:transparent}
+svg.map path:focus-visible{stroke:var(--focus);stroke-width:3}
 svg.map.base > path{fill-opacity:.35}
 svg.map .tiles{pointer-events:none}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) svg.map .tiles{filter:invert(1) hue-rotate(180deg) brightness(.85) contrast(.9)}}
