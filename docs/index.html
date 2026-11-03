@@ -9,9 +9,22 @@
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>Wien Datenkarte</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
+/* Schriften liegen auf derselben Seite (SIL Open Font License), es wird nichts von Google Fonts geladen */
+@font-face{font-family:"Bricolage Grotesque";font-style:normal;font-weight:600;font-display:swap;src:url(fonts/bricolage-grotesque-latin-ext-600-normal.woff2) format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"Bricolage Grotesque";font-style:normal;font-weight:600;font-display:swap;src:url(fonts/bricolage-grotesque-latin-600-normal.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Bricolage Grotesque";font-style:normal;font-weight:800;font-display:swap;src:url(fonts/bricolage-grotesque-latin-ext-800-normal.woff2) format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"Bricolage Grotesque";font-style:normal;font-weight:800;font-display:swap;src:url(fonts/bricolage-grotesque-latin-800-normal.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"IBM Plex Sans";font-style:normal;font-weight:400;font-display:swap;src:url(fonts/ibm-plex-sans-latin-ext-400-normal.woff2) format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"IBM Plex Sans";font-style:normal;font-weight:400;font-display:swap;src:url(fonts/ibm-plex-sans-latin-400-normal.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"IBM Plex Sans";font-style:normal;font-weight:500;font-display:swap;src:url(fonts/ibm-plex-sans-latin-ext-500-normal.woff2) format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"IBM Plex Sans";font-style:normal;font-weight:500;font-display:swap;src:url(fonts/ibm-plex-sans-latin-500-normal.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"IBM Plex Sans";font-style:normal;font-weight:600;font-display:swap;src:url(fonts/ibm-plex-sans-latin-ext-600-normal.woff2) format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"IBM Plex Sans";font-style:normal;font-weight:600;font-display:swap;src:url(fonts/ibm-plex-sans-latin-600-normal.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"IBM Plex Mono";font-style:normal;font-weight:400;font-display:swap;src:url(fonts/ibm-plex-mono-latin-ext-400-normal.woff2) format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"IBM Plex Mono";font-style:normal;font-weight:400;font-display:swap;src:url(fonts/ibm-plex-mono-latin-400-normal.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"IBM Plex Mono";font-style:normal;font-weight:500;font-display:swap;src:url(fonts/ibm-plex-mono-latin-ext-500-normal.woff2) format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"IBM Plex Mono";font-style:normal;font-weight:500;font-display:swap;src:url(fonts/ibm-plex-mono-latin-500-normal.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
 /* Layout: Kopf mit Ebenen-Chips, Karte links, Detail + Rangliste rechts; am Handy alles untereinander */
 :root{
   --bg:#f3f5f4; --surface:#ffffff; --ink:#17201e; --muted:#5d6966; --line:#d8dedc;
@@ -30,7 +43,32 @@
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
 .wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+#app{display:flex;flex-direction:column;gap:18px}
+@media (max-width:560px){.yearbar .yrange{flex-basis:100%}.yearbar .ynav{flex-basis:calc(100% - 60px)}}
 header{display:flex;flex-direction:column;gap:6px}
+.topline{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.infobtn{font:500 13px var(--body);color:var(--ink);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:5px 12px}
+.infobtn:focus-visible,.info a:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.info{max-width:760px;margin:8px 0 24px}
+.info h2{font-family:var(--display);font-weight:800;font-size:28px;margin:8px 0 6px}
+.info h3{font-family:var(--display);font-weight:600;font-size:19px;margin:26px 0 6px}
+.info p,.info li{max-width:68ch}
+.info ul{padding-left:20px;margin:6px 0}
+.info li{margin:3px 0}
+.info a{color:var(--accent)}
+.info .back{display:inline-block;margin:4px 0 4px;font:500 14px var(--body)}
+.info table{border-collapse:collapse;width:100%;font-size:14px;margin:6px 0}
+.info td,.info th{text-align:left;vertical-align:top;padding:6px 8px 6px 0;border-bottom:1px solid var(--line)}
+.info th{font-weight:600}
+.tree{font:13px/1.55 var(--mono);margin:8px 0}
+.tree .tl{display:flex;align-items:center;gap:8px;font:600 15px var(--body);margin-top:10px}
+.tree .tl small{font:400 12px var(--mono);color:var(--muted)}
+.tree .sq{width:13px;height:13px;border-radius:3px;flex:none}
+.tree .ts{display:flex;align-items:center;gap:6px;color:var(--muted);padding-left:4px}
+.tree .ts b{width:9px;height:9px;border-radius:50%;flex:none}
+.tree .ts span{color:var(--ink)}
+.creditbox{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:10px 0}
+footer .credit a{color:inherit}
 .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
 h1{font-family:var(--display);font-weight:800;font-size:clamp(28px,5vw,44px);line-height:1.05;margin:0;text-wrap:balance}
 .lede{color:var(--muted);max-width:62ch;margin:0}
@@ -173,11 +211,13 @@ svg.vin text.vl{font:600 13px var(--body);fill:#3a2e08;pointer-events:none}
 
 <div class="wrap">
   <header>
-    <div class="eyebrow">Prototyp · Open Data Wien</div>
+    <div class="topline"><div class="eyebrow">Prototyp · Open Data Wien</div><a class="infobtn" id="infobtn" href="#info">Info &amp; Datenschutz</a></div>
     <h1>Wien in 23 Bezirken</h1>
     <p class="lede">Wähle eine Ebene, schiebe durch die Jahre und tippe auf einen Bezirk oder „Wien gesamt“. Der Datenstand jeder Ebene steht direkt über der Karte. Die Farbskala gilt über alle Jahre, so sieht man Veränderungen.</p>
   </header>
 
+  <section class="info" id="info" hidden aria-labelledby="info-h"></section>
+  <div id="app">
   <div class="chips" id="layers" role="group" aria-label="Datenebene"></div>
   <div class="subs" id="subs" role="group" aria-label="Kennzahl"></div>
   <div class="yearbar">
@@ -207,7 +247,9 @@ svg.vin text.vl{font:600 13px var(--body);fill:#3a2e08;pointer-events:none}
     </div>
   </div>
 
+  </div>
   <footer>
+    <span class="credit" id="credit-foot"></span>
     <span>Daten: Stadt Wien – data.wien.gv.at, Lizenz CC BY 4.0 (Aufbereitung MA 23 auf Basis Statistik Austria). Wahl 2025: vienna.at. Fundtiere: Veterinäramt MA 60.</span>
     <span>Grundkarte „Stadtplan“: basemap.at, CC BY 4.0.</span>
     <span>Bezirksgrenzen: Statistik Austria, über GitHub ginseng666/GeoJSON-TopoJSON-Austria (Stand 2021, vereinfacht). Flächen daraus berechnet: Summe 414,5 km², offiziell 414,9 km².</span>
@@ -841,6 +883,73 @@ document.addEventListener("click",e=>{ const el=e.target.closest&&e.target.close
 document.addEventListener("keydown",e=>{ if((e.key==="Enter"||e.key===" ")&&e.target.getAttribute&&e.target.getAttribute("data-info")){ e.preventDefault(); showInfo(e.target); } });
 
 function select(b){sel=b;render();}
+/* ---------- Info-Seite ---------- */
+const LINKS={mail:"mailto:apps@puhl.ch",donate:"https://paypal.me/PuhlChristoph",github:"https://github.com/cpuhl51/wien-datenkarte",author:"https://de.wikipedia.org/wiki/Christoph_Puhl",comics:"https://www.diezöno.se",puhl:"https://www.puhl.ch"};
+const a_=(u,t)=>`<a href="${u}" target="_blank" rel="noopener">${t}</a>`;
+const creditHtml=()=>`Diese kostenlose App wurde von ${a_(LINKS.mail,"Christoph Puhl")} entwickelt und von Claude.ai umgesetzt. Wenn Du möchtest, kannst Du ${a_(LINKS.donate,"hier")} gerne für einen Kaffee, ein Mohnbeugerl oder ein KI-Monatsabo spenden. Dieses Projekt auf ${a_(LINKS.github,"GitHub")} ansehen. Mehr über den ${a_(LINKS.author,"Autor")}, weitere Apps, ${a_(LINKS.comics,"Comics")} und Tools findest Du auf ${a_(LINKS.puhl,"puhl.ch")}.`;
+function sliderName(L){ return L.clock?"Uhrzeit":(L.points||L.special)?"Stand":L.id==="wl"?"live":L.fund?"laufend":L.id==="vote"?"27.4.2025":"Jahr"; }
+function layerTree(){
+  return LAYERS.map(L=>{
+    const subs=L.special?Object.entries(SIED_COL).map(([n,c])=>({label:n,dot:c})).concat([{label:"Römerstraßen und mittelalterliche Befestigung"},{label:"Lagerplan Vindobona mit Grabungsbefunden"}]):(L.subs||[]);
+    const col=L.color||"var(--accent)";
+    return `<div class="tl"><span class="sq" style="background:${col}"></span>${esc(L.label)} <small>· ${sliderName(L)}</small></div>`
+      +subs.map((s,i)=>{ const c=s.dot||(L.id==="vote"||L.id==="brand"?s.color:null); return `<div class="ts">${i===subs.length-1?"└─":"├─"} ${c?`<b style="background:${c}"></b>`:""}<span>${esc(s.label)}</span></div>`; }).join("");
+  }).join("");
+}
+function renderInfo(){
+  document.getElementById("info").innerHTML=`<a class="back" href="#">‹ Zurück zur Karte</a>
+  <h2 id="info-h">Info &amp; Datenschutz</h2>
+  <p>Diese App zeigt offene Daten der Stadt Wien auf einer Karte der 23 Bezirke. Sie ist ein privates, nicht kommerzielles Projekt und kein Angebot der Stadt Wien.</p>
+  <div class="creditbox">${creditHtml()}</div>
+
+  <h3>So funktioniert die App</h3>
+  <ul>
+    <li><b>Ebene wählen:</b> Die Knöpfe oben (z. B. Einwohner, Herkunft, Müll) bestimmen, was die Karte zeigt. Darunter wählst du die Kennzahl.</li>
+    <li><b>Regler:</b> Je nach Ebene schiebst du durch die Jahre, durch die Uhrzeit (Öffis unterwegs) oder siehst den aktuellen Stand.</li>
+    <li><b>Bezirk antippen:</b> Rechts bzw. darunter erscheinen Details, Verlauf und Rangliste. „Wien gesamt“ zeigt die ganze Stadt.</li>
+    <li><b>Zoomen und verschieben:</b> mit + und −, mit zwei Fingern oder durch Ziehen mit einem Finger, wenn die Karte vergrößert ist. „Stadtplan“ blendet einen Straßenplan darunter ein.</li>
+    <li><b>Einrichtungen und Müll:</b> Punkt antippen zeigt Adresse und „Hin navigieren“. „Mein Standort“ zeigt die nächstgelegenen Orte.</li>
+    <li><b>Datenstand:</b> Jede Ebene zeigt über der Karte, von wann die Daten sind und woher sie kommen. Die Daten werden jede Nacht automatisch neu abgerufen.</li>
+  </ul>
+
+  <h3>Was die App enthält</h3>
+  <p class="note">Farbe vor dem Namen = Farbe der Ebene, Punkte = Farben auf der Karte, grau dahinter = worauf sich der Regler bezieht.</p>
+  <div class="tree">${layerTree()}</div>
+
+  <h3>Datenschutz</h3>
+  <ul>
+    <li><b>Kein Konto, keine Cookies, kein Tracking, keine Werbung.</b> Die App sammelt und speichert keine personenbezogenen Daten.</li>
+    <li><b>Standort:</b> Nur wenn du „Mein Standort“ antippst, fragt dein Browser um Erlaubnis. Der Standort wird ausschließlich auf deinem Gerät verwendet, um die Karte zu zentrieren und Entfernungen zu berechnen. Er wird nicht gespeichert und nirgendwohin gesendet.</li>
+    <li><b>Server-Protokolle:</b> Wie bei jeder Webseite sehen die Server, von denen Inhalte geladen werden, technisch deine IP-Adresse und deinen Browsertyp. Welche das sind, steht unten. Die App selbst wertet nichts davon aus.</li>
+    <li><b>Schriften</b> werden von dieser Seite selbst geladen, nicht von Google Fonts.</li>
+    <li><b>Navigation:</b> „Hin navigieren“ öffnet Google Maps mit der Zieladresse. Erst dann gelten die Datenschutzbestimmungen von Google.</li>
+  </ul>
+
+  <h3>Worauf die App zugreift</h3>
+  <table>
+    <tr><th>Was</th><th>Wann</th><th>Wozu</th></tr>
+    <tr><td>cpuhl51.github.io (GitHub Pages)</td><td>immer</td><td>Die App selbst und alle aufbereiteten Daten</td></tr>
+    <tr><td>wien-stoerungen.cpuhl51.workers.dev (Cloudflare)</td><td>nur Ebene „Öffi-Störungen“</td><td>Leitet die aktuellen Störungsmeldungen der Wiener Linien weiter (Zwischenspeicher 60 Sekunden)</td></tr>
+    <tr><td>mapsneu.wien.gv.at (basemap.at)</td><td>nur mit „Stadtplan“</td><td>Kacheln des Stadtplans</td></tr>
+    <tr><td>Google Maps</td><td>nur bei „Hin navigieren“</td><td>Routenplanung zum gewählten Ort</td></tr>
+    <tr><td>Standort deines Geräts</td><td>nur bei „Mein Standort“, nach Erlaubnis</td><td>Karte zentrieren, Entfernungen</td></tr>
+  </table>
+  <p class="note">Die Datenquellen (Stadt Wien – data.wien.gv.at, Statistik Austria, Wiener Linien, Veterinäramt MA 60, Stadtarchäologie Wien, vienna.at) werden nicht von deinem Gerät abgerufen, sondern jede Nacht von GitHub aus. Die genaue Quelle steht bei jeder Ebene über der Karte.</p>
+
+  <h3>Lizenzen</h3>
+  <p>Daten der Stadt Wien und basemap.at: CC BY 4.0. Schriften Bricolage Grotesque und IBM Plex: SIL Open Font License. Programmcode: MIT-Lizenz, offen auf ${a_(LINKS.github,"GitHub")}.</p>
+  <p>Fehler gefunden oder eine Idee? Schreib an ${a_(LINKS.mail,"apps@puhl.ch")}.</p>
+  <a class="back" href="#">‹ Zurück zur Karte</a>`;
+}
+function route(){
+  const on=location.hash==="#info", info=document.getElementById("info");
+  if(on&&!info.innerHTML) renderInfo();
+  info.hidden=!on; document.getElementById("app").hidden=on;
+  document.getElementById("infobtn").hidden=on;
+  if(on) window.scrollTo(0,0); else { try{render();}catch(e){} }
+}
+window.addEventListener("hashchange",route);
+document.getElementById("credit-foot").innerHTML=creditHtml();
 const pointers=new Map(); let drag=null, moved=false, tileTimer=null;
 function mapUnitsPerPx(){ const vb=svg.getAttribute("viewBox").split(" ").map(Number); return vb[2]/(svg.clientWidth||vb[2]); }
 function scheduleTiles(){ clearTimeout(tileTimer); tileTimer=setTimeout(()=>{ try{drawOrient(layer.points);drawTiles();}catch(e){} },120); }
@@ -913,6 +1022,7 @@ if(LIVE_URL){ setInterval(maybeLive,15000); document.addEventListener("visibilit
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",render);
 new MutationObserver(render).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
 render();
+if(location.hash==="#info") route();
 </script>
 
 </body>
