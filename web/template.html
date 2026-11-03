@@ -82,6 +82,9 @@ h1{font-family:var(--display);font-weight:800;font-size:clamp(28px,5vw,44px);lin
 .subs{display:flex;flex-wrap:wrap;gap:6px}
 .sub{font:600 13px var(--body);padding:5px 11px;border-radius:6px;border:2px solid var(--pc);background:transparent;color:var(--ink);cursor:pointer}
 .sub[aria-pressed="true"]{background:var(--pc);color:#fff}
+.lgroup .subs{margin-top:9px;padding-top:9px;border-top:1px dashed color-mix(in srgb,var(--gc) 40%,transparent)}
+.sub{display:inline-flex;align-items:center;gap:6px}
+.sub .sdot{width:10px;height:10px;border-radius:50%;flex:none;box-shadow:0 0 0 1.5px #fff}
 .yearbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .ylabel{font:600 12px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .stand{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:6px;padding:9px 12px}
@@ -816,7 +819,12 @@ function scaleOf(s){ if(s.range) return s.range; let lo=Infinity,hi=-Infinity; O
 function renderControls(){
   document.querySelectorAll("#layers .chip").forEach(c=>c.setAttribute("aria-pressed",c.dataset.l===layer.id));
   const sc=document.getElementById("subs");
-  sc.innerHTML=layer.subs.length<2?"":layer.subs.map(s=>`<button class="sub" id="sub-${layer.id}-${s.id}" data-s="${s.id}" style="--pc:${s.color||layer.color}" aria-pressed="${s.id===state[layer.id].sub}">${s.label}</button>`).join("");
+  /* Unterauswahl direkt unter der Kategorie der gewählten Ebene, in deren Farbe; eigener Punkt nur, wo die Farbe auf der Karte etwas bedeutet */
+  const chip=document.getElementById("layer-"+layer.id), grp=chip&&chip.closest(".lgroup");
+  if(grp&&sc.parentNode!==grp) grp.appendChild(sc);
+  const gc=grp?grp.style.getPropertyValue("--gc"):layer.color;
+  const key=s=>s.dot||(layer.id==="vote"&&s.id!=="all"?s.color:null);
+  sc.innerHTML=layer.subs.length<2?"":layer.subs.map(s=>`<button class="sub" id="sub-${layer.id}-${s.id}" data-s="${s.id}" style="--pc:${gc}" aria-pressed="${s.id===state[layer.id].sub}">${key(s)?`<b class="sdot" style="background:${key(s)}"></b>`:""}${s.label}</button>`).join("");
   sc.hidden=layer.subs.length<2;
   sc.querySelectorAll(".sub").forEach(b=>b.addEventListener("click",()=>{state[layer.id].sub=b.dataset.s;render();}));
   const s=subOf(layer), ys=yearsOf(s), y=yearOf(layer), i=ys.indexOf(y);
