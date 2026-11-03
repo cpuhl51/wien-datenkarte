@@ -169,7 +169,8 @@ dd.hl{color:var(--accent)}
 .row .bar{position:relative;height:18px;min-width:0}
 .row .bar i{position:absolute;inset:0 auto 0 0;border-radius:3px;opacity:.9}
 .row .bar span{position:relative;padding-left:6px;line-height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;font-size:12px}
-.row .v{text-align:right;font:12px var(--mono);font-variant-numeric:tabular-nums}
+.rows.comp .row{grid-template-columns:2.2em minmax(0,1fr) 7.4em}
+.row .v{white-space:nowrap;text-align:right;font:12px var(--mono);font-variant-numeric:tabular-nums}
 .row.sel{font-weight:600}
 .note{font-size:13px;color:var(--muted);max-width:75ch}
 .note b{color:var(--ink);font-weight:600}
@@ -980,6 +981,18 @@ function render2(){
   const row=(b,ref)=>{const v=arr[b],w=v==null?0:Math.max(2,(v/top)*100);
     const barIn=ref&&split?`<span class="segs">${segs()}</span>`:`<i style="width:${ref&&additive?100:w}%;background:${ref?c:v==null?bg:mix(bg,c,t(v))}"></i>`;
     return `<button class="row${b===sel?" sel":""}${ref?" ref":""}" data-b="${b}"${ref&&additive?` aria-label="Wien gesamt – antippen wechselt die Balkenansicht"`:""}><span class="n">${ref?"Ø":b+"."}</span><span class="bar">${barIn}<span>${NAMES[b]}</span></span><span class="v">${s.fmt(v)}${s.unit}</span></button>`;};
+  /* Säulen-Ansichten (Top 3, alle Parteien): statt einer Rangliste je Bezirk die Zusammensetzung als Balken */
+  const barRow=b=>{ const ps=(s.bars(b,y)||[]).filter(p=>p.v>0), tot=s.norm?ps.reduce((a,p)=>a+p.v,0):100;
+    return `<button class="row${b===sel?" sel":""}${b===0?" ref":""}" data-b="${b}"><span class="n">${b===0?"Ø":b+"."}</span><span class="bar"><span class="segs">${ps.map(p=>`<i class="seg" style="width:${(100*p.v/tot).toFixed(2)}%;background:${p.c}" title="${esc(p.l)} ${fmt1(p.v)} %"></i>`).join("")}</span><span>${NAMES[b]}</span></span><span class="v">${ps[0]?esc(ps[0].l.length>9?ps[0].l.slice(0,8)+"…":ps[0].l)+" "+fmt1(ps[0].v)+" %":"–"}</span></button>`; };
+  if(s.bars){
+    document.getElementById("ranktitle").textContent=`Zusammensetzung je Bezirk · ${title} · ${y}`;
+    document.getElementById("rows").classList.add("comp");
+    document.getElementById("rows").innerHTML=[0,...Array.from({length:23},(_,i)=>i+1)].map(barRow).join("")
+      +`<p class="note" style="margin:6px 0 0">Balken = ${s.norm?"die drei häufigsten, gemeinsam auf volle Breite":"Stimmenanteile aller Parteien"}; rechts der Spitzenreiter mit seinem echten Anteil. Eine Rangliste wäre hier irreführend, weil der Spitzenreiter von Bezirk zu Bezirk ein anderer sein kann.</p>`;
+    document.querySelectorAll(".row").forEach(r=>r.addEventListener("click",()=>select(+r.dataset.b)));
+    renderDetail(s,y,order,c); return;
+  }
+  document.getElementById("rows").classList.remove("comp");
   document.getElementById("rows").innerHTML=row(0,true)+order.map(b=>row(b)).join("")
     +(additive?`<p class="note" style="margin:6px 0 0">${split?"Wien-Balken = Anteile der Bezirke, Bezirke im Maßstab des stärksten.":"Alle Balken im Maßstab von Wien gesamt."} Wien-Balken antippen zum Umschalten.</p>`:"");
   document.querySelectorAll(".row").forEach(r=>r.addEventListener("click",()=>{ if(+r.dataset.b===0&&additive){ rankSplit=!rankSplit; } select(+r.dataset.b); }));
@@ -1077,7 +1090,7 @@ function renderDetail(s,y,order,c){
   }).join("");
   const lab=layer.subs.length>1&&s.label!==layer.label?" · "+s.label:"";
   const pd=(layer.id==="bir"||layer.id==="dea")?`<p class="sub" style="margin-top:-6px">${perDayTxt(layer.id,b,y)}</p>`:"";
-  const place=b===0?`<p class="sub">${layer.label}${lab} ${layer.clock?hhmm(y)+" Uhr":(layer.fund||layer.live)?"aktuell":y}: <b>${s.fmt(now)}${s.unit}</b></p>`
+  const place=s.bars?`<p class="sub">${layer.label}${lab} ${y}: ${(s.bars(b,y)||[]).filter(p=>p.v>0).map(p=>`<b>${esc(p.l)}</b> ${fmt1(p.v)} %`).join(" · ")}</p>`:b===0?`<p class="sub">${layer.label}${lab} ${layer.clock?hhmm(y)+" Uhr":(layer.fund||layer.live)?"aktuell":y}: <b>${s.fmt(now)}${s.unit}</b></p>`
                    :`<p class="sub">${layer.label}${lab} ${layer.clock?hhmm(y)+" Uhr":(layer.fund||layer.live)?"aktuell":y}: <b>${s.fmt(now)}${s.unit}</b> · Platz ${order.indexOf(b)+1} von 23 · Wien: ${s.fmt(s.data[y][0])}${s.unit}</p>`;
   const dogAtt=b===0?`<h4>Hundeattacken (nur Wien gesamt)</h4>${Object.entries(DOG_ATT).map(([yr,v])=>{const o=v.all-v.human;
     return `<div class="darow"><span class="dy">${yr}</span><div class="stack" role="img" aria-label="${yr}: ${v.human} Vorfälle mit gebissenem Menschen, ${o} sonstige, ${v.all} gesamt"><i style="width:${100*v.human/v.all}%;background:var(--accent)"></i><i style="width:${100*o/v.all}%;background:#6e7d7a"></i></div><span class="dt">${v.all}</span></div>`;}).join("")}
