@@ -8,11 +8,16 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: daten-update
+  cancel-in-progress: false
+
 jobs:
   update:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Daten der Stadt Wien laden
         run: bash scripts/fetch.sh
@@ -20,23 +25,27 @@ jobs:
       - name: Fahrplan auszählen (heute und morgen, Wiener Zeit)
         run: TZ=Europe/Vienna python3 scripts/gtfs_count.py data/raw/gtfs data/geo/bezirke.json data/raw/fahrten.json
 
-      - name: Daten aufbereiten
-        run: python3 scripts/build_data.py data/raw data/data.json data/geo/flaechen.json data/fundtiere/archiv.json
-
-      - name: Standorte und historische Flächen aufbereiten
-        run: python3 scripts/build_geo.py data/raw/wfs data/geo/bezirke.json data/geo_punkte.json docs/befunde.json
-
-      - name: Seite bauen
-        run: python3 scripts/build_page.py
+      - name: Daten aufbereiten und Seite bauen
+        run: bash scripts/build_all.sh
 
       - name: Änderungen speichern
         run: |
           git config user.name "daten-bot"
           git config user.email "daten-bot@users.noreply.github.com"
+          msg="Daten aktualisiert $(date -u +%Y-%m-%d)"
           git add data docs
-          if git diff --cached --quiet; then
-            echo "Keine neuen Daten."
-          else
-            git commit -m "Daten aktualisiert $(date -u +%Y-%m-%d)"
-            git push
-          fi
+          if git diff --cached --quiet; then echo "Keine neuen Daten."; exit 0; fi
+          git commit -q -m "$msg"
+          for i in 1 2 3; do
+            git push && exit 0
+            # Inzwischen wurde die App geändert: auf den neuesten Stand gehen und mit den geladenen Daten neu bauen
+            echo "Push abgelehnt, baue auf dem neuesten Stand neu (Versuch $i)"
+            rm -rf /tmp/raw && cp -r data/raw /tmp/raw && cp data/fundtiere/archiv.json /tmp/archiv.json
+            git fetch -q origin main && git reset -q --hard origin/main
+            cp -r /tmp/raw/. data/raw/ && cp /tmp/archiv.json data/fundtiere/archiv.json
+            bash scripts/build_all.sh
+            git add data docs
+            if git diff --cached --quiet; then echo "Keine neuen Daten."; exit 0; fi
+            git commit -q -m "$msg"
+          done
+          exit 1

@@ -42,21 +42,29 @@ for y in 051 101 151 201; do
 done
 curl -fsS --retry 3 -m 60 -o nat_top5.html "https://www.wien.gv.at/spezial/migration-integration-jugendliche/anhang/top-5-bevolkerungsgruppen-nach-staatsangehorigkeit-in-den-wiener-gemeindebezirken-in-absoluten-zahlen-und-in-percent-der-gesamtbevolkerung-des-bezirks/" || echo "Warnung: Staatsangehörigkeits-Tabelle nicht geladen"
 
-# Römisches Legionslager Vindobona (Geodaten, WFS als GeoJSON)
+# Geodaten-Server der Stadt (WFS als GeoJSON). Ausfälle brechen den Lauf nicht ab, die alte Datei bleibt.
+# Ist der Server nicht erreichbar, werden die restlichen Ebenen übersprungen statt stundenlang zu warten.
+WFS="https://data.wien.gv.at/daten/geo?service=WFS&request=GetFeature&version=1.1.0&srsName=EPSG:4326&outputFormat=json&typeName=ogdwien:"
+wfs_fail=0
+wfs_get() {   # $1 = Layer, $2 = Zieldatei
+  if [ "$wfs_fail" -ge 2 ]; then echo "Warnung: $1 übersprungen (Geodaten-Server nicht erreichbar), alte Datei bleibt"; return 0; fi
+  if curl -fsS --connect-timeout 20 --retry 2 --retry-delay 10 -m 180 -o "$2.tmp" "$WFS$1"; then
+    mv "$2.tmp" "$2"; wfs_fail=0
+  else
+    rm -f "$2.tmp"; wfs_fail=$((wfs_fail+1)); echo "Warnung: $1 nicht geladen, alte Datei bleibt"
+  fi
+}
+# Römisches Legionslager Vindobona
 mkdir -p vindobona
-for L in FORTIFIKATIONOGD HAUPTSTRARCHOGD KASERNEOGD LAGERBAUOGD; do
-  curl -fsS --retry 3 -m 120 -o "vindobona/$L.json" "https://data.wien.gv.at/daten/geo?service=WFS&request=GetFeature&version=1.1.0&typeName=ogdwien:$L&srsName=EPSG:4326&outputFormat=json"
-done
+for L in FORTIFIKATIONOGD HAUPTSTRARCHOGD KASERNEOGD LAGERBAUOGD; do wfs_get "$L" "vindobona/$L.json"; done
 echo "ok  vindobona"
-
-# Standorte und historische Flächen (WFS als GeoJSON); einzelne Ausfälle brechen den Lauf nicht ab
+# Standorte und historische Flächen
 mkdir -p wfs
 for L in MISTPLATZOGD ALTSTOFFSAMMLUNGOGD PROBLEMSTOFFOGD HUNDESACKERLOGD TRINKBRUNNENOGD WCANLAGE2OGD PARKINFOOGD \
-         SPIELPLATZPUNKTOGD HUNDEZONEOGD KINDERGARTENOGD SCHULEOGD DEFIBRILLATOROGD POLIZEIOGD \
+         SPIELPLATZPUNKTOGD HUNDEZONEOGD DEFIBRILLATOROGD POLIZEIOGD \
          ARCHAEOSDLGOGD ARCHAEOSTRASSENOGD MITTELALTBEFESTOGD BEFUNDARCHAEOOGD \
          UBAHNOGD UBAHNHALTOGD FLIESSGEWOGD; do
-  curl -fsS --retry 3 -m 180 -o "wfs/$L.json.tmp" "https://data.wien.gv.at/daten/geo?service=WFS&request=GetFeature&version=1.1.0&typeName=ogdwien:$L&srsName=EPSG:4326&outputFormat=json" \
-    && mv "wfs/$L.json.tmp" "wfs/$L.json" || echo "Warnung: $L nicht geladen, alte Datei bleibt"
+  wfs_get "$L" "wfs/$L.json"
 done
 echo "ok  wfs"
 
