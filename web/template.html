@@ -290,6 +290,7 @@ const GEO = __GEO__;
 const AREA = __AREA__;
 const DATA = __DATA__;
 const ABRUF = "2.11.2026";
+const IV = "?v=dev";   /* Version der Bilder, damit der Browser neue Piktogramme lädt */
 const NAMES = ["Wien gesamt","Innere Stadt","Leopoldstadt","Landstraße","Wieden","Margareten","Mariahilf","Neubau","Josefstadt","Alsergrund","Favoriten","Simmering","Meidling","Hietzing","Penzing","Rudolfsheim-Fünfhaus","Ottakring","Hernals","Währing","Döbling","Brigittenau","Floridsdorf","Donaustadt","Liesing"];
 const AREA_ALL = Object.values(AREA).reduce((a,b)=>a+b,0);
 /* Index 0 = Wien gesamt */
@@ -344,7 +345,7 @@ const WL_CAUSE = [["bau","Bauarbeiten",/bau(arbeit|stelle)|gleisbau|gleisarbeit|
 const causeOf = i => { if(i.k==="aufzug") return "aufzug"; const s=i.t+" "+i.d; const c=WL_CAUSE.find(([,,r])=>r.test(s)); return c?c[0]:"sonst"; };
 const CAUSE_COL = {bau:"#1a1a1a",einsatz:"#1c5fd6",unfall:"#c4161c",technik:"#5c6670",verkehr:"#c4161c",veranst:"#c4161c",sonst:"#e0a800",aufzug:"#3fa9e0"};
 /* Piktogramme je Ursache */
-const CAUSE_ICON = c => `icons/stoerung/${CAUSE_COL[c]?c:"sonst"}.png`;
+const CAUSE_ICON = c => `icons/stoerung/${CAUSE_COL[c]?c:"sonst"}.png${IV}`;
 let HS=null, HS_LOADING=null, wlPick=null, wlDrawn={c:new Set(),lines:false,off:0};
 function loadStops(){ if(HS) return Promise.resolve(HS); if(!HS_LOADING) HS_LOADING=fetch("haltestellen.json").then(r=>r.json()).then(d=>HS=d); return HS_LOADING; }
 const causeLabel = i => { const c=causeOf(i); return c==="aufzug"?"Aufzug":c==="sonst"?"Sonstiges":WL_CAUSE.find(x=>x[0]===c)[1]; };
@@ -789,16 +790,16 @@ function fundItems(){ const sub=subOf(LAYERS.find(L=>L.id==="fund")); return F.i
 function drawFund(s){
   if(layer.id!=="fund"){ fundG.innerHTML=""; return; }
   const u=mapUnitsPerPx(), r=(4*Math.min(1.6,1+(zoom.k-1)*.12))*u;
-  const zp=18*Math.min(1.7,1+(zoom.k-1)*.15);
+  const zp=14*Math.min(1.7,1+(zoom.k-1)*.15);
   fundG.innerHTML=fundItems().filter(i=>i.xy).map(i=>{ const [x,y]=px(i.xy), j=10*u, on=fundPick===i.id, z=(on?zp*1.45:zp)*u;
     const X=x+(hash01(i.id,1)-.5)*j*2, Y=y+(hash01(i.id,2)-.5)*j*2;
-    return `<g data-fund="${esc(i.id)}"><title>${esc(i.t)} · ${esc(i.o)}</title>${on?`<circle cx="${X.toFixed(2)}" cy="${Y.toFixed(2)}" r="${(z*.68).toFixed(2)}" style="fill:none;stroke:var(--ink);stroke-width:${(z*.09).toFixed(2)}"></circle>`:""}<image href="icons/fund/${fkOf(i)}.png" x="${(X-z/2).toFixed(2)}" y="${(Y-z/2).toFixed(2)}" width="${z.toFixed(2)}" height="${z.toFixed(2)}"></image></g>`; }).join("");
+    return `<g data-fund="${esc(i.id)}"><title>${esc(i.t)} · ${esc(i.o)}</title>${on?`<circle cx="${X.toFixed(2)}" cy="${Y.toFixed(2)}" r="${(z*.68).toFixed(2)}" style="fill:none;stroke:var(--ink);stroke-width:${(z*.09).toFixed(2)}"></circle>`:""}<image href="icons/fund/${fkOf(i)}.png${IV}" x="${(X-z/2).toFixed(2)}" y="${(Y-z/2).toFixed(2)}" width="${z.toFixed(2)}" height="${z.toFixed(2)}"></image></g>`; }).join("");
 }
 svg.addEventListener("click",e=>{ const el=e.target.closest&&e.target.closest("[data-fund]"); if(!el||layer.id!=="fund") return; e.stopPropagation(); fundPick=el.dataset.fund; render();
   const c=document.getElementById("fundpick"); if(c) c.scrollIntoView({block:"nearest",behavior:"smooth"}); },true);
 function fundPickCard(){
   if(layer.id!=="fund"||!fundPick) return ""; const i=F.items.find(x=>x.id===fundPick); if(!i) return "";
-  return `<div class="pick" id="fundpick"><div class="pk-h"><img src="icons/fund/${fkOf(i)}.png" alt="" style="width:20px;height:20px;vertical-align:-5px;margin-right:6px">${esc(FUND_KIND[fkOf(i)][0])} · gefunden am ${dmy(i.d)}</div>
+  return `<div class="pick" id="fundpick"><div class="pk-h"><img src="icons/fund/${fkOf(i)}.png${IV}" alt="" style="width:20px;height:20px;vertical-align:-5px;margin-right:6px">${esc(FUND_KIND[fkOf(i)][0])} · gefunden am ${dmy(i.d)}</div>
     <div class="pk-a">${esc(i.t)}${i.f?" · "+esc(i.f):""}${i.s&&i.s!=="unbekannt"?" · "+esc(i.s):""}</div>
     <div class="pk-m" style="font-family:var(--body)">Fundort: ${esc(i.o)} – ungefähre Lage, die Stadt nennt nur Straße oder Park</div>
     <div class="pk-b"><button class="wien" id="fundpick-x">Schließen</button></div></div>`;
@@ -821,7 +822,7 @@ function drawWl(s){
         +`<path d="${d}" style="pointer-events:none;fill:none;stroke:${c};stroke-width:${w.toFixed(2)};stroke-linecap:round;stroke-dasharray:0 ${(2*g).toFixed(2)};stroke-dashoffset:${(-g).toFixed(2)}"></path>`;
     }); }
     if(HS) i.s.forEach(id=>{ const h=HS[id]; if(!h) return; const [x,y]=px([h[0],h[1]]);
-      wlDrawn.c.add(causeOf(i)); const zp=19*Math.min(1.7,1+(zoom.k-1)*.15), z=(on?zp*1.45:zp)*mapUnitsPerPx();
+      wlDrawn.c.add(causeOf(i)); const zp=15*Math.min(1.7,1+(zoom.k-1)*.15), z=(on?zp*1.45:zp)*mapUnitsPerPx();
       dots+=`<g data-wl="${n}"><title>${esc(causeLabel(i))}: ${esc(h[2])}</title>${on?`<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${(z*.68).toFixed(2)}" style="fill:none;stroke:var(--ink);stroke-width:${(z*.09).toFixed(2)}"></circle>`:""}<image href="${CAUSE_ICON(causeOf(i))}" x="${(x-z/2).toFixed(2)}" y="${(y-z/2).toFixed(2)}" width="${z.toFixed(2)}" height="${z.toFixed(2)}"></image></g>`; });
     if(HS&&PT&&lines.length+dots.length===before) wlDrawn.off++;
   });
@@ -868,7 +869,7 @@ function renderControls(){
   if(grp&&sc.parentNode!==grp) grp.appendChild(sc);
   const gc=grp?grp.style.getPropertyValue("--gc"):layer.color;
   const key=s=>s.dot||(layer.id==="vote"&&s.id!=="all"?s.color:null);
-  const icon=s=>layer.id==="fund"&&FUND_KIND[s.id]?`icons/fund/${s.id}.png`:layer.id==="wl"&&CAUSE_COL[s.id]?`icons/stoerung/${s.id}.png`:null;
+  const icon=s=>layer.id==="fund"&&FUND_KIND[s.id]?`icons/fund/${s.id}.png${IV}`:layer.id==="wl"&&CAUSE_COL[s.id]?`icons/stoerung/${s.id}.png${IV}`:null;
   sc.innerHTML=layer.subs.length<2?"":layer.subs.map(s=>`<button class="sub" id="sub-${layer.id}-${s.id}" data-s="${s.id}" style="--pc:${gc}" aria-pressed="${s.id===state[layer.id].sub}">${icon(s)?`<img class="sico" src="${icon(s)}" alt="">`:key(s)?`<b class="sdot" style="background:${key(s)}"></b>`:""}${s.label}</button>`).join("");
   sc.hidden=layer.subs.length<2;
   sc.querySelectorAll(".sub").forEach(b=>b.addEventListener("click",()=>{state[layer.id].sub=b.dataset.s;render();}));
@@ -971,7 +972,7 @@ function render2(){
     document.getElementById("wlleg").innerHTML=(used.length?used.map(c=>`<span class="lg"><img src="${CAUSE_ICON(c)}" alt="" style="width:18px;height:18px;outline:none">${c==="aufzug"?"Aufzug":c==="sonst"?"Sonstiges":WL_CAUSE.find(x=>x[0]===c)[1]}</span>`).join("")+`<span class="lg" style="color:var(--muted)">Symbol${wlDrawn.lines?" oder Linie":""} antippen für die Meldung${wlDrawn.lines?" · punktiert = betroffener U-Bahn-Abschnitt (abwechselnd Linien- und Störungsfarbe)":""}</span>`:"")
       +(wlDrawn.off?`<span class="lg" style="color:var(--muted)">${wlDrawn.off} Meldung${wlDrawn.off>1?"en nennen":" nennt"} nur Straßenbahn- oder Buslinien ohne Haltestellen und ${wlDrawn.off>1?"sind":"ist"} daher nicht auf der Karte – siehe Liste unten.</span>`:"");
   } else if(layer.id==="fund"){ const it=fundItems(), n=it.filter(i=>i.xy).length;
-    document.getElementById("wlleg").innerHTML=Object.entries(FUND_KIND).filter(([k])=>it.some(i=>fkOf(i)===k)).map(([k,[l]])=>`<span class="lg"><img src="icons/fund/${k}.png" alt="" style="width:18px;height:18px;outline:none">${l}</span>`).join("")
+    document.getElementById("wlleg").innerHTML=Object.entries(FUND_KIND).filter(([k])=>it.some(i=>fkOf(i)===k)).map(([k,[l]])=>`<span class="lg"><img src="icons/fund/${k}.png${IV}" alt="" style="width:18px;height:18px;outline:none">${l}</span>`).join("")
       +`<span class="lg" style="color:var(--muted)">Symbol = ungefähre Lage (Mitte der Straße bzw. des Parks) · ${n} von ${it.length} Meldungen verortet · antippen für Details</span>`;
   } else document.getElementById("wlleg").innerHTML="";
   const dotNote=isPts(layer)?`● = ein Standort (${s.label}). Bezirksfarbe und Zahl = Anzahl im Bezirk. `:"";

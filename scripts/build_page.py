@@ -15,6 +15,8 @@ for key, path in [("__GEO__", p("data", "geo", "bezirke.json")),
     html = html.replace(key, open(path, encoding="utf-8").read())
 
 d = date.today()
+import time
+html = html.replace('const IV = "?v=dev";', f'const IV = "?v={int(time.time())}";')
 html = html.replace('const ABRUF = "2.11.2026";', f'const ABRUF = "{d.day}.{d.month}.{d.year}";')
 # Rahmen der Seite: ohne Viewport-Angabe zeigen Handys die Desktop-Breite verkleinert an
 head = """<!doctype html>
