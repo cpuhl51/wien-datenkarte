@@ -62,7 +62,6 @@ svg.map .tiles{pointer-events:none}
 .baseop{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
 .baseop input{width:90px;accent-color:var(--accent)}
 .wien[aria-pressed="true"]#basebtn{background:var(--ink);color:var(--bg)}
-svg.map.zoomed > text{display:none}
 svg.map.zoomed{touch-action:none;cursor:grab}
 svg.map.zoomed:active{cursor:grabbing}
 svg.map > path{vector-effect:non-scaling-stroke}
@@ -88,9 +87,13 @@ dt.hlk{background:color-mix(in srgb,var(--accent) 18%,transparent);border-radius
 b.sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:baseline}
 svg.vin path[data-info]{cursor:pointer}
 svg.map .ovl path{pointer-events:auto}
-svg.map text.small{font-size:9.5px}
-svg.map text.tiny{font-size:8px;stroke-width:2px;letter-spacing:-.03em}
+svg.map text.small{font-size:calc(9.5px / var(--zk,1))}
+svg.map text.tiny{font-size:calc(8px / var(--zk,1));stroke-width:calc(2px / var(--zk,1));letter-spacing:-.03em}
 svg.map text{font:600 11px var(--mono);fill:var(--ink);paint-order:stroke;stroke:var(--surface);stroke-width:3px;pointer-events:none}
+svg.map > text{font-size:calc(11px / var(--zk,1));stroke-width:calc(3px / var(--zk,1))}
+svg.map.zoomed > text.small,svg.map.zoomed > text.tiny{font-size:calc(11px / var(--zk,1));stroke-width:calc(3px / var(--zk,1));letter-spacing:0}
+/* Zwei-Finger-Geste gehört der Karte, nicht dem Seitenzoom des Browsers */
+svg.map{touch-action:pan-x pan-y}
 .legend{display:flex;flex-direction:column;gap:4px}
 .ramp{height:10px;border-radius:3px}
 .ticks{display:flex;justify-content:space-between;font:12px var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
@@ -366,8 +369,8 @@ const LAYERS = [
          {id:"avg",label:"Durchschnittsalter",data:S.age_avg,fmt:fmt1,unit:" J.",zero:true}],
    note:"Anteil an allen Einwohnern bzw. Durchschnittsalter in Jahren."},
   {id:"cob",label:"Herkunft",color:"#b0476d",src:SRC.nat,stand:y=>`Bevölkerungsstand am 1.1.${y}`,stack:["nat","cob"],
-   subs:[{id:"abroad",label:"Im Ausland geboren",data:S.cob4_notaut,...PCT,color:"#b5651d",note:"Nach Geburtsland."},
-         {id:"notaut",label:"Nicht österreichisch",data:S.nat4_notaut,...PCT,note:"Nach Staatsbürgerschaft."},
+   subs:[{id:"abroad",label:"Geburtsland: Ausland",data:S.cob4_notaut,...PCT,color:"#b5651d",note:"Anteil der Menschen, die außerhalb Österreichs geboren wurden – egal welche Staatsbürgerschaft sie heute haben. Viele davon sind inzwischen österreichische Staatsbürger, daher liegt dieser Wert höher als „Staatsbürgerschaft: nicht AT“."},
+         {id:"notaut",label:"Staatsbürgerschaft: nicht AT",data:S.nat4_notaut,...PCT,note:"Anteil der Menschen ohne österreichische Staatsbürgerschaft – egal wo sie geboren sind (auch in Wien geborene Kinder ausländischer Eltern zählen dazu). Die drei Knöpfe darunter teilen diesen Anteil nach Staatsbürgerschaft auf."},
          {id:"eea",label:"EU/EWR/Schweiz/GB",data:S.nat4_eea,...PCT,note:"Staatsbürger aus EU, EWR, Schweiz und Großbritannien."},
          {id:"reu",label:"Übriges Europa",data:S.nat4_reu,...PCT,note:"Staatsbürger aus dem übrigen Europa inkl. Russland und Türkei."},
          {id:"tcn",label:"Drittstaaten",data:S.nat4_tcn,...PCT,note:"Staatsbürger aller übrigen Staaten."}],
@@ -529,7 +532,7 @@ function applyZoom(){
   const w=(W+8)/zoom.k, h=(H+8)/zoom.k;
   const x=Math.max(-4,Math.min(W+4-w,zoom.cx-w/2)), y=Math.max(-4,Math.min(H+4-h,zoom.cy-h/2));
   svg.setAttribute("viewBox",`${x.toFixed(1)} ${y.toFixed(1)} ${w.toFixed(1)} ${h.toFixed(1)}`);
-  svg.classList.toggle("zoomed",zoom.k>1);
+  svg.classList.toggle("zoomed",zoom.k>1); svg.style.setProperty("--zk",Math.max(1,zoom.k*0.75).toFixed(3));
   document.getElementById("zoomout").hidden=zoom.k===1;
 }
 let me=null;
