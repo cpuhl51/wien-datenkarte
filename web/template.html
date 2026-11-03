@@ -1102,8 +1102,8 @@ function renderDetail(s,y,order,c){
   const place=s.bars?`<p class="sub">${layer.label}${lab} ${y}: ${(s.bars(b,y)||[]).filter(p=>p.v>0).map(p=>`<b>${esc(p.l)}</b> ${fmt1(p.v)} %`).join(" · ")}</p>`:b===0?`<p class="sub">${layer.label}${lab} ${layer.clock?hhmm(y)+" Uhr":(layer.fund||layer.live)?"aktuell":y}: <b>${s.fmt(now)}${s.unit}</b></p>`
                    :`<p class="sub">${layer.label}${lab} ${layer.clock?hhmm(y)+" Uhr":(layer.fund||layer.live)?"aktuell":y}: <b>${s.fmt(now)}${s.unit}</b> · Platz ${order.indexOf(b)+1} von 23 · Wien: ${s.fmt(s.data[y][0])}${s.unit}</p>`;
   const dogAtt=b===0?`<h4>Hundeattacken (nur Wien gesamt)</h4>${Object.entries(DOG_ATT).map(([yr,v])=>{const o=v.all-v.human;
-    return `<div class="darow"><span class="dy">${yr}</span><div class="stack" role="img" aria-label="${yr}: ${v.human} Vorfälle mit gebissenem Menschen, ${o} sonstige, ${v.all} gesamt"><i style="width:${100*v.human/v.all}%;background:var(--accent)"></i><i style="width:${100*o/v.all}%;background:#6e7d7a"></i></div><span class="dt">${v.all}</span></div>`;}).join("")}
-    <div class="skey"><span><b style="background:var(--accent)"></b>Mensch gebissen</span><span><b style="background:#6e7d7a"></b>sonstige (Hund gebissen, Attacke, Sachschaden)</span></div>
+    return `<div class="darow"><span class="dy">${yr}</span><div class="stack" role="img" aria-label="${yr}: ${v.human} Vorfälle mit gebissenem Menschen, ${o} sonstige, ${v.all} gesamt"><i style="width:${100*v.human/v.all}%;background:#8a5a2b"></i><i style="width:${100*o/v.all}%;background:#6e7d7a"></i></div><span class="dt">${v.all}</span></div>`;}).join("")}
+    <div class="skey"><span><b style="background:#8a5a2b"></b>Mensch gebissen</span><span><b style="background:#6e7d7a"></b>sonstige (Hund gebissen, Attacke, Sachschaden)</span></div>
     <p class="note" style="margin:0">${Object.entries(DOG_ATT).map(([yr,v])=>`${yr}: ${v.human} Mensch, ${v.all-v.human} sonstige`).join(" · ")}. Bissstatistik der MA 58; „sonstige“ = Vorfälle ohne gebissenen Menschen. Für 2024 ist der Download-Link der Stadt derzeit defekt.</p>`:"";
   document.getElementById("detail").innerHTML=`
     <h2>${b===0?"Wien gesamt":b+". "+NAMES[b]}</h2>
@@ -1268,8 +1268,8 @@ svg.addEventListener("click",e=>{
 
 const lc=document.getElementById("layers");
 const LGROUPS=[["Demografie","#c4161c",["pop","age","cob","bir","dea","edu"]],
-  ["Mobilität","#3d6f9e",["fp","wl","veh","brand"]],
-  ["Infrastruktur","#4f7d3a",["infra","waste"]],
+  ["Mobilität","#6e7d7a",["fp","wl","veh","brand"]],
+  ["Infrastruktur","#2f6fb0",["infra","waste"]],
   ["Tiere","#8a5a2b",["dog","fund"]],
   ["Politik & Geschichte","#7a3db8",["vote","antik"]]];
 const inGroup=new Set(LGROUPS.flatMap(g=>g[2]));
