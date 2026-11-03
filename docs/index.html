@@ -783,7 +783,7 @@ function drawWl(s){
         +`<path d="${d}" style="pointer-events:none;fill:none;stroke:${c};stroke-width:${w.toFixed(2)};stroke-linecap:round;stroke-dasharray:0 ${(2*g).toFixed(2)};stroke-dashoffset:${(-g).toFixed(2)}"></path>`;
     }); }
     if(HS) i.s.forEach(id=>{ const h=HS[id]; if(!h) return; const [x,y]=px([h[0],h[1]]);
-      wlDrawn.c.add(causeOf(i)); const z=(on?20:13)*mapUnitsPerPx();
+      wlDrawn.c.add(causeOf(i)); const zp=16*Math.min(1.7,1+(zoom.k-1)*.15), z=(on?zp*1.45:zp)*mapUnitsPerPx();
       dots+=`<g data-wl="${n}"><title>${esc(causeLabel(i))}: ${esc(h[2])}</title>${on?`<rect x="${(x-z/2-z*.12).toFixed(2)}" y="${(y-z/2-z*.12).toFixed(2)}" width="${(z*1.24).toFixed(2)}" height="${(z*1.24).toFixed(2)}" rx="${(z*.2).toFixed(2)}" style="fill:var(--ink)"></rect>`:""}<image href="${CAUSE_ICON(causeOf(i))}" x="${(x-z/2).toFixed(2)}" y="${(y-z/2).toFixed(2)}" width="${z.toFixed(2)}" height="${z.toFixed(2)}"></image></g>`; });
     if(HS&&PT&&lines.length+dots.length===before) wlDrawn.off++;
   });
@@ -1144,7 +1144,7 @@ document.querySelectorAll(".themesw button").forEach(b=>b.addEventListener("clic
 document.getElementById("credit-foot").innerHTML=creditHtml();
 const pointers=new Map(); let drag=null, moved=false, tileTimer=null;
 function mapUnitsPerPx(){ const vb=svg.getAttribute("viewBox").split(" ").map(Number); return vb[2]/(svg.clientWidth||vb[2]); }
-function scheduleTiles(){ clearTimeout(tileTimer); tileTimer=setTimeout(()=>{ try{drawOrient(layer.points);drawTiles();if(!layer.special)drawBars(subOf(layer),yearOf(layer));}catch(e){} },120); }
+function scheduleTiles(){ clearTimeout(tileTimer); tileTimer=setTimeout(()=>{ try{drawOrient(layer.points);drawTiles();if(!layer.special){drawBars(subOf(layer),yearOf(layer));drawWl(subOf(layer));}}catch(e){} },120); }
 svg.addEventListener("pointerdown",e=>{
   pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
   if(zoom.k>1||pointers.size===2){ drag={cx:zoom.cx,cy:zoom.cy,x:e.clientX,y:e.clientY,k:zoom.k,dist:null}; moved=false; }
