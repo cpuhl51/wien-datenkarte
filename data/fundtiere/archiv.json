@@ -1,226 +1,258 @@
 [
 {
-"id": "",
-"t": "Katze",
-"k": "Katzen",
-"d": "2026-10-02",
-"s": "unbekannt",
-"f": "braun-getigert",
-"o": "23., Ketzergasse",
-"b": 23
-},
-{
-"id": "",
+"id": "64090",
 "t": "Fink",
 "k": "Andere Tiere",
 "d": "2026-10-02",
 "s": "unbekannt",
 "f": "",
 "o": "06., Mariahilfer Straße",
-"b": 6
+"b": 6,
+"xy": [
+16.3383,
+48.19634
+]
 },
 {
-"id": "",
-"t": "Wellensittich",
-"k": "Andere Tiere",
-"d": "2026-10-03",
+"id": "64091",
+"t": "Katze",
+"k": "Katzen",
+"d": "2026-10-02",
 "s": "unbekannt",
-"f": "",
-"o": "03., Gestettengasse",
-"b": 3
+"f": "braun-getigert",
+"o": "23., Ketzergasse",
+"b": 23,
+"xy": [
+16.27886,
+48.13018
+]
 },
 {
-"id": "",
+"id": "64103",
 "t": "Europäisch Kurzhaar",
 "k": "Katzen",
 "d": "2026-10-03",
 "s": "männlich",
 "f": "braun getigert mit weiß",
 "o": "21., Spitzweg",
-"b": 21
+"b": 21,
+"xy": [
+16.459,
+48.27237
+]
 },
 {
-"id": "",
+"id": "64105",
 "t": "Europäisch Kurzhaar",
 "k": "Katzen",
 "d": "2026-10-03",
 "s": "männlich",
 "f": "schwarz",
 "o": "22., Wagramer Straße",
-"b": 22
+"b": 22,
+"xy": [
+16.46343,
+48.25622
+]
 },
 {
-"id": "",
-"t": "Scottish Fold Shorthair",
-"k": "Katzen",
-"d": "2026-10-04",
-"s": "weiblich",
-"f": "schildpatt",
-"o": "10., Franz-Koci-Straße",
-"b": 10
+"id": "64109",
+"t": "Wellensittich",
+"k": "Andere Tiere",
+"d": "2026-10-03",
+"s": "unbekannt",
+"f": "",
+"o": "03., Gestettengasse",
+"b": 3,
+"xy": [
+16.40464,
+48.196
+]
 },
 {
-"id": "",
-"t": "Langhaarkatze",
-"k": "Katzen",
-"d": "2026-10-04",
-"s": "weiblich",
-"f": "braun",
-"o": "22., Am Mühlwasser",
-"b": 22
-},
-{
-"id": "",
-"t": "Europäisch Kurzhaar",
-"k": "Katzen",
-"d": "2026-10-04",
-"s": "männlich",
-"f": "schwarz,weiß",
-"o": "10., Feuchterslebengasse",
-"b": 10
-},
-{
-"id": "",
-"t": "Scottish Fold Shorthair",
-"k": "Katzen",
-"d": "2026-10-04",
-"s": "männlich",
-"f": "rot getigert",
-"o": "10., Franz-Koci-Straße",
-"b": 10
-},
-{
-"id": "",
+"id": "64112",
 "t": "Kaninchen",
 "k": "Andere Tiere",
 "d": "2026-10-04",
 "s": "männlich",
 "f": "braun/weiß",
 "o": "16., Brüßlgasse",
-"b": 16
+"b": 16,
+"xy": [
+16.32122,
+48.20858
+]
 },
 {
-"id": "",
-"t": "Katze",
+"id": "64113",
+"t": "Scottish Fold Shorthair",
 "k": "Katzen",
-"d": "2026-10-05",
-"s": "unbekannt",
-"f": "braun getigert",
-"o": "23., Ketzergasse",
-"b": 23
-},
-{
-"id": "",
-"t": "Europäisch Kurzhaar",
-"k": "Katzen",
-"d": "2026-10-05",
+"d": "2026-10-04",
 "s": "weiblich",
-"f": "schwarz",
-"o": "15., Hütteldorfer Straße",
-"b": 15
+"f": "schildpatt",
+"o": "10., Franz-Koci-Straße",
+"b": 10,
+"xy": [
+16.38996,
+48.14735
+]
 },
 {
-"id": "",
-"t": "Europäisch Kurzhaar",
+"id": "64114",
+"t": "Scottish Fold Shorthair",
 "k": "Katzen",
-"d": "2026-10-05",
+"d": "2026-10-04",
 "s": "weiblich",
-"f": "braun getigert",
-"o": "20., Griegstraße",
-"b": 20
+"f": "schildpatt",
+"o": "10., Franz-Koci-Straße",
+"b": 10,
+"xy": [
+16.38996,
+48.14735
+]
 },
 {
-"id": "",
+"id": "64117",
+"t": "Langhaarkatze",
+"k": "Katzen",
+"d": "2026-10-04",
+"s": "weiblich",
+"f": "braun",
+"o": "22., Am Mühlwasser",
+"b": 22,
+"xy": [
+16.46714,
+48.21211
+]
+},
+{
+"id": "64118",
 "t": "Europäisch Kurzhaar",
 "k": "Katzen",
-"d": "2026-10-05",
+"d": "2026-10-04",
 "s": "männlich",
-"f": "braun getigert",
-"o": "19., Hutweidengasse",
-"b": 19
+"f": "schwarz,weiß",
+"o": "10., Feuchterslebengasse",
+"b": 10,
+"xy": [
+16.38666,
+48.17106
+]
 },
 {
-"id": "",
-"t": "Europäisch Kurzhaar",
-"k": "Katzen",
-"d": "2026-10-05",
-"s": "männlich",
-"f": "braun getigert",
-"o": "21., KLG Leopoldau, Gruppe Ö, Weg 3, Parzelle 76",
-"b": 21
-},
-{
-"id": "",
+"id": "64119",
 "t": "Langhaarkatze",
 "k": "Katzen",
 "d": "2026-10-05",
 "s": "männlich",
 "f": "weiß mit grau",
 "o": "21., Birneckergasse",
-"b": 21
+"b": 21,
+"xy": [
+16.40546,
+48.24368
+]
 },
 {
-"id": "",
+"id": "64120",
+"t": "Katze",
+"k": "Katzen",
+"d": "2026-10-05",
+"s": "unbekannt",
+"f": "braun getigert",
+"o": "23., Ketzergasse",
+"b": 23,
+"xy": [
+16.27886,
+48.13018
+]
+},
+{
+"id": "64122",
+"t": "Europäisch Kurzhaar",
+"k": "Katzen",
+"d": "2026-10-05",
+"s": "weiblich",
+"f": "schwarz",
+"o": "15., Hütteldorfer Straße",
+"b": 15,
+"xy": [
+16.30425,
+48.19918
+]
+},
+{
+"id": "64131",
+"t": "Europäisch Kurzhaar",
+"k": "Katzen",
+"d": "2026-10-05",
+"s": "männlich",
+"f": "braun getigert",
+"o": "19., Hutweidengasse",
+"b": 19,
+"xy": [
+16.33508,
+48.2424
+]
+},
+{
+"id": "64133",
+"t": "Europäisch Kurzhaar",
+"k": "Katzen",
+"d": "2026-10-05",
+"s": "männlich",
+"f": "braun getigert",
+"o": "21., KLG Leopoldau, Gruppe Ö, Weg 3, Parzelle 76",
+"b": 21,
+"xy": [
+16.44682,
+48.26508
+]
+},
+{
+"id": "64135",
+"t": "Europäisch Kurzhaar",
+"k": "Katzen",
+"d": "2026-10-05",
+"s": "weiblich",
+"f": "braun getigert",
+"o": "20., Griegstraße",
+"b": 20,
+"xy": [
+16.37589,
+48.24908
+]
+},
+{
+"id": "64149",
 "t": "Europäisch Kurzhaar",
 "k": "Katzen",
 "d": "2026-10-06",
 "s": "weiblich",
 "f": "braun getigert mit weiß",
 "o": "05., Arbeitergasse",
-"b": 5
+"b": 5,
+"xy": [
+16.3502,
+48.18551
+]
 },
 {
-"id": "",
+"id": "64159",
 "t": "Landschildkröte",
 "k": "Andere Tiere",
 "d": "2026-10-07",
 "s": "unbekannt",
 "f": "",
 "o": "22., Blumengärten Hirschstetten",
-"b": 22
+"b": 22,
+"xy": [
+16.474,
+48.23968
+]
 },
 {
-"id": "",
-"t": "Sittich",
-"k": "Andere Tiere",
-"d": "2026-10-07",
-"s": "unbekannt",
-"f": "gelb",
-"o": "22., Bertha-von-Suttner-Gasse",
-"b": 22
-},
-{
-"id": "",
-"t": "Wellensittich",
-"k": "Andere Tiere",
-"d": "2026-10-07",
-"s": "unbekannt",
-"f": "gelb",
-"o": "09., Porzellangasse",
-"b": 9
-},
-{
-"id": "",
-"t": "Skorpion",
-"k": "Andere Tiere",
-"d": "2026-10-07",
-"s": "unbekannt",
-"f": "schwarz",
-"o": "10., Collmanngasse",
-"b": 10
-},
-{
-"id": "",
-"t": "Europäisch Kurzhaar",
-"k": "Katzen",
-"d": "2026-10-07",
-"s": "weiblich",
-"f": "tricolor",
-"o": "14., Waidhausenstraße",
-"b": 14
-},
-{
-"id": "",
+"id": "64161",
 "t": "Landschildkröte",
 "k": "Andere Tiere",
 "d": "2026-10-07",
@@ -230,277 +262,399 @@
 "b": 10
 },
 {
-"id": "",
+"id": "64162",
 "t": "Chinchilla",
 "k": "Andere Tiere",
 "d": "2026-10-07",
 "s": "weiblich",
 "f": "grau",
 "o": "02., Gredlerstraße",
-"b": 2
+"b": 2,
+"xy": [
+16.37881,
+48.21374
+]
 },
 {
-"id": "",
+"id": "64163",
+"t": "Europäisch Kurzhaar",
+"k": "Katzen",
+"d": "2026-10-07",
+"s": "weiblich",
+"f": "tricolor",
+"o": "14., Waidhausenstraße",
+"b": 14,
+"xy": [
+16.27983,
+48.19977
+]
+},
+{
+"id": "64165",
+"t": "Wellensittich",
+"k": "Andere Tiere",
+"d": "2026-10-07",
+"s": "unbekannt",
+"f": "gelb",
+"o": "09., Porzellangasse",
+"b": 9,
+"xy": [
+16.36246,
+48.22229
+]
+},
+{
+"id": "64170",
+"t": "Sittich",
+"k": "Andere Tiere",
+"d": "2026-10-07",
+"s": "unbekannt",
+"f": "gelb",
+"o": "22., Bertha-von-Suttner-Gasse",
+"b": 22,
+"xy": [
+16.45412,
+48.25239
+]
+},
+{
+"id": "64178",
 "t": "Russisch Blau",
 "k": "Katzen",
 "d": "2026-10-07",
 "s": "männlich",
 "f": "dunkelgrau",
 "o": "03., Lechnerstraße",
-"b": 3
+"b": 3,
+"xy": [
+16.40667,
+48.19751
+]
 },
 {
-"id": "",
-"t": "Nymphensittich",
+"id": "64179",
+"t": "Skorpion",
 "k": "Andere Tiere",
-"d": "2026-10-08",
+"d": "2026-10-07",
 "s": "unbekannt",
-"f": "weiß-gelb",
-"o": "22., Bonsaigasse",
-"b": 22
+"f": "schwarz",
+"o": "10., Collmanngasse",
+"b": 10,
+"xy": [
+16.3919,
+48.16512
+]
 },
 {
-"id": "",
-"t": "Europäisch Kurzhaar",
-"k": "Katzen",
-"d": "2026-10-08",
-"s": "weiblich",
-"f": "schildpatt",
-"o": "02., Max-Winter-Platz",
-"b": 2
-},
-{
-"id": "",
-"t": "Europäisch Kurzhaar",
-"k": "Katzen",
-"d": "2026-10-08",
-"s": "weiblich",
-"f": "grau",
-"o": "12., Duchweg",
-"b": 12
-},
-{
-"id": "",
-"t": "Europäisch Kurzhaar",
-"k": "Katzen",
-"d": "2026-10-08",
-"s": "weiblich",
-"f": "braun getigert mit weiß",
-"o": "22., Eileen-Gray-Gasse",
-"b": 22
-},
-{
-"id": "",
-"t": "Havaneser",
-"k": "Hunde",
-"d": "2026-10-08",
-"s": "männlich",
-"f": "grau, braun mit hellen Abzeichen",
-"o": "23., Triester Straße",
-"b": 23
-},
-{
-"id": "",
-"t": "Britisch Kurzhaar",
-"k": "Katzen",
-"d": "2026-10-08",
-"s": "männlich",
-"f": "grau",
-"o": "20., Adalbert-Stifter-Straße",
-"b": 20
-},
-{
-"id": "",
+"id": "64182",
 "t": "Europäisch Kurzhaar",
 "k": "Katzen",
 "d": "2026-10-08",
 "s": "männlich",
 "f": "braun getigert mit weiß",
 "o": "22., Esslinger Hauptstraße",
-"b": 22
+"b": 22,
+"xy": [
+16.52561,
+48.21143
+]
 },
 {
-"id": "",
+"id": "64185",
+"t": "Havaneser",
+"k": "Hunde",
+"d": "2026-10-08",
+"s": "männlich",
+"f": "grau, braun mit hellen Abzeichen",
+"o": "23., Triester Straße",
+"b": 23,
+"xy": [
+16.33899,
+48.15273
+]
+},
+{
+"id": "64189",
 "t": "Europäisch Kurzhaar",
 "k": "Katzen",
 "d": "2026-10-08",
 "s": "männlich",
 "f": "schwarz",
 "o": "02., Max-Winter-Platz",
-"b": 2
+"b": 2,
+"xy": [
+16.39994,
+48.22034
+]
 },
 {
-"id": "",
+"id": "64190",
 "t": "Europäisch Kurzhaar",
 "k": "Katzen",
 "d": "2026-10-08",
-"s": "männlich",
-"f": "rot getigert",
-"o": "02., Max-Winter-Platz",
-"b": 2
+"s": "weiblich",
+"f": "grau",
+"o": "12., Duchweg",
+"b": 12,
+"xy": [
+16.33814,
+48.18351
+]
 },
 {
-"id": "",
+"id": "64191",
+"t": "Europäisch Kurzhaar",
+"k": "Katzen",
+"d": "2026-10-08",
+"s": "weiblich",
+"f": "schildpatt",
+"o": "02., Max-Winter-Platz",
+"b": 2,
+"xy": [
+16.39994,
+48.22034
+]
+},
+{
+"id": "64192",
+"t": "Europäisch Kurzhaar",
+"k": "Katzen",
+"d": "2026-10-08",
+"s": "weiblich",
+"f": "schildpatt",
+"o": "02., Max-Winter-Platz",
+"b": 2,
+"xy": [
+16.39994,
+48.22034
+]
+},
+{
+"id": "64196",
+"t": "Europäisch Kurzhaar",
+"k": "Katzen",
+"d": "2026-10-08",
+"s": "weiblich",
+"f": "braun getigert mit weiß",
+"o": "22., Eileen-Gray-Gasse",
+"b": 22,
+"xy": [
+16.51099,
+48.22678
+]
+},
+{
+"id": "64197",
 "t": "Europäisch Kurzhaar",
 "k": "Katzen",
 "d": "2026-10-08",
 "s": "männlich",
 "f": "rot getigert",
 "o": "20., Othmargasse",
-"b": 20
+"b": 20,
+"xy": [
+16.368,
+48.23079
+]
 },
 {
-"id": "",
-"t": "Zuchttaube",
+"id": "64198",
+"t": "Nymphensittich",
 "k": "Andere Tiere",
-"d": "2026-10-09",
+"d": "2026-10-08",
 "s": "unbekannt",
-"f": "weiß",
-"o": "10., Grundäckergasse",
-"b": 10
+"f": "weiß-gelb",
+"o": "22., Bonsaigasse",
+"b": 22,
+"xy": [
+16.43096,
+48.24912
+]
 },
 {
-"id": "",
+"id": "64199",
+"t": "Britisch Kurzhaar",
+"k": "Katzen",
+"d": "2026-10-08",
+"s": "männlich",
+"f": "grau",
+"o": "20., Adalbert-Stifter-Straße",
+"b": 20,
+"xy": [
+16.37062,
+48.24031
+]
+},
+{
+"id": "64207",
 "t": "Europäisch Kurzhaar",
 "k": "Katzen",
 "d": "2026-10-09",
 "s": "männlich",
 "f": "schwarz",
 "o": "10., Böhmischer Prater",
-"b": 10
+"b": 10,
+"xy": [
+16.39841,
+48.16681
+]
 },
 {
-"id": "",
+"id": "64211",
 "t": "Scottish Fold Shorthair",
 "k": "Katzen",
 "d": "2026-10-09",
 "s": "männlich",
 "f": "grau",
 "o": "02., Max-Winter-Platz",
-"b": 2
+"b": 2,
+"xy": [
+16.39994,
+48.22034
+]
 },
 {
-"id": "",
-"t": "Birma",
-"k": "Katzen",
-"d": "2026-10-10",
-"s": "weiblich",
-"f": "Rassetypisch",
-"o": "10., Inzersdorfer Straße",
-"b": 10
+"id": "64218",
+"t": "Zuchttaube",
+"k": "Andere Tiere",
+"d": "2026-10-09",
+"s": "unbekannt",
+"f": "weiß",
+"o": "10., Grundäckergasse",
+"b": 10,
+"xy": [
+16.39617,
+48.13934
+]
 },
 {
-"id": "",
+"id": "64219",
 "t": "Kaninchen",
 "k": "Andere Tiere",
 "d": "2026-10-10",
 "s": "weiblich",
 "f": "hellbraun-schwarz",
 "o": "22., Attemsgasse",
-"b": 22
+"b": 22,
+"xy": [
+16.43428,
+48.24787
+]
 },
 {
-"id": "",
+"id": "64220",
 "t": "Europäisch Kurzhaar",
 "k": "Katzen",
 "d": "2026-10-10",
 "s": "männlich",
 "f": "schwarz",
 "o": "10., Geißfußgasse",
-"b": 10
+"b": 10,
+"xy": [
+16.4042,
+48.15474
+]
 },
 {
-"id": "",
+"id": "64221",
+"t": "Birma",
+"k": "Katzen",
+"d": "2026-10-10",
+"s": "weiblich",
+"f": "Rassetypisch",
+"o": "10., Inzersdorfer Straße",
+"b": 10,
+"xy": [
+16.3673,
+48.17271
+]
+},
+{
+"id": "64230",
 "t": "Wasserschildkröte",
 "k": "Andere Tiere",
 "d": "2026-10-11",
 "s": "unbekannt",
 "f": "",
 "o": "16., Herbststraße",
-"b": 16
+"b": 16,
+"xy": [
+16.32516,
+48.20683
+]
 },
 {
-"id": "",
+"id": "64236",
 "t": "Europäisch Kurzhaar",
 "k": "Katzen",
 "d": "2026-10-11",
 "s": "männlich",
 "f": "schwarz - weiß",
 "o": "21., Kinzerplatz",
-"b": 21
+"b": 21,
+"xy": [
+16.40858,
+48.25301
+]
 },
 {
-"id": "",
-"t": "Katze",
-"k": "Katzen",
-"d": "2026-10-12",
-"s": "unbekannt",
-"f": "schwarz/weiß rosa Nase",
-"o": "10., Erholungsgebiet Wienerberg",
-"b": 10
-},
-{
-"id": "",
-"t": "Katze",
-"k": "Katzen",
-"d": "2026-10-12",
-"s": "unbekannt",
-"f": "schwarz/weiß schwarze Nase",
-"o": "10., Erholungsgebiet Wienerberg",
-"b": 10
-},
-{
-"id": "",
-"t": "Wellensittich",
-"k": "Andere Tiere",
-"d": "2026-10-12",
-"s": "unbekannt",
-"f": "gelb",
-"o": "04., Südtiroler Platz",
-"b": 4
-},
-{
-"id": "",
+"id": "64239",
 "t": "Kanarienvogel",
 "k": "Andere Tiere",
 "d": "2026-10-12",
 "s": "unbekannt",
 "f": "gelb",
 "o": "10., Neilreichgasse",
-"b": 10
+"b": 10,
+"xy": [
+16.35994,
+48.16386
+]
 },
 {
-"id": "",
+"id": "64260",
 "t": "Hund",
 "k": "Hunde",
 "d": "2026-10-12",
 "s": "weiblich",
 "f": "beige",
 "o": "23., Großgrünmarkt Heiwerkstraße",
-"b": 23
+"b": 23,
+"xy": [
+16.36044,
+48.13603
+]
 },
 {
-"id": "",
-"t": "Europäisch Kurzhaar",
+"id": "64261",
+"t": "Katze",
 "k": "Katzen",
 "d": "2026-10-12",
-"s": "weiblich",
-"f": "grau getigert mit weiß",
-"o": "22., Brabbéegasse",
-"b": 22
+"s": "unbekannt",
+"f": "schwarz/weiß rosa Nase",
+"o": "10., Erholungsgebiet Wienerberg",
+"b": 10,
+"xy": [
+16.348,
+48.15979
+]
 },
 {
-"id": "",
-"t": "Langhaarkatze",
+"id": "64262",
+"t": "Katze",
 "k": "Katzen",
 "d": "2026-10-12",
-"s": "weiblich",
-"f": "weiß mit grau getigert",
-"o": "20., Klosterneuburger Straße",
-"b": 20
+"s": "unbekannt",
+"f": "schwarz/weiß rosa Nase",
+"o": "10., Erholungsgebiet Wienerberg",
+"b": 10,
+"xy": [
+16.348,
+48.15979
+]
 },
 {
-"id": "",
+"id": "64264",
 "t": "Hund",
 "k": "Hunde",
 "d": "2026-10-12",
@@ -510,277 +664,441 @@
 "b": 10
 },
 {
-"id": "",
+"id": "64266",
+"t": "Europäisch Kurzhaar",
+"k": "Katzen",
+"d": "2026-10-12",
+"s": "weiblich",
+"f": "grau getigert mit weiß",
+"o": "22., Brabbéegasse",
+"b": 22,
+"xy": [
+16.44647,
+48.25749
+]
+},
+{
+"id": "64267",
 "t": "Siam",
 "k": "Katzen",
 "d": "2026-10-12",
 "s": "männlich",
 "f": "weiß",
 "o": "01., Herrengasse",
-"b": 1
+"b": 1,
+"xy": [
+16.3655,
+48.20989
+]
 },
 {
-"id": "",
+"id": "64268",
 "t": "Wellensittich",
 "k": "Andere Tiere",
-"d": "2026-10-13",
+"d": "2026-10-12",
 "s": "unbekannt",
-"f": "grün,gelb",
-"o": "21., Untere Jungenberggasse",
-"b": 21
+"f": "gelb",
+"o": "04., Südtiroler Platz",
+"b": 4,
+"xy": [
+16.37339,
+48.18591
+]
 },
 {
-"id": "",
+"id": "64272",
+"t": "Langhaarkatze",
+"k": "Katzen",
+"d": "2026-10-12",
+"s": "weiblich",
+"f": "weiß mit grau getigert",
+"o": "20., Klosterneuburger Straße",
+"b": 20,
+"xy": [
+16.36715,
+48.23326
+]
+},
+{
+"id": "64278",
 "t": "Nymphensittich",
 "k": "Andere Tiere",
 "d": "2026-10-13",
 "s": "unbekannt",
 "f": "gelb/grau",
 "o": "22., Im Auwald zugeflogen",
-"b": 22
+"b": 22,
+"xy": [
+16.51611,
+48.26381
+]
 },
 {
-"id": "",
+"id": "64279",
 "t": "Europäisch Kurzhaar",
 "k": "Katzen",
 "d": "2026-10-13",
 "s": "weiblich",
 "f": "braun getigert",
 "o": "22., Telephonweg",
-"b": 22
+"b": 22,
+"xy": [
+16.52902,
+48.23933
+]
 },
 {
-"id": "",
-"t": "Nymphensittich",
+"id": "64286",
+"t": "Wellensittich",
 "k": "Andere Tiere",
-"d": "2026-10-14",
+"d": "2026-10-13",
 "s": "unbekannt",
-"f": "grau-weiß-gelb",
-"o": "22., Harrachgasse",
-"b": 22
+"f": "grün,gelb",
+"o": "21., Untere Jungenberggasse",
+"b": 21,
+"xy": [
+16.39309,
+48.30606
+]
 },
 {
-"id": "",
-"t": "Nymphensittich",
-"k": "Andere Tiere",
-"d": "2026-10-14",
-"s": "unbekannt",
-"f": "weiß-gelb",
-"o": "22., Polgarstraße",
-"b": 22
-},
-{
-"id": "",
+"id": "64293",
 "t": "Wellensittich",
 "k": "Andere Tiere",
 "d": "2026-10-14",
 "s": "weiblich",
 "f": "gelb/grün",
 "o": "16., Klopstockgasse",
-"b": 16
+"b": 16,
+"xy": [
+16.32322,
+48.21785
+]
 },
 {
-"id": "",
+"id": "64295",
+"t": "Nymphensittich",
+"k": "Andere Tiere",
+"d": "2026-10-14",
+"s": "unbekannt",
+"f": "grau-weiß-gelb",
+"o": "22., Harrachgasse",
+"b": 22,
+"xy": [
+16.42619,
+48.22295
+]
+},
+{
+"id": "64297",
+"t": "Nymphensittich",
+"k": "Andere Tiere",
+"d": "2026-10-14",
+"s": "unbekannt",
+"f": "weiß-gelb",
+"o": "22., Polgarstraße",
+"b": 22,
+"xy": [
+16.45093,
+48.23362
+]
+},
+{
+"id": "64302",
 "t": "Europäisch Kurzhaar",
 "k": "Katzen",
 "d": "2026-10-14",
 "s": "männlich",
 "f": "schwarz/weiß",
 "o": "10., Quellenstraße",
-"b": 10
+"b": 10,
+"xy": [
+16.3775,
+48.17509
+]
 },
 {
-"id": "",
+"id": "64307",
 "t": "Zuchttaube",
 "k": "Andere Tiere",
 "d": "2026-10-15",
 "s": "unbekannt",
 "f": "arttypisch",
 "o": "11., Neugebäudestraße",
-"b": 11
+"b": 11,
+"xy": [
+16.43525,
+48.16172
+]
 },
 {
-"id": "",
+"id": "64311",
 "t": "Europäisch Kurzhaar",
 "k": "Katzen",
 "d": "2026-10-15",
 "s": "weiblich",
 "f": "schildpatt",
 "o": "14., Flötzersteig",
-"b": 14
+"b": 14,
+"xy": [
+16.28455,
+48.20471
+]
 },
 {
-"id": "",
+"id": "64313",
 "t": "Bernhardiner",
 "k": "Hunde",
 "d": "2026-10-15",
 "s": "männlich",
 "f": "beige/weiss",
 "o": "07., Neubaugürtel",
-"b": 7
+"b": 7,
+"xy": [
+16.33836,
+48.20002
+]
 },
 {
-"id": "",
-"t": "Nymphensittich",
-"k": "Andere Tiere",
-"d": "2026-10-16",
-"s": "unbekannt",
-"f": "grau",
-"o": "22., Erzherzog-Karl-Straße",
-"b": 22
-},
-{
-"id": "",
-"t": "Agapornide",
-"k": "Andere Tiere",
-"d": "2026-10-16",
-"s": "unbekannt",
-"f": "weiß/grau",
-"o": "21., Brünner Straße",
-"b": 21
-},
-{
-"id": "",
-"t": "Langhaarkatze",
-"k": "Katzen",
-"d": "2026-10-16",
-"s": "weiblich",
-"f": "grau getigert",
-"o": "22., Erzherzog-Karl-Straße",
-"b": 22
-},
-{
-"id": "",
+"id": "64320",
 "t": "Katze",
 "k": "Katzen",
 "d": "2026-10-16",
 "s": "weiblich",
 "f": "braun getigert-weiß",
 "o": "23., Engelshofengasse",
-"b": 23
+"b": 23,
+"xy": [
+16.27965,
+48.16167
+]
 },
 {
-"id": "",
+"id": "64321",
 "t": "Britisch Kurzhaar",
 "k": "Katzen",
 "d": "2026-10-16",
 "s": "männlich",
 "f": "grau getigert",
 "o": "03., Trubelgasse",
-"b": 3
+"b": 3,
+"xy": [
+16.38863,
+48.18895
+]
 },
 {
-"id": "",
-"t": "Sonstige Vögel",
-"k": "Andere Tiere",
-"d": "2026-10-17",
-"s": "unbekannt",
-"f": "",
-"o": "18., Gentzgasse",
-"b": 18
-},
-{
-"id": "",
-"t": "Europäisch Kurzhaar",
+"id": "64322",
+"t": "Langhaarkatze",
 "k": "Katzen",
-"d": "2026-10-17",
+"d": "2026-10-16",
 "s": "weiblich",
-"f": "tricolor",
-"o": "17., Hormayrgasse",
-"b": 17
+"f": "grau getigert",
+"o": "22., Erzherzog-Karl-Straße",
+"b": 22,
+"xy": [
+16.45566,
+48.22959
+]
 },
 {
-"id": "",
-"t": "Britisch Kurzhaar",
-"k": "Katzen",
-"d": "2026-10-17",
-"s": "männlich",
-"f": "weiß/beige",
-"o": "22., Weinwurmweg",
-"b": 22
+"id": "64323",
+"t": "Nymphensittich",
+"k": "Andere Tiere",
+"d": "2026-10-16",
+"s": "unbekannt",
+"f": "grau",
+"o": "22., Erzherzog-Karl-Straße",
+"b": 22,
+"xy": [
+16.45566,
+48.22959
+]
 },
 {
-"id": "",
+"id": "64330",
+"t": "Agapornide",
+"k": "Andere Tiere",
+"d": "2026-10-16",
+"s": "unbekannt",
+"f": "weiß/grau",
+"o": "21., Brünner Straße",
+"b": 21,
+"xy": [
+16.41743,
+48.28777
+]
+},
+{
+"id": "64337",
 "t": "Europäisch Kurzhaar",
 "k": "Katzen",
 "d": "2026-10-17",
 "s": "männlich",
 "f": "braun getigert",
 "o": "03., Erdbergstraße",
-"b": 3
+"b": 3,
+"xy": [
+16.411,
+48.19394
+]
 },
 {
-"id": "",
+"id": "64338",
+"t": "Sonstige Vögel",
+"k": "Andere Tiere",
+"d": "2026-10-17",
+"s": "unbekannt",
+"f": "",
+"o": "18., Gentzgasse",
+"b": 18,
+"xy": [
+16.33892,
+48.22893
+]
+},
+{
+"id": "64339",
+"t": "Europäisch Kurzhaar",
+"k": "Katzen",
+"d": "2026-10-17",
+"s": "weiblich",
+"f": "tricolor",
+"o": "17., Hormayrgasse",
+"b": 17,
+"xy": [
+16.33233,
+48.22141
+]
+},
+{
+"id": "64340",
 "t": "Europäisch Kurzhaar",
 "k": "Katzen",
 "d": "2026-10-17",
 "s": "männlich",
 "f": "weiß",
 "o": "10., Quellenstraße",
-"b": 10
+"b": 10,
+"xy": [
+16.3775,
+48.17509
+]
 },
 {
-"id": "",
+"id": "64341",
+"t": "Britisch Kurzhaar",
+"k": "Katzen",
+"d": "2026-10-17",
+"s": "männlich",
+"f": "weiß/beige",
+"o": "22., Weinwurmweg",
+"b": 22,
+"xy": [
+16.42559,
+48.24507
+]
+},
+{
+"id": "64348",
 "t": "Zuchttaube",
 "k": "Andere Tiere",
 "d": "2026-10-18",
 "s": "unbekannt",
 "f": "weiß mit grau",
 "o": "22., Hasibederstraße",
-"b": 22
+"b": 22,
+"xy": [
+16.48497,
+48.23587
+]
 },
 {
-"id": "",
-"t": "Wellensittich",
-"k": "Andere Tiere",
-"d": "2026-10-19",
-"s": "unbekannt",
-"f": "grün-gelb",
-"o": "23., Traubengasse",
-"b": 23
-},
-{
-"id": "",
-"t": "Nymphensittich",
-"k": "Andere Tiere",
-"d": "2026-10-19",
-"s": "unbekannt",
-"f": "grau-gelb",
-"o": "22., Larwingasse",
-"b": 22
-},
-{
-"id": "",
-"t": "Nymphensittich",
-"k": "Andere Tiere",
-"d": "2026-10-19",
-"s": "unbekannt",
-"f": "weiß - gelb",
-"o": "22., Rennbahnweg",
-"b": 22
-},
-{
-"id": "",
-"t": "Zuchttaube",
-"k": "Andere Tiere",
-"d": "2026-10-19",
-"s": "unbekannt",
-"f": "grau",
-"o": "21., Shopping Center Nord",
-"b": 21
-},
-{
-"id": "",
+"id": "64363",
 "t": "Havaneser",
 "k": "Hunde",
 "d": "2026-10-19",
 "s": "männlich",
 "f": "beige",
 "o": "19., Obkirchergasse",
-"b": 19
+"b": 19,
+"xy": [
+16.34194,
+48.24318
+]
 },
 {
-"id": "",
+"id": "64364",
+"t": "Zuchttaube",
+"k": "Andere Tiere",
+"d": "2026-10-19",
+"s": "unbekannt",
+"f": "grau",
+"o": "21., Shopping Center Nord",
+"b": 21,
+"xy": [
+16.398,
+48.26715
+]
+},
+{
+"id": "64366",
+"t": "Britisch Kurzhaar",
+"k": "Katzen",
+"d": "2026-10-19",
+"s": "männlich",
+"f": "grau",
+"o": "14., Penzinger Straße",
+"b": 14,
+"xy": [
+16.30283,
+48.19051
+]
+},
+{
+"id": "64368",
+"t": "Kaninchen",
+"k": "Andere Tiere",
+"d": "2026-10-19",
+"s": "männlich",
+"f": "weiß",
+"o": "10., Laimäckergasse",
+"b": 10,
+"xy": [
+16.38702,
+48.17249
+]
+},
+{
+"id": "64369",
+"t": "Nymphensittich",
+"k": "Andere Tiere",
+"d": "2026-10-19",
+"s": "unbekannt",
+"f": "grau-gelb",
+"o": "22., Larwingasse",
+"b": 22,
+"xy": [
+16.45174,
+48.24264
+]
+},
+{
+"id": "64370",
+"t": "Nymphensittich",
+"k": "Andere Tiere",
+"d": "2026-10-19",
+"s": "unbekannt",
+"f": "weiß - gelb",
+"o": "22., Rennbahnweg",
+"b": 22,
+"xy": [
+16.45418,
+48.25599
+]
+},
+{
+"id": "64371",
 "t": "Hund",
 "k": "Hunde",
 "d": "2026-10-19",
@@ -790,337 +1108,423 @@
 "b": 14
 },
 {
-"id": "",
+"id": "64374",
+"t": "Wellensittich",
+"k": "Andere Tiere",
+"d": "2026-10-19",
+"s": "unbekannt",
+"f": "grün-gelb",
+"o": "23., Traubengasse",
+"b": 23,
+"xy": [
+16.27606,
+48.13485
+]
+},
+{
+"id": "64375",
 "t": "Hund",
 "k": "Hunde",
 "d": "2026-10-19",
 "s": "männlich",
-"f": "beige",
+"f": "schwarz",
 "o": "14., Casino-Park",
 "b": 14
 },
 {
-"id": "",
-"t": "Britisch Kurzhaar",
-"k": "Katzen",
-"d": "2026-10-19",
-"s": "männlich",
-"f": "grau",
-"o": "14., Penzinger Straße",
-"b": 14
-},
-{
-"id": "",
-"t": "Kaninchen",
-"k": "Andere Tiere",
-"d": "2026-10-19",
-"s": "männlich",
-"f": "weiß",
-"o": "10., Laimäckergasse",
-"b": 10
-},
-{
-"id": "",
-"t": "Europäisch Kurzhaar",
-"k": "Katzen",
-"d": "2026-10-20",
-"s": "weiblich",
-"f": "braun getigert",
-"o": "21., Leopoldauer Straße",
-"b": 21
-},
-{
-"id": "",
+"id": "64385",
 "t": "Europäisch Kurzhaar",
 "k": "Katzen",
 "d": "2026-10-20",
 "s": "männlich",
 "f": "grau getigert",
 "o": "14., Fünkhgasse",
-"b": 14
+"b": 14,
+"xy": [
+16.29461,
+48.19512
+]
 },
 {
-"id": "",
+"id": "64387",
+"t": "Europäisch Kurzhaar",
+"k": "Katzen",
+"d": "2026-10-20",
+"s": "weiblich",
+"f": "braun getigert",
+"o": "21., Leopoldauer Straße",
+"b": 21,
+"xy": [
+16.4202,
+48.2603
+]
+},
+{
+"id": "64394",
 "t": "Langhaarkatze",
 "k": "Katzen",
 "d": "2026-10-21",
 "s": "unbekannt",
 "f": "beige /grau",
 "o": "21., Viehtriftgasse",
-"b": 21
+"b": 21,
+"xy": [
+16.43406,
+48.26056
+]
 },
 {
-"id": "",
+"id": "64395",
 "t": "Wellensittich",
 "k": "Andere Tiere",
 "d": "2026-10-21",
 "s": "unbekannt",
 "f": "gelb",
 "o": "23., Anton-Baumgartner-Straße",
-"b": 23
+"b": 23,
+"xy": [
+16.32329,
+48.15085
+]
 },
 {
-"id": "",
+"id": "64397",
 "t": "Zuchttaube",
 "k": "Andere Tiere",
 "d": "2026-10-22",
 "s": "unbekannt",
 "f": "grau-weiß",
 "o": "10., Gußriegelstraße",
-"b": 10
+"b": 10,
+"xy": [
+16.35848,
+48.17144
+]
 },
 {
-"id": "",
+"id": "64398",
 "t": "Europäisch Kurzhaar",
 "k": "Katzen",
 "d": "2026-10-22",
 "s": "männlich",
 "f": "braun getigert mit weiß",
 "o": "12., Löhnergasse",
-"b": 12
+"b": 12,
+"xy": [
+16.31665,
+48.17353
+]
 },
 {
-"id": "",
-"t": "Europäisch Kurzhaar",
-"k": "Katzen",
-"d": "2026-10-23",
-"s": "weiblich",
-"f": "braun getigert",
-"o": "10., Friesenplatz",
-"b": 10
-},
-{
-"id": "",
+"id": "64418",
 "t": "Katze",
 "k": "Katzen",
 "d": "2026-10-23",
 "s": "weiblich",
 "f": "braun getigert mit weiß",
 "o": "15., Schweglerstraße",
-"b": 15
+"b": 15,
+"xy": [
+16.32815,
+48.19918
+]
 },
 {
-"id": "",
+"id": "64426",
 "t": "Dschungarischer Zwerghamster",
 "k": "Andere Tiere",
 "d": "2026-10-23",
 "s": "weiblich",
 "f": "grau weiß",
 "o": "18., Hans-Radl-Schule",
-"b": 18
+"b": 18,
+"xy": [
+16.33063,
+48.22856
+]
 },
 {
-"id": "",
-"t": "Birma",
+"id": "64427",
+"t": "Europäisch Kurzhaar",
 "k": "Katzen",
-"d": "2026-10-24",
-"s": "unbekannt",
-"f": "rassetypisch",
-"o": "19., Zahnradbahnstraße",
-"b": 19
+"d": "2026-10-23",
+"s": "weiblich",
+"f": "braun getigert",
+"o": "10., Friesenplatz",
+"b": 10,
+"xy": [
+16.36383,
+48.17161
+]
 },
 {
-"id": "",
+"id": "64430",
 "t": "Europäisch Kurzhaar",
 "k": "Katzen",
 "d": "2026-10-24",
 "s": "weiblich",
 "f": "tricolor",
 "o": "21., Adolf-Loos-Gasse",
-"b": 21
+"b": 21,
+"xy": [
+16.4535,
+48.27302
+]
 },
 {
-"id": "",
+"id": "64434",
+"t": "Birma",
+"k": "Katzen",
+"d": "2026-10-24",
+"s": "unbekannt",
+"f": "rassetypisch",
+"o": "19., Zahnradbahnstraße",
+"b": 19,
+"xy": [
+16.35915,
+48.25902
+]
+},
+{
+"id": "64435",
 "t": "Europäisch Kurzhaar",
 "k": "Katzen",
 "d": "2026-10-24",
 "s": "weiblich",
 "f": "braun getigert",
 "o": "14., Jakob-Gremdlinger-Straße",
-"b": 14
+"b": 14,
+"xy": [
+16.23632,
+48.20884
+]
 },
 {
-"id": "",
+"id": "64441",
 "t": "Europäisch Kurzhaar",
 "k": "Katzen",
 "d": "2026-10-25",
 "s": "weiblich",
 "f": "weiß",
 "o": "10., Laubeplatz",
-"b": 10
+"b": 10,
+"xy": [
+16.36842,
+48.17489
+]
 },
 {
-"id": "",
+"id": "64445",
 "t": "Europäisch Kurzhaar",
 "k": "Katzen",
 "d": "2026-10-25",
 "s": "weiblich",
 "f": "schwarz mit braun",
 "o": "16., Haberlgasse",
-"b": 16
+"b": 16,
+"xy": [
+16.32995,
+48.20954
+]
 },
 {
-"id": "",
+"id": "64452",
 "t": "Britisch Kurzhaar",
 "k": "Katzen",
 "d": "2026-10-26",
 "s": "weiblich",
 "f": "grau",
 "o": "20., Othmargasse",
-"b": 20
+"b": 20,
+"xy": [
+16.368,
+48.23079
+]
 },
 {
-"id": "",
-"t": "Wellensittich",
-"k": "Andere Tiere",
-"d": "2026-10-27",
-"s": "unbekannt",
-"f": "weiß",
-"o": "15., Märzstraße",
-"b": 15
-},
-{
-"id": "",
-"t": "Europäisch Kurzhaar",
-"k": "Katzen",
-"d": "2026-10-27",
-"s": "weiblich",
-"f": "braun getigert",
-"o": "10., Gutheil-Schoder-Gasse",
-"b": 10
-},
-{
-"id": "",
-"t": "Europäisch Kurzhaar",
-"k": "Katzen",
-"d": "2026-10-27",
-"s": "weiblich",
-"f": "tricolor",
-"o": "21., Achengasse",
-"b": 21
-},
-{
-"id": "",
+"id": "64456",
 "t": "Langhaarkatze",
 "k": "Katzen",
 "d": "2026-10-27",
 "s": "weiblich",
 "f": "braun getigert",
 "o": "11., Dreherstraße",
-"b": 11
+"b": 11,
+"xy": [
+16.47247,
+48.15416
+]
 },
 {
-"id": "",
+"id": "64457",
+"t": "Europäisch Kurzhaar",
+"k": "Katzen",
+"d": "2026-10-27",
+"s": "weiblich",
+"f": "braun getigert",
+"o": "10., Gutheil-Schoder-Gasse",
+"b": 10,
+"xy": [
+16.33351,
+48.15908
+]
+},
+{
+"id": "64460",
+"t": "Europäisch Kurzhaar",
+"k": "Katzen",
+"d": "2026-10-27",
+"s": "weiblich",
+"f": "tricolor",
+"o": "21., Achengasse",
+"b": 21,
+"xy": [
+16.44925,
+48.28484
+]
+},
+{
+"id": "64461",
+"t": "Wellensittich",
+"k": "Andere Tiere",
+"d": "2026-10-27",
+"s": "unbekannt",
+"f": "weiß",
+"o": "15., Märzstraße",
+"b": 15,
+"xy": [
+16.31936,
+48.19843
+]
+},
+{
+"id": "64464",
 "t": "Kanarienvogel",
 "k": "Andere Tiere",
 "d": "2026-10-28",
 "s": "unbekannt",
 "f": "",
 "o": "23., Hödlgasse",
-"b": 23
+"b": 23,
+"xy": [
+16.2959,
+48.14904
+]
 },
 {
-"id": "",
+"id": "64469",
 "t": "Katze",
 "k": "Katzen",
 "d": "2026-10-28",
 "s": "männlich",
 "f": "rot",
 "o": "21., Freytaggasse",
-"b": 21
+"b": 21,
+"xy": [
+16.40172,
+48.25487
+]
 },
 {
-"id": "",
-"t": "Nymphensittich",
-"k": "Andere Tiere",
-"d": "2026-10-29",
-"s": "unbekannt",
-"f": "weiß orange gelb",
-"o": "03., Schimmelgasse",
-"b": 3
-},
-{
-"id": "",
-"t": "Sonstige Vögel",
-"k": "Andere Tiere",
-"d": "2026-10-29",
-"s": "unbekannt",
-"f": "mehrfarbig",
-"o": "22., Am Heidjöchl",
-"b": 22
-},
-{
-"id": "",
+"id": "64477",
 "t": "Europäisch Kurzhaar",
 "k": "Katzen",
 "d": "2026-10-29",
 "s": "männlich",
 "f": "braun getigert mit weiß",
 "o": "15., Dankwartgasse",
-"b": 15
+"b": 15,
+"xy": [
+16.33067,
+48.20332
+]
 },
 {
-"id": "",
+"id": "64478",
+"t": "Sonstige Vögel",
+"k": "Andere Tiere",
+"d": "2026-10-29",
+"s": "unbekannt",
+"f": "mehrfarbig",
+"o": "22., Am Heidjöchl",
+"b": 22,
+"xy": [
+16.49392,
+48.23674
+]
+},
+{
+"id": "64479",
+"t": "Nymphensittich",
+"k": "Andere Tiere",
+"d": "2026-10-29",
+"s": "unbekannt",
+"f": "weiß orange gelb",
+"o": "03., Schimmelgasse",
+"b": 3,
+"xy": [
+16.40136,
+48.19287
+]
+},
+{
+"id": "64481",
 "t": "Europäisch Kurzhaar",
 "k": "Katzen",
 "d": "2026-10-29",
 "s": "männlich",
 "f": "grau getigert mit weiß",
 "o": "09., Zimmermanngasse",
-"b": 9
+"b": 9,
+"xy": [
+16.34324,
+48.21672
+]
 },
 {
-"id": "",
+"id": "64485",
 "t": "Huhn",
 "k": "Andere Tiere",
 "d": "2026-10-30",
 "s": "unbekannt",
 "f": "weiß",
 "o": "14., Kinkplatz",
-"b": 14
+"b": 14,
+"xy": [
+16.27631,
+48.20029
+]
 },
 {
-"id": "",
+"id": "64488",
 "t": "Katze",
 "k": "Katzen",
 "d": "2026-10-30",
 "s": "weiblich",
 "f": "",
 "o": "22., Donauinsel",
-"b": 22
+"b": 22,
+"xy": [
+16.42447,
+48.21681
+]
 },
 {
-"id": "",
+"id": "64496",
 "t": "Nymphensittich",
 "k": "Andere Tiere",
 "d": "2026-11-01",
 "s": "unbekannt",
 "f": "weiß/grau/gelb",
 "o": "20., Mortaraplatz",
-"b": 20
+"b": 20,
+"xy": [
+16.38651,
+48.23424
+]
 },
 {
-"id": "",
-"t": "Britisch Kurzhaar",
-"k": "Katzen",
-"d": "2026-11-01",
-"s": "weiblich",
-"f": "grau",
-"o": "10., Columbusgasse",
-"b": 10
-},
-{
-"id": "",
-"t": "Kaninchen",
-"k": "Andere Tiere",
-"d": "2026-11-01",
-"s": "weiblich",
-"f": "weiß mit schwarz/braun",
-"o": "21., Grellgasse",
-"b": 21
-},
-{
-"id": "",
+"id": "64497",
 "t": "Europäisch Kurzhaar",
 "k": "Katzen",
 "d": "2026-11-01",
@@ -1130,23 +1534,59 @@
 "b": 1
 },
 {
-"id": "",
+"id": "64499",
+"t": "Kaninchen",
+"k": "Andere Tiere",
+"d": "2026-11-01",
+"s": "weiblich",
+"f": "weiß mit schwarz/braun",
+"o": "21., Grellgasse",
+"b": 21,
+"xy": [
+16.43315,
+48.28714
+]
+},
+{
+"id": "64500",
+"t": "Britisch Kurzhaar",
+"k": "Katzen",
+"d": "2026-11-01",
+"s": "weiblich",
+"f": "grau",
+"o": "10., Columbusgasse",
+"b": 10,
+"xy": [
+16.37349,
+48.17486
+]
+},
+{
+"id": "64502",
 "t": "Scottish Fold Longhair",
 "k": "Katzen",
 "d": "2026-11-01",
 "s": "männlich",
 "f": "weiß",
 "o": "02., Kanalwächterhausweg",
-"b": 2
+"b": 2,
+"xy": [
+16.4281,
+48.18958
+]
 },
 {
-"id": "",
+"id": "64505",
 "t": "Nymphensittich",
 "k": "Andere Tiere",
 "d": "2026-11-02",
 "s": "unbekannt",
 "f": "grau",
 "o": "15., Auerwelsbachpark",
-"b": 15
+"b": 15,
+"xy": [
+16.31704,
+48.18848
+]
 }
 ]

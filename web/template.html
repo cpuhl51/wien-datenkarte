@@ -773,6 +773,28 @@ function uSection(line,text){
   const out=[]; parts.forEach(r=>{ let run=[]; r.forEach(p=>{ if(inside(p)) run.push(p); else { if(run.length>1) out.push(run); run=[]; } }); if(run.length>1) out.push(run); });
   return out.length?out:parts;
 }
+/* Fundtiere: ungefähre Lage (Mitte der genannten Straße bzw. des Parks), leicht gestreut, damit Meldungen derselben Straße sichtbar bleiben */
+const FUND_COL={"Katzen":"#e8590c","Hunde":"#8a5a2b","Andere Tiere":"#2b8a3e"};
+const fundG=document.createElementNS(NS,"g"); fundG.setAttribute("class","wlg"); svg.appendChild(fundG);
+let fundPick=null;
+const hash01=(s,k)=>{ let h=2166136261^k; for(const ch of String(s)) h=Math.imul(h^ch.charCodeAt(0),16777619); return ((h>>>0)%1000)/1000; };
+function fundItems(){ const sub=subOf(LAYERS.find(L=>L.id==="fund")); return F.items.filter(i=>sub.id==="all"||i.k===sub.label); }
+function drawFund(s){
+  if(layer.id!=="fund"){ fundG.innerHTML=""; return; }
+  const u=mapUnitsPerPx(), r=(4*Math.min(1.6,1+(zoom.k-1)*.12))*u;
+  fundG.innerHTML=fundItems().filter(i=>i.xy).map(i=>{ const [x,y]=px(i.xy), j=10*u, on=fundPick===i.id;
+    const X=x+(hash01(i.id,1)-.5)*j*2, Y=y+(hash01(i.id,2)-.5)*j*2;
+    return `<circle data-fund="${esc(i.id)}" cx="${X.toFixed(1)}" cy="${Y.toFixed(1)}" r="${(on?r*1.6:r).toFixed(2)}" style="fill:${FUND_COL[i.k]||"#7f8c87"};stroke:${on?"var(--ink)":"#fff"};stroke-width:${(on?2.2:1.3)*u}"><title>${esc(i.t)} · ${esc(i.o)}</title></circle>`; }).join("");
+}
+svg.addEventListener("click",e=>{ const el=e.target.closest&&e.target.closest("[data-fund]"); if(!el||layer.id!=="fund") return; e.stopPropagation(); fundPick=el.dataset.fund; render();
+  const c=document.getElementById("fundpick"); if(c) c.scrollIntoView({block:"nearest",behavior:"smooth"}); },true);
+function fundPickCard(){
+  if(layer.id!=="fund"||!fundPick) return ""; const i=F.items.find(x=>x.id===fundPick); if(!i) return "";
+  return `<div class="pick" id="fundpick"><div class="pk-h"><b class="sw" style="background:${FUND_COL[i.k]||"#7f8c87"}"></b>${esc(i.k)} · gefunden am ${dmy(i.d)}</div>
+    <div class="pk-a">${esc(i.t)}${i.f?" · "+esc(i.f):""}${i.s&&i.s!=="unbekannt"?" · "+esc(i.s):""}</div>
+    <div class="pk-m" style="font-family:var(--body)">Fundort: ${esc(i.o)} – ungefähre Lage, die Stadt nennt nur Straße oder Park</div>
+    <div class="pk-b"><button class="wien" id="fundpick-x">Schließen</button></div></div>`;
+}
 function drawWl(s){
   if(layer.id!=="wl"){ wlG.innerHTML=""; return; }
   if(!HS){ loadStops().then(()=>render()).catch(()=>{}); }
@@ -927,7 +949,7 @@ function render2(){
   drawOrient(isPts(layer));
   if(isPts(layer)){ if(!PT){ loadPoints().then(()=>render()).catch(()=>{document.getElementById("layernote").textContent="Standorte konnten nicht geladen werden (nur auf der veröffentlichten Seite verfügbar).";}); } else drawPoints(s.pts,s.dot||c); }
   else overlay.innerHTML="";
-  drawWl(s);
+  drawWl(s); drawFund(s);
   mapThousand=s.unit===""&&Math.max(...arr.slice(1).filter(v=>v!=null))>=1e4;
   for(let b=1;b<=23;b++){paths[b].setAttribute("fill",s.bars?"transparent":arr[b]==null?bg:mix(bg,c,t(arr[b])));paths[b].classList.toggle("sel",b===sel);
     labelEls[b].textContent=s.bars?"":arr[b]==null?"–":mapFmt(arr[b],s);}
@@ -939,6 +961,9 @@ function render2(){
   if(layer.id==="wl"){ const used=[...wlDrawn.c];
     document.getElementById("wlleg").innerHTML=(used.length?used.map(c=>`<span class="lg"><img src="${CAUSE_ICON(c)}" alt="" style="width:18px;height:18px;outline:none">${c==="aufzug"?"Aufzug":c==="sonst"?"Sonstiges":WL_CAUSE.find(x=>x[0]===c)[1]}</span>`).join("")+`<span class="lg" style="color:var(--muted)">Symbol${wlDrawn.lines?" oder Linie":""} antippen für die Meldung${wlDrawn.lines?" · punktiert = betroffener U-Bahn-Abschnitt (abwechselnd Linien- und Störungsfarbe)":""}</span>`:"")
       +(wlDrawn.off?`<span class="lg" style="color:var(--muted)">${wlDrawn.off} Meldung${wlDrawn.off>1?"en nennen":" nennt"} nur Straßenbahn- oder Buslinien ohne Haltestellen und ${wlDrawn.off>1?"sind":"ist"} daher nicht auf der Karte – siehe Liste unten.</span>`:"");
+  } else if(layer.id==="fund"){ const it=fundItems(), n=it.filter(i=>i.xy).length;
+    document.getElementById("wlleg").innerHTML=Object.entries(FUND_COL).filter(([k])=>it.some(i=>i.k===k)).map(([k,c])=>`<span class="lg"><b style="background:${c};border-radius:50%"></b>${k}</span>`).join("")
+      +`<span class="lg" style="color:var(--muted)">Punkt = ungefähre Lage (Mitte der Straße bzw. des Parks) · ${n} von ${it.length} Meldungen verortet · antippen für Details</span>`;
   } else document.getElementById("wlleg").innerHTML="";
   const dotNote=isPts(layer)?`● = ein Standort (${s.label}). Bezirksfarbe und Zahl = Anzahl im Bezirk. `:"";
   document.getElementById("layernote").textContent=dotNote+(mapThousand?"Zahlen auf der Karte in Tausend. ":"")+(s.unit.trim()==="J."?"Zahlen auf der Karte in Jahren. ":"")+[layer.note,s.note].filter(Boolean).join(" ")+(!s.bars&&!s.range&&yearsOf(s).length>1?(layer.clock?" Kartenfarben: Spannweite der Bezirke über den ganzen Tag.":" Kartenfarben: Spannweite der Bezirke über alle Jahre."):"");
@@ -1061,7 +1086,7 @@ function renderDetail(s,y,order,c){
   document.getElementById("detail").innerHTML=`
     <h2>${b===0?"Wien gesamt":b+". "+NAMES[b]}</h2>
     ${place}${pd}
-    ${isPts(layer)&&PT&&PT.points[s.pts]?pickCard(s):""}${wlPickCard()}
+    ${isPts(layer)&&PT&&PT.points[s.pts]?pickCard(s):""}${wlPickCard()}${fundPickCard()}
     ${spark(s,b,y,c)}
     ${layer.id==="dea"?(b===0?monthChart(y,c):`<p class="note">Monatswerte gibt es nur für ganz Wien: oben auf „Wien gesamt“ tippen.</p>`):""}
     ${layer.id==="bir"?`<p class="note">Monatswerte für Geburten veröffentlichen weder die Stadt Wien noch Statistik Austria als offene Daten.</p>`:""}
@@ -1077,6 +1102,7 @@ function renderDetail(s,y,order,c){
     ${dogAtt}`;
   wirePick();
   const pa=document.getElementById("ptall"); if(pa) pa.onclick=()=>{ showAllPts=pa.dataset.k; render(); };
+  const fx=document.getElementById("fundpick-x"); if(fx) fx.onclick=()=>{ fundPick=null; render(); };
   const wx=document.getElementById("wlpick-x"); if(wx) wx.onclick=()=>{ wlPick=null; render(); };
 }
 const openExp={};
@@ -1179,7 +1205,7 @@ document.querySelectorAll(".themesw button").forEach(b=>b.addEventListener("clic
 document.getElementById("credit-foot").innerHTML=creditHtml();
 const pointers=new Map(); let drag=null, moved=false, tileTimer=null;
 function mapUnitsPerPx(){ const vb=svg.getAttribute("viewBox").split(" ").map(Number); return vb[2]/(svg.clientWidth||vb[2]); }
-function scheduleTiles(){ clearTimeout(tileTimer); tileTimer=setTimeout(()=>{ try{drawOrient(isPts(layer));drawTiles();if(!layer.special){drawBars(subOf(layer),yearOf(layer));drawWl(subOf(layer));}}catch(e){} },120); }
+function scheduleTiles(){ clearTimeout(tileTimer); tileTimer=setTimeout(()=>{ try{drawOrient(isPts(layer));drawTiles();if(!layer.special){drawBars(subOf(layer),yearOf(layer));drawWl(subOf(layer));drawFund(subOf(layer));}}catch(e){} },120); }
 svg.addEventListener("pointerdown",e=>{
   pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
   if(zoom.k>1||pointers.size===2){ drag={cx:zoom.cx,cy:zoom.cy,x:e.clientX,y:e.clientY,k:zoom.k,dist:null}; moved=false; }

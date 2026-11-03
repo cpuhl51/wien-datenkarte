@@ -126,17 +126,61 @@ S["age_avg"], _ = series(read("avgage"), "AGE_AVE")
 xml = open(os.path.join(src, "fund.xml"), encoding="utf-8").read()
 items = []
 for it in re.findall(r"<item>(.*?)</item>", xml, re.S):
-    g = lambda tag: html.unescape((re.search(rf"<{tag}>(.*?)</{tag}>", it, re.S) or [None, ""])[1].strip())
+    g = lambda tag: html.unescape((re.search(rf"<{tag}(?:\s[^>]*)?>(.*?)</{tag}>", it, re.S) or [None, ""])[1].strip())
     ort = g("vcard:street-address")
     m = re.match(r"\s*(\d{1,2})\.", ort)
     items.append({"id": g("guid"), "t": g("title"), "k": re.sub(r"^\d+_", "", g("description")), "d": g("dc:date"),
                   "s": g("vie:geschlecht"), "f": g("vie:farbe"), "o": ort, "b": int(m.group(1)) if m and 1 <= int(m.group(1)) <= 23 else 0})
 # Archiv: jede Fundmeldung bleibt erhalten, auch wenn sie aus dem 30-Tage-Feed fällt
 archive = json.load(open(archive_path)) if os.path.exists(archive_path) else []
+# frühere Einträge ohne Kennung (Fehler bis 3.11.2026): Kennung aus dem Feed übernehmen oder aus Datum/Tier/Ort bilden
+_fid = {(i["d"], i["t"], i["o"]): i["id"] for i in items}
+for a_ in archive:
+    if not a_.get("id"):
+        a_["id"] = _fid.get((a_["d"], a_["t"], a_["o"])) or f'{a_["d"]}|{a_["t"]}|{a_["o"]}'
+_seen = set(); archive = [a_ for a_ in archive if not (a_["id"] in _seen or _seen.add(a_["id"]))]
 known = {a["id"] for a in archive}
 archive += [i for i in items if i["id"] not in known]
 archive.sort(key=lambda i: (i["d"], i["id"]))
 json.dump(archive, open(archive_path, "w"), ensure_ascii=False, indent=0)
+# Ungefähre Lage der Fundorte: Straße/Park über den Adress-Service der Stadt Wien (OGD), Ergebnis wird zwischengespeichert.
+# Der Fundort nennt nur Straße oder Park, keine Hausnummer: der Punkt ist daher die Mitte der Straße bzw. des Parks.
+import urllib.request, urllib.parse
+geo_cache_path = os.path.join(os.path.dirname(archive_path), "geocache.json")
+geo_cache = json.load(open(geo_cache_path)) if os.path.exists(geo_cache_path) else {}
+geo_fail, geo_new = 0, 0
+def geocode(o, b):
+    global geo_fail, geo_new
+    if o in geo_cache:
+        return geo_cache[o]
+    if geo_fail >= 3 or geo_new >= 200:
+        return None
+    name = re.sub(r"^\s*\d{1,2}\.,\s*", "", o).strip()
+    if not name:
+        return None
+    q = name + (f", 1{b:02d}0" if b else "")
+    url = "https://data.wien.gv.at/daten/OGDAddressService.svc/GetAddressInfo?" + urllib.parse.urlencode({"Address": q, "crs": "EPSG:4326"})
+    try:
+        with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "wien-datenkarte"}), timeout=15) as r:
+            f = json.load(r).get("features") or []
+        geo_fail = 0; geo_new += 1
+    except Exception:
+        geo_fail += 1
+        return None
+    # nur Treffer im genannten Bezirk (Straßen über mehrere Bezirke: Bezirksliste des Treffers)
+    ok = [g for g in f if not b or str(b) in re.split(r"\s*,\s*", str(g.get("properties", {}).get("Bezirk", "")))]
+    xy = [round(ok[0]["geometry"]["coordinates"][0], 5), round(ok[0]["geometry"]["coordinates"][1], 5)] if ok else None
+    geo_cache[o] = xy
+    return xy
+for it_ in archive + items:
+    if it_.get("o") and "xy" not in it_:
+        xy = geocode(it_["o"], it_.get("b", 0))
+        if xy:
+            it_["xy"] = xy
+json.dump(geo_cache, open(geo_cache_path, "w"), ensure_ascii=False, indent=0)
+json.dump(archive, open(archive_path, "w"), ensure_ascii=False, indent=0)
+print("Fundorte verortet:", sum(1 for i in items if i.get("xy")), "von", len(items), "| neu abgefragt:", geo_new)
+
 fund_stale = False
 if not items and archive:
     # Feed gerade leer oder gestört: die letzten 30 Tage aus dem Archiv zeigen
