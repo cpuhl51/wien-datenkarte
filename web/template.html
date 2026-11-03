@@ -87,7 +87,8 @@ h1{font-family:var(--display);font-weight:800;font-size:clamp(28px,5vw,44px);lin
 .sub .sdot{width:10px;height:10px;border-radius:50%;flex:none;box-shadow:0 0 0 1.5px #fff}
 .yearbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .ylabel{font:600 12px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-.stand{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:6px;padding:9px 12px}
+.stand{display:flex;flex-wrap:wrap;gap:4px 18px;font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding:10px 2px 0}
+.stand b{color:var(--ink)}
 .stand b{font-weight:600}
 .stand span{color:var(--muted)}
 .stand .warn{color:var(--accent);font-weight:500}
@@ -203,6 +204,13 @@ svg.map.all path{stroke:var(--ink);stroke-width:.6}
 .flist .fd{font:12px var(--mono);color:var(--muted);grid-row:span 2}
 .flist .fo{color:var(--muted);font-size:12px}
 dl .exp{grid-column:1/-1;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:4px 0}
+.lbox{border-left:4px solid color-mix(in srgb,var(--lc) 30%,transparent);padding:2px 0 2px 12px;margin:12px 0}
+.lbox summary{display:flex;justify-content:space-between;gap:12px;cursor:pointer;list-style:none;font:600 13px var(--mono);letter-spacing:.04em;text-transform:uppercase;color:var(--muted);padding:4px 0}
+.lbox summary::-webkit-details-marker{display:none}
+.lbox summary span::before{content:"▸ ";color:var(--lc)}
+.lbox[open] summary span::before{content:"▾ "}
+.lbox summary b{font:500 14px var(--mono);color:var(--ink);text-transform:none}
+.lbox summary:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 dl .exp summary{display:flex;justify-content:space-between;gap:12px;cursor:pointer;color:var(--muted);list-style:none}
 dl .exp summary::-webkit-details-marker{display:none}
 dl .exp summary span::before{content:"▸ ";color:var(--accent)}
@@ -246,7 +254,6 @@ svg.vin text.vl{font:600 13px var(--body);fill:#3a2e08;pointer-events:none}
     </div>
     <span class="yrange" id="yrange"></span>
   </div>
-  <div class="stand" id="stand" aria-live="polite"></div>
 
   <div class="grid">
     <div class="mapbox">
@@ -263,6 +270,7 @@ svg.vin text.vl{font:600 13px var(--body);fill:#3a2e08;pointer-events:none}
     </div>
   </div>
 
+  <div class="stand" id="stand" aria-live="polite"></div>
   </div>
   <footer>
     <span class="credit" id="credit-foot"></span>
@@ -988,26 +996,37 @@ function stackBar(key,b,y){
     <div class="skey">${vals.map(([l,v,c])=>`<span><b style="background:${c}"></b>${l} <em>${abs?fmtInt(v)+" · "+fmt1(100*v/sum)+" %":fmt1(v)+" %"}</em></span>`).join("")}</div>`;
 }
 
+const groupCol = L => { const g=LGROUPS.find(g=>g[2].includes(L.id)); return g?g[1]:"#7f8c87"; };
+const openBox = {};
+function listBox(key,title,count,inner,L){
+  const open = openBox[key]!==false;
+  return `<details class="lbox" data-key="${key}" style="--lc:${groupCol(L||layer)}"${open?" open":""}><summary><span>${title}</span><b>${count}</b></summary>${inner}</details>`;
+}
+document.addEventListener("toggle",e=>{ const d=e.target; if(d.classList&&d.classList.contains("lbox")) openBox[d.dataset.key]=d.open; },true);
+let showAllPts=null;
 function fundList(b,L){
   const FL=L||layer, it=F.items.filter(i=>(b===0||i.b===b)&&(state.fund.sub==="all"||i.k===subOf(FL).label)).sort((a,c)=>c.d.localeCompare(a.d));
   if(!it.length) return `<p class="note">Keine Fundmeldung in diesem Zeitraum.</p>`;
+  if(!L) return listBox("fund","Gemeldete Tiere",it.length,fundList(b,layer).replace(/^<h4>[^<]*<\/h4>/,""));
   return `<h4>Gemeldete Tiere (${it.length})</h4><ul class="flist">${it.slice(0,60).map(i=>`<li><span class="fd">${dmy(i.d)}</span><span>${i.t}${i.f?" · "+i.f:""}${i.s&&i.s!=="unbekannt"?" · "+i.s:""}</span><span class="fo">${i.o}</span></li>`).join("")}</ul>
     <p class="note" style="margin:6px 0 0">Abholung und Kontakt: Seite „Fundtiere“ auf wien.gv.at.</p>`;
 }
 
-function wlList(b){
-  const k=state.wl.sub;
-  const it=WL.items.filter(i=>(b===0||i.b.includes(b))&&(k==="all"||i.k===k));
+function wlList(b,boxed){
+  const WLL=LAYERS.find(L=>L.id==="wl");
+  const it=wlItems(subOf(WLL)).map(([i])=>i).filter(i=>b===0||i.b.includes(b));
   if(!it.length) return `<p class="note">Gerade keine Meldung für ${b===0?"Wien":"diesen Bezirk"}.</p>`;
+  if(boxed) return listBox("wl","Aktuelle Meldungen",it.length,wlList(b).replace(/^<h4>[^<]*<\/h4>/,""),WLL);
   return `<h4>Aktuelle Meldungen (${it.length})</h4><ul class="flist">${it.map(i=>`<li><span class="fd">${causeLabel(i)}</span><span>${i.l.length?"<b>"+i.l.join(", ")+"</b> · ":""}${i.t}</span><span class="fo">${i.d!==i.t?i.d:""}</span></li>`).join("")}</ul>`;
 }
 
 function ptList(s,b){
   const all=PT.points[s.pts].pts, it=all.map((p,i)=>[p,i]).filter(([p])=>b===0||p[2]===b).map(([p,i])=>Object.assign(p.slice(),{i}));
-  const named=it.filter(p=>p[3]);
+  const coll=new Intl.Collator("de-AT",{numeric:true});
+  const named=it.filter(p=>p[3]).sort((a,c)=>(a[2]||99)-(c[2]||99)||coll.compare(a[3].replace(/^\d+\.,\s*/,""),c[3].replace(/^\d+\.,\s*/,"")));
   if(!named.length) return `<p class="note">${fmtInt(it.length)} Standorte${b?" im Bezirk":" in Wien"}.</p>`;
-  const show=named.slice(0,80);
-  return `<h4>${s.label} (${fmtInt(it.length)})</h4><ul class="flist">${show.map(p=>`<li class="pickable" data-pick="${s.pts}:${p.i}" tabindex="0"><span class="fd">${p[2]?p[2]+".":""}</span><span>${esc(p[3])}</span></li>`).join("")}</ul>${named.length>80?`<p class="note" style="margin:4px 0 0">Die ersten 80 von ${fmtInt(named.length)}.</p>`:""}`;
+  const all_=showAllPts===s.pts+":"+b, show=all_?named:named.slice(0,80);
+  return listBox("pts-"+s.pts,s.label,fmtInt(it.length),`<p class="note" style="margin:2px 0 4px">Sortiert nach Bezirk, dann Straße.</p><ul class="flist">${show.map(p=>`<li class="pickable" data-pick="${s.pts}:${p.i}" tabindex="0"><span class="fd">${p[2]?p[2]+".":""}</span><span>${esc(p[2]?p[3].replace(/^\d+\.,\s*/,""):p[3])}</span></li>`).join("")}</ul>${named.length>80&&!all_?`<p class="note" style="margin:4px 0 0">Die ersten 80 von ${fmtInt(named.length)}. <button class="wien" id="ptall" data-k="${s.pts}:${b}">Alle anzeigen</button></p>`:""}`);
 }
 
 function renderDetail(s,y,order,c){
@@ -1040,11 +1059,12 @@ function renderDetail(s,y,order,c){
     ${layer.id==="brand"&&BR?rankList(`Top 10 Marken ${BR.year}`,BR.ranking[b].map(r=>[brandName(r[0]),r[1],fmt1(r[2])+" %"]),"Pkw-Bestand am 31.12., nicht Neuzulassungen."):""}
     ${layer.fund?fundList(b):""}
     ${isPts(layer)&&PT&&PT.points[s.pts]?nearList(s)+ptList(s,b):""}
-    ${layer.id==="wl"?wlList(b):""}
+    ${layer.id==="wl"?wlList(b,true):""}
     <h4>Weitere Werte</h4>
     <dl><dt>Fläche</dt><dd>${fmt1(b===0?AREA_ALL:AREA[b])} km²</dd>${others}</dl>
     ${dogAtt}`;
   wirePick();
+  const pa=document.getElementById("ptall"); if(pa) pa.onclick=()=>{ showAllPts=pa.dataset.k; render(); };
   const wx=document.getElementById("wlpick-x"); if(wx) wx.onclick=()=>{ wlPick=null; render(); };
 }
 const openExp={};
