@@ -103,6 +103,9 @@ svg.map text.stat{font-family:var(--body);font-weight:500;fill:var(--ink);paint-
 svg.map .orient{pointer-events:none}
 svg.map .ovl{pointer-events:none}
 svg.map .bars,svg.map .barlab{pointer-events:none}
+svg.map .wlg circle,svg.map .wlg path{cursor:pointer}
+#wlleg:empty{display:none}
+#wlleg{margin-top:8px}
 svg.map .barlab text{font-family:var(--mono);font-weight:600;fill:#fff;paint-order:stroke;stroke:rgba(0,0,0,.6);text-anchor:start}
 svg#map.barmode > path{stroke:#fff;stroke-width:3px;stroke-linejoin:round}
 svg#map.barmode > path.sel{stroke:#111;stroke-width:4px}
@@ -239,7 +242,7 @@ svg.vin text.vl{font:600 13px var(--body);fill:#3a2e08;pointer-events:none}
         <label class="baseop" id="baseop" hidden>Deckkraft <input type="range" id="baseopr" min="0.2" max="1" step="0.1" value="0.6"></label><span class="hint">Zahlen = gewählte Ebene · Bezirk antippen für Details · gezoomt: mit dem Finger verschieben</span></div>
       <p class="note" id="locmsg" hidden></p>
       <svg class="map" id="map" role="img" aria-label="Karte der Wiener Gemeindebezirke"></svg>
-      <div class="legend"><div class="ramp" id="ramp"></div><div class="ticks" id="ticks"></div></div>
+      <div class="legend"><div class="ramp" id="ramp"></div><div class="ticks" id="ticks"></div><div class="ticks blg" id="wlleg"></div></div>
       <p class="note" id="layernote"></p>
     </div>
     <div class="side">
@@ -307,6 +310,9 @@ const WL_CAUSE = [["bau","Bauarbeiten",/bau(arbeit|stelle)|gleisbau|gleisarbeit|
   ["verkehr","Verkehrsbehinderung",/falschpark|parkend|verkehrsbehinder|stau|verkehrsüberlast|verkehrsaufkommen|hindernis|blockier/i],
   ["veranst","Veranstaltung/Demo",/demonstr|veranstalt|kundgebung|marathon|umzug|parade|\blauf\b/i]];
 const causeOf = i => { if(i.k==="aufzug") return "aufzug"; const s=i.t+" "+i.d; const c=WL_CAUSE.find(([,,r])=>r.test(s)); return c?c[0]:"sonst"; };
+const CAUSE_COL = {bau:"#f08c00",einsatz:"#1c7ed6",unfall:"#e03131",technik:"#7048e8",verkehr:"#2b8a3e",veranst:"#e64980",sonst:"#5c6670",aufzug:"#0ca678"};
+let HS=null, HS_LOADING=null, wlPick=null, wlDrawn={c:new Set(),lines:false,off:0};
+function loadStops(){ if(HS) return Promise.resolve(HS); if(!HS_LOADING) HS_LOADING=fetch("haltestellen.json").then(r=>r.json()).then(d=>HS=d); return HS_LOADING; }
 const causeLabel = i => { const c=causeOf(i); return c==="aufzug"?"Aufzug":c==="sonst"?"Sonstiges":WL_CAUSE.find(x=>x[0]===c)[1]; };
 
 /* Fahrplan-Zählung: Fahrten laut Plan je 10 Minuten, Tag = heute (Wiener Zeit), sonst erster verfügbarer Tag */
@@ -715,6 +721,35 @@ function drawPoints(key,c){
   if(picked&&picked.key===key){ const [x,y]=px([picked.p[0],picked.p[1]]); overlay.innerHTML+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r*2.6}" style="fill:none;stroke:var(--ink);stroke-width:${2/Math.max(1,zoom.k/2.2)}"></circle>`; }
   overlay.setAttribute("fill",c); overlay.setAttribute("stroke","var(--dotline)"); overlay.setAttribute("stroke-width",String((r>3?1:.6)/Math.max(1,zoom.k/2.2)));
 }
+/* Störungen auf der Karte: Punkt je betroffener Haltestelle, U-Bahn-Linie hervorgehoben, wenn nur die Linie genannt ist */
+const wlG=document.createElementNS(NS,"g"); wlG.setAttribute("class","wlg"); svg.appendChild(wlG);
+function wlItems(s){ return WL.items.map((i,n)=>[i,n]).filter(([i])=>!s.calc||s.id==="all"||(s.id==="fb"?i.k!=="aufzug":s.id==="aufzug"?i.k==="aufzug":causeOf(i)===s.id)); }
+function drawWl(s){
+  if(layer.id!=="wl"){ wlG.innerHTML=""; return; }
+  if(!HS){ loadStops().then(()=>render()).catch(()=>{}); }
+  if(!PT){ loadPoints().then(()=>render()).catch(()=>{}); }
+  const k=zoom.k, r=(k>1?9/k:4.2), sw=1.4/Math.max(1,k/1.5);
+  let lines="", dots=""; wlDrawn={c:new Set(),lines:false,off:0};
+  wlItems(s).forEach(([i,n])=>{
+    const c=CAUSE_COL[causeOf(i)], on=wlPick===n, before=lines.length+dots.length;
+    if(!i.s.length&&PT&&PT.orient){ (i.l||[]).forEach(l=>{ const m=/^U(\d)$/.exec(l); if(!m) return;
+      PT.orient.ubahn.filter(g=>g.l===m[1]).forEach(g=>{ wlDrawn.c.add(causeOf(i)); wlDrawn.lines=true; lines+=`<path d="${geoPath(g)}" data-wl="${n}" style="fill:none;stroke:${c};stroke-width:${(on?9:6)/k};stroke-opacity:.85;stroke-dasharray:${8/k} ${5/k};stroke-linecap:round"></path>`; }); }); }
+    if(HS) i.s.forEach(id=>{ const h=HS[id]; if(!h) return; const [x,y]=px([h[0],h[1]]);
+      wlDrawn.c.add(causeOf(i)); dots+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(on?r*1.6:r).toFixed(2)}" data-wl="${n}" style="fill:${c};stroke:${on?"var(--ink)":"#fff"};stroke-width:${(on?sw*2:sw).toFixed(2)}"><title>${esc(causeLabel(i))}: ${esc(h[2])}</title></circle>`; });
+    if(HS&&PT&&lines.length+dots.length===before) wlDrawn.off++;
+  });
+  wlG.innerHTML=lines+dots;
+}
+svg.addEventListener("click",e=>{ const el=e.target.closest&&e.target.closest("[data-wl]"); if(!el||layer.id!=="wl") return; e.stopPropagation(); wlPick=+el.dataset.wl; render();
+  const card=document.getElementById("wlpick"); if(card) card.scrollIntoView({block:"nearest",behavior:"smooth"}); },true);
+function wlPickCard(){
+  if(layer.id!=="wl"||wlPick==null||!WL.items[wlPick]) return "";
+  const i=WL.items[wlPick], st=HS?[...new Set(i.s.map(id=>HS[id]&&HS[id][2]).filter(Boolean))]:[];
+  return `<div class="pick" id="wlpick"><div class="pk-h"><b class="sw" style="background:${CAUSE_COL[causeOf(i)]}"></b>${esc(causeLabel(i))}${i.l.length?" · "+esc(i.l.join(", ")):""}</div>
+    <div class="pk-a">${esc(i.t)}</div>${i.d&&i.d!==i.t?`<div class="pk-m" style="font-family:var(--body)">${esc(i.d)}</div>`:""}
+    ${st.length?`<div class="pk-m">Haltestelle${st.length>1?"n":""}: ${esc(st.join(", "))}</div>`:""}
+    <div class="pk-b"><button class="wien" id="wlpick-x">Schließen</button></div></div>`;
+}
 function geoPath(g){
   const ring=r=>"M"+r.map(c=>px(c).map(v=>v.toFixed(1)).join(",")).join("L");
   if(g.t==="Polygon") return g.c.map(r=>ring(r)+"Z").join("");
@@ -829,6 +864,7 @@ function render2(){
   drawOrient(layer.points);
   if(layer.points){ if(!PT){ loadPoints().then(()=>render()).catch(()=>{document.getElementById("layernote").textContent="Standorte konnten nicht geladen werden (nur auf der veröffentlichten Seite verfügbar).";}); } else drawPoints(s.pts,s.dot||c); }
   else overlay.innerHTML="";
+  drawWl(s);
   mapThousand=s.unit===""&&Math.max(...arr.slice(1).filter(v=>v!=null))>=1e4;
   for(let b=1;b<=23;b++){paths[b].setAttribute("fill",s.bars?"transparent":arr[b]==null?bg:mix(bg,c,t(arr[b])));paths[b].classList.toggle("sel",b===sel);
     labelEls[b].textContent=s.bars?"":arr[b]==null?"–":mapFmt(arr[b],s);}
@@ -837,6 +873,10 @@ function render2(){
   document.getElementById("ramp").style.height=s.bars?"0":"";
   document.getElementById("ticks").innerHTML=s.bars?barLegend(s,y):[lo,(lo+hi)/2,hi].map(v=>`<span>${s.fmt(v)}${s.unit}</span>`).join("");
   document.getElementById("ticks").classList.toggle("blg",!!s.bars);
+  if(layer.id==="wl"){ const used=[...wlDrawn.c];
+    document.getElementById("wlleg").innerHTML=(used.length?used.map(c=>`<span class="lg"><b style="background:${CAUSE_COL[c]};border-radius:50%"></b>${c==="aufzug"?"Aufzug":c==="sonst"?"Sonstiges":WL_CAUSE.find(x=>x[0]===c)[1]}</span>`).join("")+`<span class="lg" style="color:var(--muted)">Punkt${wlDrawn.lines?" oder Linie":""} antippen für die Meldung${wlDrawn.lines?" · gestrichelt = ganze U-Bahn-Linie betroffen":""}</span>`:"")
+      +(wlDrawn.off?`<span class="lg" style="color:var(--muted)">${wlDrawn.off} Meldung${wlDrawn.off>1?"en nennen":" nennt"} nur Straßenbahn- oder Buslinien ohne Haltestellen und ${wlDrawn.off>1?"sind":"ist"} daher nicht auf der Karte – siehe Liste unten.</span>`:"");
+  } else document.getElementById("wlleg").innerHTML="";
   const dotNote=layer.points?`● = ein Standort (${s.label}). Bezirksfarbe und Zahl = Anzahl im Bezirk. `:"";
   document.getElementById("layernote").textContent=dotNote+(mapThousand?"Zahlen auf der Karte in Tausend. ":"")+(s.unit.trim()==="J."?"Zahlen auf der Karte in Jahren. ":"")+[layer.note,s.note].filter(Boolean).join(" ")+(!s.bars&&!s.range&&yearsOf(s).length>1?(layer.clock?" Kartenfarben: Spannweite der Bezirke über den ganzen Tag.":" Kartenfarben: Spannweite der Bezirke über alle Jahre."):"");
   const title=layer.subs.length>1&&s.label!==layer.label?`${layer.label} · ${s.label}`:layer.label;
@@ -939,7 +979,7 @@ function renderDetail(s,y,order,c){
   document.getElementById("detail").innerHTML=`
     <h2>${b===0?"Wien gesamt":b+". "+NAMES[b]}</h2>
     ${place}${pd}
-    ${layer.points&&PT&&PT.points[s.pts]?pickCard(s):""}
+    ${layer.points&&PT&&PT.points[s.pts]?pickCard(s):""}${wlPickCard()}
     ${spark(s,b,y,c)}
     ${layer.id==="dea"?(b===0?monthChart(y,c):`<p class="note">Monatswerte gibt es nur für ganz Wien: oben auf „Wien gesamt“ tippen.</p>`):""}
     ${layer.id==="bir"?`<p class="note">Monatswerte für Geburten veröffentlichen weder die Stadt Wien noch Statistik Austria als offene Daten.</p>`:""}
@@ -954,6 +994,7 @@ function renderDetail(s,y,order,c){
     <dl><dt>Fläche</dt><dd>${fmt1(b===0?AREA_ALL:AREA[b])} km²</dd>${others}</dl>
     ${dogAtt}`;
   wirePick();
+  const wx=document.getElementById("wlpick-x"); if(wx) wx.onclick=()=>{ wlPick=null; render(); };
 }
 const openExp={};
 document.getElementById("detail").addEventListener("toggle",e=>{ if(e.target.classList&&e.target.classList.contains("exp")) openExp[e.target.id.slice(4)]=e.target.open; },true);
@@ -1109,7 +1150,7 @@ async function refreshLive(){
     const ts=s=>s?Date.parse(s.replace(/([+-]\d\d)(\d\d)$/,"$1:$2")):null;
     WL.items=d.trafficInfos.filter(t=>{const st=ts(t.time&&t.time.start),en=ts(t.time&&t.time.end);return !(st&&st>now)&&!(en&&en<now);})
       .map(t=>({k:kind[cats[t.refTrafficInfoCategoryId]]||"sonst",t:(t.title||"").replace(/\s+/g," ").trim(),d:(t.description||"").replace(/\s+/g," ").trim().slice(0,220),
-        l:t.relatedLines||(t.attributes&&t.attributes.relatedLines)||[],b:[...new Set((t.relatedStops||[]).map(s=>WL.stopb[s]).filter(Boolean))].sort((a,b)=>a-b)}));
+        l:t.relatedLines||(t.attributes&&t.attributes.relatedLines)||[],b:[...new Set((t.relatedStops||[]).map(s=>WL.stopb[s]).filter(Boolean))].sort((a,b)=>a-b),s:t.relatedStops||[]}));
     const n=new Date(); WL.fetched=`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,"0")}-${String(n.getDate()).padStart(2,"0")} ${String(n.getHours()).padStart(2,"0")}:${String(n.getMinutes()).padStart(2,"0")}`;
     const L=LAYERS.find(x=>x.id==="wl"); L.subs.forEach(s=>{s.data=s.calc();}); L.live=true;
     L.stand=()=>`Live, zuletzt aktualisiert ${WL.fetched.slice(11)} Uhr · nur gerade gültige Meldungen`;

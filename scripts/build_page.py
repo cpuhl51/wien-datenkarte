@@ -42,4 +42,6 @@ open(p("docs", "index.html"), "w", encoding="utf-8").write(html)
 import shutil
 if os.path.exists(p("data", "geo_punkte.json")):
     shutil.copyfile(p("data", "geo_punkte.json"), p("docs", "punkte.json"))
+if os.path.exists(p("data", "haltestellen.json")):
+    shutil.copyfile(p("data", "haltestellen.json"), p("docs", "haltestellen.json"))
 print("docs/index.html geschrieben,", len(html) // 1024, "KB")

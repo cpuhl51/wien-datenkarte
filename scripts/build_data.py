@@ -161,11 +161,13 @@ def district_of(lon, lat):
     return 0
 
 stop_bez = {}
+stop_xy = {}
 hp = os.path.join(src, "haltepunkte.csv")
 if os.path.exists(hp):
     for r in csv.DictReader(open(hp, encoding="utf-8-sig"), delimiter=";"):
         try:
             stop_bez[int(r["StopID"])] = district_of(float(r["Longitude"]), float(r["Latitude"]))
+            stop_xy[r["StopID"]] = [round(float(r["Longitude"]), 5), round(float(r["Latitude"]), 5), r["StopText"]]
         except (ValueError, KeyError):
             pass
 
@@ -188,9 +190,13 @@ if os.path.exists(tp):
                        "t": re.sub(r"\s+", " ", t.get("title", "")).strip(),
                        "d": re.sub(r"\s+", " ", t.get("description", "")).strip()[:220],
                        "l": t.get("relatedLines") or (t.get("attributes") or {}).get("relatedLines") or [],
-                       "b": bez})
+                       "b": bez, "s": sorted({s for s in (t.get("relatedStops") or [])})})
     wl = {"items": active, "fetched": datetime.now().strftime("%Y-%m-%d %H:%M"), "stops": len(stop_bez),
           "stopb": {str(k): v for k, v in stop_bez.items() if v}}
+
+# Haltestellen-Koordinaten für die Karte der Störungen (wird von der Seite erst bei Bedarf geladen)
+if stop_xy:
+    json.dump(stop_xy, open(os.path.join(os.path.dirname(out), "haltestellen.json"), "w"), ensure_ascii=False, separators=(",", ":"))
 
 # Sterbefälle Wien je Monat: aus Wochenzahlen von Statistik Austria (Wohnort Wien, ohne Auslandssterbefälle).
 # Jede Woche wird gleichmäßig auf ihre 7 Tage verteilt; nur vollständig abgedeckte Monate werden ausgegeben.
