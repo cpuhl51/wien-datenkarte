@@ -928,6 +928,9 @@ function histPlan(items){
 }
 
 function renderSpecial(){
+  /* alles von der vorigen Ebene entfernen: Säulen, Störungs- und Fundtier-Symbole, Punkte, Legende */
+  drawBars({}); wlG.innerHTML=""; fundG.innerHTML=""; overlay.innerHTML=""; document.getElementById("wlleg").innerHTML="";
+  document.getElementById("ticks").classList.remove("blg"); document.getElementById("ramp").style.height="";
   orient.innerHTML=""; if(zoom.k!==1){ zoom.k=1; zoom.cx=W/2; zoom.cy=H/2; applyZoom(); }
   document.querySelector(".yearbar").hidden=true; document.querySelector(".rank").hidden=true;
   document.getElementById("stand").innerHTML=`<div><b>Datenstand:</b> ${layer.stand()}</div><div><span>Quelle:</span> ${layer.src}</div>`;
