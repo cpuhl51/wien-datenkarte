@@ -7,8 +7,68 @@
 		<dc:creator>post@ma60.wien.gv.at</dc:creator>
 		<dc:identifier>de</dc:identifier>
 		<dc:language>de</dc:language>
-		<generator>v1.8.1</generator>
+		<generator>v1.9.0</generator>
 		
+
+<item>
+	<title>Malteser</title>
+	<description>01_Hunde</description>
+	<guid isPermaLink="false">64533</guid>
+	<dc:date>2026-11-04</dc:date>
+	<vie:geburtsjahr>2012</vie:geburtsjahr>
+	<vie:geschlecht>m&#228;nnlich</vie:geschlecht>
+	<vie:farbe>wei&#223;</vie:farbe>
+	<vie:mischling></vie:mischling>
+	<cal:location>
+		<vcard:street-address>12., Lichtensterngasse</vcard:street-address>
+	</cal:location>
+	<cal:organizer>
+		<vcard:fn>Stadt Wien | Veterin&#228;ramt und Tierschutz</vcard:fn>
+		<vcard:tel>+43 1 4000-8060</vcard:tel>
+		<vcard:email>post@ma60.wien.gv.at</vcard:email>
+	</cal:organizer>
+		<media:thumbnail url="/fundundvergabetiere/internet/Bild/Thumbnail/86468" />
+</item>
+
+<item>
+	<title>Europ&#228;isch Kurzhaar</title>
+	<description>02_Katzen</description>
+	<guid isPermaLink="false">64522</guid>
+	<dc:date>2026-11-03</dc:date>
+	<vie:geburtsjahr></vie:geburtsjahr>
+	<vie:geschlecht>unbekannt</vie:geschlecht>
+	<vie:farbe>braun getigert mit wei&#223;</vie:farbe>
+	<vie:mischling></vie:mischling>
+	<cal:location>
+		<vcard:street-address>11., Herderplatz</vcard:street-address>
+	</cal:location>
+	<cal:organizer>
+		<vcard:fn>TierQuarTier Wien,  1220 Wien, S&#252;&#223;enbrunner Stra&#223;e 101</vcard:fn>
+		<vcard:tel>+43 1 734 11 02 - 114</vcard:tel>
+		<vcard:email>tieraufnahme@tierquartier.at</vcard:email>
+	</cal:organizer>
+		<media:thumbnail url="/fundundvergabetiere/internet/Bild/Thumbnail/86482" />
+</item>
+
+<item>
+	<title>Nymphensittich</title>
+	<description>03_Andere Tiere</description>
+	<guid isPermaLink="false">64521</guid>
+	<dc:date>2026-11-03</dc:date>
+	<vie:geburtsjahr></vie:geburtsjahr>
+	<vie:geschlecht>unbekannt</vie:geschlecht>
+	<vie:farbe></vie:farbe>
+	<vie:mischling></vie:mischling>
+	<cal:location>
+		<vcard:street-address>10., Raxstra&#223;e</vcard:street-address>
+	</cal:location>
+	<cal:organizer>
+		<vcard:fn>Zoo Forchtenstein, 1140 Wien</vcard:fn>
+		<vcard:tel>0676/95 33 256 v. Montag - Freitag 10-14 Uhr (ausgenommen Feiertage)</vcard:tel>
+		<vcard:email>reptilienzooforchtenstein@gmail.com</vcard:email>
+	</cal:organizer>
+		<media:thumbnail url="/fundundvergabetiere/internet/Bild/Thumbnail/86481" />
+</item>
 
 <item>
 	<title>Nymphensittich</title>
@@ -28,6 +88,46 @@
 		<vcard:email>post@ma60.wien.gv.at</vcard:email>
 	</cal:organizer>
 		<media:thumbnail url="/fundundvergabetiere/internet/Bild/Thumbnail/86430" />
+</item>
+
+<item>
+	<title>Nymphensittich</title>
+	<description>03_Andere Tiere</description>
+	<guid isPermaLink="false">64507</guid>
+	<dc:date>2026-11-02</dc:date>
+	<vie:geburtsjahr></vie:geburtsjahr>
+	<vie:geschlecht>unbekannt</vie:geschlecht>
+	<vie:farbe></vie:farbe>
+	<vie:mischling></vie:mischling>
+	<cal:location>
+		<vcard:street-address>20., Vorgartenstra&#223;e</vcard:street-address>
+	</cal:location>
+	<cal:organizer>
+		<vcard:fn>Zoo Forchtenstein, 1140 Wien</vcard:fn>
+		<vcard:tel>0676/95 33 256 v. Montag - Freitag 10-14 Uhr (ausgenommen Feiertage)</vcard:tel>
+		<vcard:email>reptilienzooforchtenstein@gmail.com</vcard:email>
+	</cal:organizer>
+		<media:thumbnail url="/fundundvergabetiere/internet/Bild/Thumbnail/86451" />
+</item>
+
+<item>
+	<title>Langhaarkatze</title>
+	<description>02_Katzen</description>
+	<guid isPermaLink="false">64510</guid>
+	<dc:date>2026-11-02</dc:date>
+	<vie:geburtsjahr></vie:geburtsjahr>
+	<vie:geschlecht>m&#228;nnlich</vie:geschlecht>
+	<vie:farbe>rot getigert</vie:farbe>
+	<vie:mischling></vie:mischling>
+	<cal:location>
+		<vcard:street-address>18., Canongasse</vcard:street-address>
+	</cal:location>
+	<cal:organizer>
+		<vcard:fn>Stadt Wien | Veterin&#228;ramt und Tierschutz</vcard:fn>
+		<vcard:tel>+43 1 4000-8060</vcard:tel>
+		<vcard:email>post@ma60.wien.gv.at</vcard:email>
+	</cal:organizer>
+		<media:thumbnail url="/fundundvergabetiere/internet/Bild/Thumbnail/86456" />
 </item>
 
 <item>
@@ -1117,7 +1217,7 @@
 	<dc:date>2026-10-15</dc:date>
 	<vie:geburtsjahr>2021</vie:geburtsjahr>
 	<vie:geschlecht>m&#228;nnlich</vie:geschlecht>
-	<vie:farbe>beige/weiss</vie:farbe>
+	<vie:farbe>braun/weiss</vie:farbe>
 	<vie:mischling></vie:mischling>
 	<cal:location>
 		<vcard:street-address>07., Neubaug&#252;rtel</vcard:street-address>
@@ -2208,106 +2308,6 @@
 		<vcard:email>tieraufnahme@tierquartier.at</vcard:email>
 	</cal:organizer>
 		<media:thumbnail url="/fundundvergabetiere/internet/Bild/Thumbnail/85953" />
-</item>
-
-<item>
-	<title>Wellensittich</title>
-	<description>03_Andere Tiere</description>
-	<guid isPermaLink="false">64109</guid>
-	<dc:date>2026-10-03</dc:date>
-	<vie:geburtsjahr></vie:geburtsjahr>
-	<vie:geschlecht>unbekannt</vie:geschlecht>
-	<vie:farbe></vie:farbe>
-	<vie:mischling></vie:mischling>
-	<cal:location>
-		<vcard:street-address>03., Gestettengasse</vcard:street-address>
-	</cal:location>
-	<cal:organizer>
-		<vcard:fn>Zoo Forchtenstein, 1140 Wien</vcard:fn>
-		<vcard:tel>0676/95 33 256 v. Montag - Freitag 10-14 Uhr (ausgenommen Feiertage)</vcard:tel>
-		<vcard:email>reptilienzooforchtenstein@gmail.com</vcard:email>
-	</cal:organizer>
-		<media:thumbnail url="/fundundvergabetiere/internet/Bild/Thumbnail/85950" />
-</item>
-
-<item>
-	<title>Europ&#228;isch Kurzhaar</title>
-	<description>02_Katzen</description>
-	<guid isPermaLink="false">64103</guid>
-	<dc:date>2026-10-03</dc:date>
-	<vie:geburtsjahr>2023</vie:geburtsjahr>
-	<vie:geschlecht>m&#228;nnlich</vie:geschlecht>
-	<vie:farbe>braun getigert mit wei&#223;</vie:farbe>
-	<vie:mischling></vie:mischling>
-	<cal:location>
-		<vcard:street-address>21., Spitzweg</vcard:street-address>
-	</cal:location>
-	<cal:organizer>
-		<vcard:fn>TierQuarTier Wien,  1220 Wien, S&#252;&#223;enbrunner Stra&#223;e 101</vcard:fn>
-		<vcard:tel>+43 1 734 11 02 - 114</vcard:tel>
-		<vcard:email>tieraufnahme@tierquartier.at</vcard:email>
-	</cal:organizer>
-		<media:thumbnail url="/fundundvergabetiere/internet/Bild/Thumbnail/85948" />
-</item>
-
-<item>
-	<title>Europ&#228;isch Kurzhaar</title>
-	<description>02_Katzen</description>
-	<guid isPermaLink="false">64105</guid>
-	<dc:date>2026-10-03</dc:date>
-	<vie:geburtsjahr>2026</vie:geburtsjahr>
-	<vie:geschlecht>m&#228;nnlich</vie:geschlecht>
-	<vie:farbe>schwarz</vie:farbe>
-	<vie:mischling></vie:mischling>
-	<cal:location>
-		<vcard:street-address>22., Wagramer Stra&#223;e</vcard:street-address>
-	</cal:location>
-	<cal:organizer>
-		<vcard:fn>TierQuarTier Wien,  1220 Wien, S&#252;&#223;enbrunner Stra&#223;e 101</vcard:fn>
-		<vcard:tel>+43 1 734 11 02 - 114</vcard:tel>
-		<vcard:email>tieraufnahme@tierquartier.at</vcard:email>
-	</cal:organizer>
-		<media:thumbnail url="/fundundvergabetiere/internet/Bild/Thumbnail/85949" />
-</item>
-
-<item>
-	<title>Katze</title>
-	<description>02_Katzen</description>
-	<guid isPermaLink="false">64091</guid>
-	<dc:date>2026-10-02</dc:date>
-	<vie:geburtsjahr></vie:geburtsjahr>
-	<vie:geschlecht>unbekannt</vie:geschlecht>
-	<vie:farbe>braun-getigert</vie:farbe>
-	<vie:mischling></vie:mischling>
-	<cal:location>
-		<vcard:street-address>23., Ketzergasse</vcard:street-address>
-	</cal:location>
-	<cal:organizer>
-		<vcard:fn>Stadt Wien | Veterin&#228;ramt und Tierschutz</vcard:fn>
-		<vcard:tel>+43 1 4000-8060</vcard:tel>
-		<vcard:email>post@ma60.wien.gv.at</vcard:email>
-	</cal:organizer>
-		<media:thumbnail url="/fundundvergabetiere/internet/Bild/Thumbnail/85930" />
-</item>
-
-<item>
-	<title>Fink</title>
-	<description>03_Andere Tiere</description>
-	<guid isPermaLink="false">64090</guid>
-	<dc:date>2026-10-02</dc:date>
-	<vie:geburtsjahr></vie:geburtsjahr>
-	<vie:geschlecht>unbekannt</vie:geschlecht>
-	<vie:farbe></vie:farbe>
-	<vie:mischling></vie:mischling>
-	<cal:location>
-		<vcard:street-address>06., Mariahilfer Stra&#223;e</vcard:street-address>
-	</cal:location>
-	<cal:organizer>
-		<vcard:fn>Zoo Forchtenstein, 1140 Wien</vcard:fn>
-		<vcard:tel>0676/95 33 256 v. Montag - Freitag 10-14 Uhr (ausgenommen Feiertage)</vcard:tel>
-		<vcard:email>reptilienzooforchtenstein@gmail.com</vcard:email>
-	</cal:organizer>
-		<media:thumbnail url="/fundundvergabetiere/internet/Bild/Thumbnail/85931" />
 </item>
 
 	</channel>
