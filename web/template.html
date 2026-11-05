@@ -1313,4 +1313,6 @@ matchMedia("(prefers-color-scheme: dark)").addEventListener("change",render);
 new MutationObserver(render).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
 render();
 if(location.hash==="#info") route();
+/* Service Worker: Installation als App und Offline-Betrieb */
+if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>
