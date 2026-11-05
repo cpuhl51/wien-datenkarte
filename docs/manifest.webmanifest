@@ -1,6 +1,6 @@
 {
-  "name": "Wien – Zahlen und Statistik",
-  "short_name": "Wien Zahlen",
+  "name": "Wien aktuell – Statistik und Zahlen",
+  "short_name": "Wien aktuell",
   "description": "Offene Daten der Stadt Wien auf einer Karte der 23 Bezirke.",
   "lang": "de-AT",
   "start_url": "./",
