@@ -240,7 +240,7 @@ svg.vin text.vl{font:600 13px var(--body);fill:#3a2e08;pointer-events:none}
 
 <div class="wrap">
   <header>
-    <div class="topline"><div class="eyebrow">Prototyp · Open Data Wien</div><div class="tools"><div class="themesw" role="group" aria-label="Darstellung"><button data-th="auto" aria-pressed="true">Auto</button><button data-th="light" aria-pressed="false">Hell</button><button data-th="dark" aria-pressed="false">Dunkel</button></div><a class="infobtn" id="infobtn" href="#info">Info &amp; Datenschutz</a></div></div>
+    <div class="topline"><div class="eyebrow">Prototyp · Open Data Wien</div><div class="tools"><div class="themesw" role="group" aria-label="Darstellung"><button data-th="auto" aria-pressed="true">Auto</button><button data-th="light" aria-pressed="false">Hell</button><button data-th="dark" aria-pressed="false">Dunkel</button></div><button class="infobtn" id="installbtn" hidden>App installieren</button><a class="infobtn" id="infobtn" href="#info">Info &amp; Datenschutz</a></div></div>
     <h1>Wien aktuell – Statistik und Zahlen</h1>
     <p class="lede">Wähle eine Ebene, schiebe durch die Jahre und tippe auf einen Bezirk oder „Wien gesamt“. Der Datenstand jeder Ebene steht direkt über der Karte. Die Farben bedeuten in jedem Jahr dasselbe: Wird ein Bezirk beim Durchschieben der Jahre dunkler, ist der Wert gestiegen.</p>
   </header>
@@ -1205,6 +1205,9 @@ function renderInfo(){
   </table>
   <p class="note">Die Datenquellen (Stadt Wien – data.wien.gv.at, Statistik Austria, Wiener Linien, Veterinäramt MA 60, Stadtarchäologie Wien, vienna.at) werden nicht von deinem Gerät abgerufen, sondern jede Nacht von GitHub aus. Die genaue Quelle steht bei jeder Ebene über der Karte.</p>
 
+  <h3>App installieren</h3>
+  <p>In Chrome: ⋮ → „Zum Startbildschirm hinzufügen“ → „Installieren“, oder der Knopf „App installieren“ oben, sobald er erscheint.</p>
+  <p class="note" id="appstatus">App-Status wird ermittelt …</p>
   <h3>Lizenzen</h3>
   <p>Daten der Stadt Wien und basemap.at: CC BY 4.0. Schriften Bricolage Grotesque und IBM Plex: SIL Open Font License. Flaggen: flag-icons (MIT-Lizenz), Serbien als Flagge ohne Wappen. Programmcode: MIT-Lizenz, offen auf ${a_(LINKS.github,"GitHub")}.</p>
   <p>Fehler gefunden oder eine Idee? Schreib an ${a_(LINKS.mail,"apps@puhl.ch")}.</p>
@@ -1213,6 +1216,7 @@ function renderInfo(){
 function route(){
   const on=location.hash==="#info", info=document.getElementById("info");
   if(on&&!info.innerHTML) renderInfo();
+  if(on) appStatus().then(s=>{ const el=document.getElementById("appstatus"); if(el) el.textContent=s; });
   info.hidden=!on; document.getElementById("app").hidden=on;
   document.getElementById("infobtn").hidden=on;
   if(on) window.scrollTo(0,0); else { try{render();}catch(e){} }
@@ -1315,4 +1319,15 @@ render();
 if(location.hash==="#info") route();
 /* Service Worker: Installation als App und Offline-Betrieb */
 if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
+/* eigener Installieren-Knopf, sobald Chrome die App als installierbar meldet */
+let installEvt=null;
+window.addEventListener("beforeinstallprompt",e=>{ e.preventDefault(); installEvt=e; document.getElementById("installbtn").hidden=false; });
+window.addEventListener("appinstalled",()=>{ installEvt=null; document.getElementById("installbtn").hidden=true; });
+document.getElementById("installbtn").addEventListener("click",async()=>{ if(!installEvt) return; installEvt.prompt(); await installEvt.userChoice.catch(()=>{}); installEvt=null; document.getElementById("installbtn").hidden=true; });
+/* App-Status für die Info-Seite (Hilfe bei Installationsproblemen) */
+async function appStatus(){
+  const sw="serviceWorker" in navigator?((await navigator.serviceWorker.getRegistration().catch(()=>null))?.active?"aktiv":"noch nicht aktiv – Seite neu laden"):"vom Browser nicht unterstützt";
+  const mode=matchMedia("(display-mode: standalone)").matches?"läuft als installierte App":"läuft im Browser";
+  return `Service Worker: ${sw} · ${mode} · Installieren-Angebot von Chrome: ${installEvt?"vorhanden":"nicht erhalten"}`;
+}
 </script>
