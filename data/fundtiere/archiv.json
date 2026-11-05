@@ -1638,5 +1638,35 @@
 "f": "weiß",
 "o": "12., Lichtensterngasse",
 "b": 12
+},
+{
+"id": "64536",
+"t": "Kaninchen",
+"k": "Andere Tiere",
+"d": "2026-11-04",
+"s": "männlich",
+"f": "weiß",
+"o": "22., Lotte-Profohs-Weg",
+"b": 22
+},
+{
+"id": "64537",
+"t": "Hund",
+"k": "Hunde",
+"d": "2026-11-04",
+"s": "unbekannt",
+"f": "",
+"o": "11., Bürgerspitalwiese",
+"b": 11
+},
+{
+"id": "64549",
+"t": "Kaninchen",
+"k": "Andere Tiere",
+"d": "2026-11-04",
+"s": "männlich",
+"f": "schwarz",
+"o": "18., Weißdornweg",
+"b": 18
 }
 ]
