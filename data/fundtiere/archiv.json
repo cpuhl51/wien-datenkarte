@@ -1668,5 +1668,45 @@
 "f": "schwarz",
 "o": "18., Weißdornweg",
 "b": 18
+},
+{
+"id": "64555",
+"t": "Nymphensittich",
+"k": "Andere Tiere",
+"d": "2026-11-05",
+"s": "unbekannt",
+"f": "grau/gelb",
+"o": "21., Pragerstraße",
+"b": 21
+},
+{
+"id": "64558",
+"t": "Schildkröte",
+"k": "Andere Tiere",
+"d": "2026-11-05",
+"s": "unbekannt",
+"f": "",
+"o": "21., An der oberen Alten Donau",
+"b": 21
+},
+{
+"id": "64560",
+"t": "Europäisch Kurzhaar",
+"k": "Katzen",
+"d": "2026-11-05",
+"s": "männlich",
+"f": "Schwarz",
+"o": "12., Am Fuchsenfeld",
+"b": 12
+},
+{
+"id": "64564",
+"t": "Hund",
+"k": "Hunde",
+"d": "2026-11-06",
+"s": "männlich",
+"f": "beige",
+"o": "12., Unter-Meidlinger Straße",
+"b": 12
 }
 ]
