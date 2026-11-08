@@ -2,7 +2,7 @@
 // Nötig, weil die Schnittstelle der Wiener Linien keine direkten Browser-Abfragen erlaubt (kein CORS).
 // Nur diese eine Adresse wird weitergereicht, Antworten werden 60 Sekunden zwischengespeichert.
 const UPSTREAM = "https://www.wienerlinien.at/ogd_realtime/trafficInfoList";
-const ALLOWED_ORIGINS = ["https://cpuhl51.github.io"];
+const ALLOWED_ORIGINS = ["https://app.wien-live-daten.puhl.ch", "https://cpuhl51.github.io"];
 
 export default {
   async fetch(request) {

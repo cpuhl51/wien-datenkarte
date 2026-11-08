@@ -7,4 +7,4 @@
    `web/template.html` bei `const LIVE_URL = "";` eintragen und speichern.
 
 Danach holt die Web-App die Störungen jede Minute neu. Der Worker leitet nur diese eine
-Adresse weiter und lässt nur Anfragen von cpuhl51.github.io zu.
+Adresse weiter und lässt nur Anfragen von app.wien-live-daten.puhl.ch und cpuhl51.github.io zu.
