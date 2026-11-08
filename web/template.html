@@ -70,6 +70,9 @@ footer .credit a{color:inherit}
 h1{font-family:var(--display);font-weight:800;font-size:clamp(28px,5vw,44px);line-height:1.05;margin:0;text-wrap:balance}
 .lede{color:var(--muted);max-width:62ch;margin:0}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
+.svopt{display:flex;align-items:center;gap:8px;margin:4px 0;cursor:pointer}
+.svopt input{accent-color:var(--accent)}
+#startbtn[aria-pressed="true"]{border-color:#e0a800;color:var(--ink)}
 .lgroups{display:flex;flex-direction:column;gap:8px}
 .lgroup{background:color-mix(in srgb,var(--gc) 7%,transparent);border-left:3px solid color-mix(in srgb,var(--gc) 65%,transparent);border-radius:0;padding:7px 10px 9px}
 .lgname{display:block;font:500 11px var(--mono);letter-spacing:.07em;text-transform:uppercase;color:color-mix(in srgb,var(--gc) 70%,var(--ink));margin-bottom:6px}
@@ -262,7 +265,7 @@ svg.vin text.vl{font:600 13px var(--body);fill:#3a2e08;pointer-events:none}
 
   <div class="grid">
     <div class="mapbox">
-      <div class="maphead"><button class="wien" id="wien" aria-pressed="false">Wien gesamt</button><button class="wien" id="locate">Mein Standort</button><button class="wien zb" id="zin" aria-label="Hineinzoomen">+</button><button class="wien zb" id="zoutb" aria-label="Herauszoomen">−</button><button class="wien" id="zoomout" hidden>Ganze Stadt</button><button class="wien" id="basebtn" aria-pressed="false">Stadtplan</button>
+      <div class="maphead"><button class="wien" id="wien" aria-pressed="false">Wien gesamt</button><button class="wien" id="startbtn" aria-pressed="false">☆ Als Start</button><button class="wien" id="locate">Mein Standort</button><button class="wien zb" id="zin" aria-label="Hineinzoomen">+</button><button class="wien zb" id="zoutb" aria-label="Herauszoomen">−</button><button class="wien" id="zoomout" hidden>Ganze Stadt</button><button class="wien" id="basebtn" aria-pressed="false">Stadtplan</button>
         <label class="baseop" id="baseop" hidden>Deckkraft <input type="range" id="baseopr" min="0.2" max="1" step="0.1" value="0.6"></label><span class="hint">Zahlen = gewählte Ebene · Bezirk antippen für Details · gezoomt: mit dem Finger verschieben</span></div>
       <p class="note" id="locmsg" hidden></p>
       <svg class="map" id="map" role="img" aria-label="Karte der Wiener Gemeindebezirke"></svg>
@@ -573,6 +576,17 @@ const state = {}; LAYERS.forEach(L=>{state[L.id]={sub:L.subs[0].id,year:null};})
 if(FP) state.fp.year = FP_DAY===viennaNow().day ? Math.floor(viennaNow().min/FP.step) : Math.floor(8*60/FP.step);
 let layer = LAYERS.find(L=>L.id==="infra")||LAYERS[0], sel = 0;
 if(layer.id==="infra") state.infra.sub="defi";
+/* Startansicht: Standard (Defibrillatoren), eine fest gewählte Ansicht oder die zuletzt gewählte – nur in diesem Browser gespeichert */
+const ls={get:k=>{try{return JSON.parse(localStorage.getItem(k));}catch(e){return null;}},set:(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(k,JSON.stringify(v));}catch(e){}}};
+function applyView(v){ const L=v&&LAYERS.find(x=>x.id===v.layer); if(!L) return; layer=L; if(v.sub&&L.subs.some(s=>s.id===v.sub)) state[L.id].sub=v.sub; }
+(()=>{ const sv=ls.get("startView"); if(sv&&sv.mode==="fixed") applyView(sv); else if(sv&&sv.mode==="last") applyView(ls.get("lastView")); })();
+const viewName = v => { const L=LAYERS.find(x=>x.id===v.layer); if(!L) return "–"; const s=L.subs.find(x=>x.id===v.sub); return L.label+(s&&L.subs.length>1?" · "+s.label:""); };
+function updateStartBtn(){
+  const b=document.getElementById("startbtn"); if(!b) return; const sv=ls.get("startView")||{mode:"default"};
+  const on=sv.mode==="fixed"&&sv.layer===layer.id&&sv.sub===state[layer.id].sub;
+  b.setAttribute("aria-pressed",on); b.textContent=on?"★ Startansicht":"☆ Als Start";
+  b.title=on?"Diese Ansicht erscheint beim Öffnen der App. Nochmals tippen: zurück zum Standard.":"Diese Ansicht beim Öffnen der App zeigen";
+}
 const subOf = L => L.subs.find(s=>s.id===state[L.id].sub);
 const yearsOf = s => Object.keys(s.data).map(Number).sort((a,b)=>a-b);
 const yearOf = L => { const ys=yearsOf(subOf(L)); let y=state[L.id].year; if(!ys.includes(y)) y=ys[ys.length-1]; return y; };
@@ -951,6 +965,7 @@ function renderSpecial(){
 }
 function render(){
   render2(); try{ drawTiles(); }catch(e){}
+  ls.set("lastView",{layer:layer.id,sub:state[layer.id].sub}); updateStartBtn();
 }
 let rankSplit=true;
 function render2(){
@@ -1189,7 +1204,7 @@ function renderInfo(){
     <li><b>Kein Konto, keine Cookies, kein Tracking, keine Werbung.</b> Die App sammelt keine personenbezogenen Daten.</li>
     <li><b>Standort:</b> Nur wenn du „Mein Standort“ antippst, fragt dein Browser um Erlaubnis. Der Standort wird ausschließlich auf deinem Gerät verwendet, um die Karte zu zentrieren und Entfernungen zu berechnen. Er wird nicht gespeichert und nirgendwohin gesendet.</li>
     <li><b>Server-Protokolle:</b> Wie bei jeder Webseite sehen die Server, von denen Inhalte geladen werden, technisch deine IP-Adresse und deinen Browsertyp. Welche das sind, steht unten. Die App selbst wertet nichts davon aus.</li>
-    <li><b>Darstellung:</b> Deine Wahl Auto/Hell/Dunkel wird nur in deinem Browser gespeichert (lokaler Speicher), nicht übertragen.</li>
+    <li><b>Darstellung und Startansicht:</b> Deine Wahl (Auto/Hell/Dunkel, Startansicht, zuletzt gewählte Ansicht) wird nur in deinem Browser gespeichert (lokaler Speicher), nicht übertragen.</li>
     <li><b>Schriften</b> werden von dieser Seite selbst geladen, nicht von Google Fonts.</li>
     <li><b>Navigation:</b> „Hin navigieren“ öffnet Google Maps mit der Zieladresse. Erst dann gelten die Datenschutzbestimmungen von Google.</li>
   </ul>
@@ -1205,6 +1220,8 @@ function renderInfo(){
   </table>
   <p class="note">Die Datenquellen (Stadt Wien – data.wien.gv.at, Statistik Austria, Wiener Linien, Veterinäramt MA 60, Stadtarchäologie Wien, vienna.at) werden nicht von deinem Gerät abgerufen, sondern jede Nacht von GitHub aus. Die genaue Quelle steht bei jeder Ebene über der Karte.</p>
 
+  <h3>Startansicht</h3>
+  <div id="svbox">${startViewHtml()}</div>
   <h3>App installieren</h3>
   <p>In Chrome: ⋮ → „Zum Startbildschirm hinzufügen“ → „Installieren“, oder der Knopf „App installieren“ oben, sobald er erscheint.</p>
   <p class="note" id="appstatus">App-Status wird ermittelt …</p>
@@ -1216,12 +1233,25 @@ function renderInfo(){
 function route(){
   const on=location.hash==="#info", info=document.getElementById("info");
   if(on&&!info.innerHTML) renderInfo();
+  if(on){ const el=document.getElementById("svbox"); if(el) el.innerHTML=startViewHtml(); }
   if(on) appStatus().then(s=>{ const el=document.getElementById("appstatus"); if(el) el.textContent=s; });
   info.hidden=!on; document.getElementById("app").hidden=on;
   document.getElementById("infobtn").hidden=on;
   if(on) window.scrollTo(0,0); else { try{render();}catch(e){} }
 }
 window.addEventListener("hashchange",route);
+document.getElementById("startbtn").addEventListener("click",()=>{ const sv=ls.get("startView")||{}; const cur={layer:layer.id,sub:state[layer.id].sub};
+  ls.set("startView", sv.mode==="fixed"&&sv.layer===cur.layer&&sv.sub===cur.sub ? null : {mode:"fixed",...cur}); updateStartBtn(); });
+function startViewHtml(){
+  const sv=ls.get("startView")||{mode:"default"}, cur={layer:layer.id,sub:state[layer.id].sub};
+  const opt=(m,l)=>`<label class="svopt"><input type="radio" name="sv" value="${m}"${sv.mode===m||(m==="default"&&!["fixed","last"].includes(sv.mode))?" checked":""}> ${l}</label>`;
+  return opt("default","Standard: Einrichtungen · Defibrillatoren")+opt("last","Zuletzt gewählte Ansicht")
+    +opt("fixed",`Feste Ansicht: <b>${esc(sv.mode==="fixed"?viewName(sv):viewName(cur))}</b>`)
+    +`<p class="note" style="margin:4px 0 0">Tipp: Auf der Karte mit „☆ Als Start“ die gerade gezeigte Ansicht festlegen. Die Wahl bleibt nur in diesem Browser gespeichert.</p>`;
+}
+document.addEventListener("change",e=>{ if(e.target.name!=="sv") return; const m=e.target.value, sv=ls.get("startView")||{};
+  ls.set("startView", m==="default"?null: m==="last"?{mode:"last"}: {mode:"fixed",layer:sv.mode==="fixed"?sv.layer:layer.id,sub:sv.mode==="fixed"?sv.sub:state[layer.id].sub});
+  const el=document.getElementById("svbox"); if(el) el.innerHTML=startViewHtml(); updateStartBtn(); });
 /* Darstellung: Auto (wie das Gerät), Hell, Dunkel – Wahl bleibt nur in diesem Browser gespeichert */
 function applyTheme(v){
   if(v==="light"||v==="dark") document.documentElement.setAttribute("data-theme",v); else document.documentElement.removeAttribute("data-theme");
