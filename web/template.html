@@ -77,6 +77,7 @@ h1{font-family:var(--display);font-weight:800;font-size:clamp(28px,5vw,44px);lin
 .maptitle h2{font-family:var(--display);font-weight:800;font-size:22px;line-height:1.15;margin:0}
 .mapsub{margin:2px 0 10px;font:13px var(--mono);color:var(--muted)}
 #startbtn{flex:none}
+#mappick .pick{margin:10px 0 4px}
 .mapbox .yearbar{margin-top:12px}
 .mapbox .lgroups{margin-top:16px}
 .lgroups{display:flex;flex-direction:column;gap:8px}
@@ -264,6 +265,7 @@ svg.vin text.vl{font:600 13px var(--body);fill:#3a2e08;pointer-events:none}
         <label class="baseop" id="baseop" hidden>Deckkraft <input type="range" id="baseopr" min="0.2" max="1" step="0.1" value="0.6"></label><span class="hint">Zahlen = gewählte Ebene · Bezirk antippen für Details · gezoomt: mit dem Finger verschieben</span></div>
       <p class="note" id="locmsg" hidden></p>
       <svg class="map" id="map" role="img" aria-label="Karte der Wiener Gemeindebezirke"></svg>
+      <div id="mappick" aria-live="polite"></div>
       <div class="legend"><div class="ramp" id="ramp"></div><div class="ticks" id="ticks"></div><div class="ticks blg" id="wlleg"></div></div>
       <p class="note" id="layernote"></p>
       <div class="yearbar">
@@ -949,6 +951,7 @@ function histPlan(items){
 }
 
 function renderSpecial(){
+  document.getElementById("mappick").innerHTML="";
   /* alles von der vorigen Ebene entfernen: Säulen, Störungs- und Fundtier-Symbole, Punkte, Legende */
   drawBars({}); wlG.innerHTML=""; fundG.innerHTML=""; overlay.innerHTML=""; document.getElementById("wlleg").innerHTML="";
   document.getElementById("ticks").classList.remove("blg"); document.getElementById("ramp").style.height="";
@@ -1139,10 +1142,12 @@ function renderDetail(s,y,order,c){
     return `<div class="darow"><span class="dy">${yr}</span><div class="stack" role="img" aria-label="${yr}: ${v.human} Vorfälle mit gebissenem Menschen, ${o} sonstige, ${v.all} gesamt"><i style="width:${100*v.human/v.all}%;background:#8a5a2b"></i><i style="width:${100*o/v.all}%;background:#6e7d7a"></i></div><span class="dt">${v.all}</span></div>`;}).join("")}
     <div class="skey"><span><b style="background:#8a5a2b"></b>Mensch gebissen</span><span><b style="background:#6e7d7a"></b>sonstige (Hund gebissen, Attacke, Sachschaden)</span></div>
     <p class="note" style="margin:0">${Object.entries(DOG_ATT).map(([yr,v])=>`${yr}: ${v.human} Mensch, ${v.all-v.human} sonstige`).join(" · ")}. Bissstatistik der MA 58; „sonstige“ = Vorfälle ohne gebissenen Menschen. Für 2024 ist der Download-Link der Stadt derzeit defekt.</p>`:"";
+  /* angetippter Ort, Tier oder Störung: Kärtchen direkt unter der Karte */
+  document.getElementById("mappick").innerHTML=(isPts(layer)&&PT&&PT.points[s.pts]?pickCard(s):"")+wlPickCard()+fundPickCard();
   document.getElementById("detail").innerHTML=`
     <h2>${b===0?"Wien gesamt":b+". "+NAMES[b]}</h2>
     ${place}${pd}
-    ${isPts(layer)&&PT&&PT.points[s.pts]?pickCard(s):""}${wlPickCard()}${fundPickCard()}
+
     ${spark(s,b,y,c)}
     ${layer.id==="dea"?(b===0?monthChart(y,c):`<p class="note">Monatswerte gibt es nur für ganz Wien: oben auf „Wien gesamt“ tippen.</p>`):""}
     ${layer.id==="bir"?`<p class="note">Monatswerte für Geburten veröffentlichen weder die Stadt Wien noch Statistik Austria als offene Daten.</p>`:""}
