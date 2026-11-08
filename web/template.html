@@ -1185,6 +1185,12 @@ function renderInfo(){
   <p>Diese App zeigt offene Daten der Stadt Wien auf einer Karte der 23 Bezirke. Sie ist ein privates, nicht kommerzielles Projekt und kein Angebot der Stadt Wien.</p>
   <div class="creditbox">${creditHtml()}</div>
 
+  <h3>Startansicht</h3>
+  <div id="svbox">${startViewHtml()}</div>
+  <h3>App installieren</h3>
+  <p>In Chrome: ⋮ → „Zum Startbildschirm hinzufügen“ → „Installieren“, oder der Knopf „App installieren“ oben, sobald er erscheint.</p>
+  <p class="note" id="appstatus">App-Status wird ermittelt …</p>
+
   <h3>So funktioniert die App</h3>
   <ul>
     <li><b>Ebene wählen:</b> Die Knöpfe oben (z. B. Einwohner, Herkunft, Müll) bestimmen, was die Karte zeigt. Darunter wählst du die Kennzahl.</li>
@@ -1220,11 +1226,6 @@ function renderInfo(){
   </table>
   <p class="note">Die Datenquellen (Stadt Wien – data.wien.gv.at, Statistik Austria, Wiener Linien, Veterinäramt MA 60, Stadtarchäologie Wien, vienna.at) werden nicht von deinem Gerät abgerufen, sondern jede Nacht von GitHub aus. Die genaue Quelle steht bei jeder Ebene über der Karte.</p>
 
-  <h3>Startansicht</h3>
-  <div id="svbox">${startViewHtml()}</div>
-  <h3>App installieren</h3>
-  <p>In Chrome: ⋮ → „Zum Startbildschirm hinzufügen“ → „Installieren“, oder der Knopf „App installieren“ oben, sobald er erscheint.</p>
-  <p class="note" id="appstatus">App-Status wird ermittelt …</p>
   <h3>Lizenzen</h3>
   <p>Daten der Stadt Wien und basemap.at: CC BY 4.0. Schriften Bricolage Grotesque und IBM Plex: SIL Open Font License. Flaggen: flag-icons (MIT-Lizenz), Serbien als Flagge ohne Wappen. Programmcode: MIT-Lizenz, offen auf ${a_(LINKS.github,"GitHub")}.</p>
   <p>Fehler gefunden oder eine Idee? Schreib an ${a_(LINKS.mail,"apps@puhl.ch")}.</p>
