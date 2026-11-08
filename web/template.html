@@ -78,6 +78,8 @@ h1{font-family:var(--display);font-weight:800;font-size:clamp(28px,5vw,44px);lin
 .mapsub{margin:2px 0 10px;font:13px var(--mono);color:var(--muted)}
 #startbtn{flex:none}
 #mappick .pick{margin:10px 0 4px}
+.fundfoto{width:100%;max-width:360px;border-radius:8px;display:block}
+.pick a.wien{text-decoration:none;display:inline-flex;align-items:center}
 .mapbox .yearbar{margin-top:12px}
 .mapbox .lgroups{margin-top:16px}
 .lgroups{display:flex;flex-direction:column;gap:8px}
@@ -824,7 +826,11 @@ function fundPickCard(){
   if(layer.id!=="fund"||!fundPick) return ""; const i=F.items.find(x=>x.id===fundPick); if(!i) return "";
   return `<div class="pick" id="fundpick"><div class="pk-h"><img src="icons/fund/${fkOf(i)}.png${IV}" alt="" style="width:20px;height:20px;vertical-align:-5px;margin-right:6px">${esc(FUND_KIND[fkOf(i)][0])} · gefunden am ${dmy(i.d)}</div>
     <div class="pk-a">${esc(i.t)}${i.f?" · "+esc(i.f):""}${i.s&&i.s!=="unbekannt"?" · "+esc(i.s):""}</div>
+    ${i.foto?`<img class="fundfoto" src="${i.foto}" alt="Foto: ${esc(i.t)}" loading="lazy">`:""}
+    ${i.mx||i.j?`<div class="pk-m" style="font-family:var(--body)">${[esc(i.mx||""),i.j?"geboren "+esc(i.j):""].filter(Boolean).join(" · ")}</div>`:""}
     <div class="pk-m" style="font-family:var(--body)">Fundort: ${esc(i.o)} – ungefähre Lage, die Stadt nennt nur Straße oder Park</div>
+    <div class="pk-m" style="font-family:var(--body)"><b>Fund-ID ${esc(i.id)}</b>${i.org?` · Tier ist bei: ${esc(i.org)}`:""}</div>
+    <div class="pk-b">${i.tel?`<a class="navbtn" href="tel:${esc(i.tel.replace(/[^+\d]/g,""))}">Anrufen</a>`:""}${i.mail?`<a class="wien" href="mailto:${esc(i.mail)}?subject=${encodeURIComponent("Fundtier "+i.id)}">E-Mail</a>`:""}<a class="wien" href="https://www.wien.gv.at/zusammenleben/fundservice-tiere" target="_blank" rel="noopener">Fundtiere bei der Stadt</a></div>
     <div class="pk-b"><button class="wien" id="fundpick-x">Schließen</button></div></div>`;
 }
 function drawWl(s){
@@ -1232,6 +1238,7 @@ function renderInfo(){
     <li><b>Standort:</b> Nur wenn du „Mein Standort“ antippst, fragt dein Browser um Erlaubnis. Der Standort wird ausschließlich auf deinem Gerät verwendet, um die Karte zu zentrieren und Entfernungen zu berechnen. Er wird nicht gespeichert und nirgendwohin gesendet.</li>
     <li><b>Server-Protokolle:</b> Wie bei jeder Webseite sehen die Server, von denen Inhalte geladen werden, technisch deine IP-Adresse und deinen Browsertyp. Welche das sind, steht unten. Die App selbst wertet nichts davon aus.</li>
     <li><b>Darstellung und Startansicht:</b> Deine Wahl (Auto/Hell/Dunkel, Startansicht, zuletzt gewählte Ansicht) wird nur in deinem Browser gespeichert (lokaler Speicher), nicht übertragen.</li>
+    <li><b>Fotos der Fundtiere</b> stammen von der Stadt Wien und werden jede Nacht auf diese Seite kopiert, dein Gerät lädt sie nicht von wien.gv.at.</li>
     <li><b>Schriften</b> werden von dieser Seite selbst geladen, nicht von Google Fonts.</li>
     <li><b>Navigation:</b> „Hin navigieren“ öffnet Google Maps mit der Zieladresse. Erst dann gelten die Datenschutzbestimmungen von Google.</li>
   </ul>

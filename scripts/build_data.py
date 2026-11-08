@@ -130,7 +130,9 @@ for it in re.findall(r"<item>(.*?)</item>", xml, re.S):
     ort = g("vcard:street-address")
     m = re.match(r"\s*(\d{1,2})\.", ort)
     items.append({"id": g("guid"), "t": g("title"), "k": re.sub(r"^\d+_", "", g("description")), "d": g("dc:date"),
-                  "s": g("vie:geschlecht"), "f": g("vie:farbe"), "o": ort, "b": int(m.group(1)) if m and 1 <= int(m.group(1)) <= 23 else 0})
+                  "s": g("vie:geschlecht"), "f": g("vie:farbe"), "o": ort, "b": int(m.group(1)) if m and 1 <= int(m.group(1)) <= 23 else 0,
+                  "j": g("vie:geburtsjahr"), "mx": g("vie:mischling"), "org": g("vcard:fn"), "tel": g("vcard:tel"), "mail": g("vcard:email"),
+                  "img": (re.search(r'<media:thumbnail url="([^"]+)"', it) or [None, ""])[1]})
 # Archiv: jede Fundmeldung bleibt erhalten, auch wenn sie aus dem 30-Tage-Feed fällt
 archive = json.load(open(archive_path)) if os.path.exists(archive_path) else []
 # frühere Einträge ohne Kennung (Fehler bis 3.11.2026): Kennung aus dem Feed übernehmen oder aus Datum/Tier/Ort bilden
@@ -180,6 +182,30 @@ for it_ in archive + items:
 json.dump(geo_cache, open(geo_cache_path, "w"), ensure_ascii=False, indent=0)
 json.dump(archive, open(archive_path, "w"), ensure_ascii=False, indent=0)
 print("Fundorte verortet:", sum(1 for i in items if i.get("xy")), "von", len(items), "| neu abgefragt:", geo_new)
+
+# Fotos der aktuellen Fundtiere auf die eigene Seite kopieren (so lädt das Handy nichts von fremden Servern); alte Fotos löschen
+foto_dir = os.path.join(os.path.dirname(out), "..", "docs", "fundfotos")
+os.makedirs(foto_dir, exist_ok=True)
+keep, foto_fail = set(), 0
+for it_ in items:
+    if not it_.get("img") or not it_.get("id"):
+        continue
+    fn = re.sub(r"[^0-9A-Za-z_-]", "", it_["id"]) + ".jpg"
+    fp_ = os.path.join(foto_dir, fn)
+    if not os.path.exists(fp_) and foto_fail < 3:
+        try:
+            with urllib.request.urlopen(urllib.request.Request("https://www.wien.gv.at" + it_["img"], headers={"User-Agent": "wien-datenkarte"}), timeout=15) as r:
+                data = r.read()
+            if data[:2] == b"\xff\xd8":
+                open(fp_, "wb").write(data)
+        except Exception:
+            foto_fail += 1
+    if os.path.exists(fp_):
+        it_["foto"] = "fundfotos/" + fn; keep.add(fn)
+for fn in os.listdir(foto_dir):
+    if fn not in keep:
+        os.remove(os.path.join(foto_dir, fn))
+print("Fundtier-Fotos:", len(keep))
 
 fund_stale = False
 if not items and archive:
