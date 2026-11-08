@@ -22,7 +22,7 @@ Stand: 8.11.2026
 - Verpackung als Trusted Web Activity mit Googles Werkzeug Bubblewrap.
 - Dafür nötig: Datei `/.well-known/assetlinks.json` unter app.wien-live-daten.puhl.ch (wird beim Verpacken erzeugt).
 - Neues privates Entwicklerkonto: vor der ersten Veröffentlichung geschlossener Test mit 12 Testern über 14 Tage.
-- Store-Icon: `assets/playstore-icon-512.png`, Logo mit Schrift: `assets/logo-mit-text.jpg`.
+- Logo (überall, ohne Schriftzug): `assets/logo-original.jpg`, Store-Icon: `assets/playstore-icon-512.png`.
 
 ## Sicherheit
 - Öffentliches Repo: jeder kann lesen und kopieren, ändern nur Konten mit Schreibrecht (Christoph und die freigegebene Claude-App).
