@@ -73,6 +73,12 @@ h1{font-family:var(--display);font-weight:800;font-size:clamp(28px,5vw,44px);lin
 .svopt{display:flex;align-items:center;gap:8px;margin:4px 0;cursor:pointer}
 .svopt input{accent-color:var(--accent)}
 #startbtn[aria-pressed="true"]{border-color:#e0a800;color:var(--ink)}
+.maptitle{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.maptitle h2{font-family:var(--display);font-weight:800;font-size:22px;line-height:1.15;margin:0}
+.mapsub{margin:2px 0 10px;font:13px var(--mono);color:var(--muted)}
+#startbtn{flex:none}
+.mapbox .yearbar{margin-top:12px}
+.mapbox .lgroups{margin-top:16px}
 .lgroups{display:flex;flex-direction:column;gap:8px}
 .lgroup{background:color-mix(in srgb,var(--gc) 7%,transparent);border-left:3px solid color-mix(in srgb,var(--gc) 65%,transparent);border-radius:0;padding:7px 10px 9px}
 .lgname{display:block;font:500 11px var(--mono);letter-spacing:.07em;text-transform:uppercase;color:color-mix(in srgb,var(--gc) 70%,var(--ink));margin-bottom:6px}
@@ -245,32 +251,33 @@ svg.vin text.vl{font:600 13px var(--body);fill:#3a2e08;pointer-events:none}
   <header>
     <div class="topline"><div class="eyebrow">Prototyp · Open Data Wien</div><div class="tools"><div class="themesw" role="group" aria-label="Darstellung"><button data-th="auto" aria-pressed="true">Auto</button><button data-th="light" aria-pressed="false">Hell</button><button data-th="dark" aria-pressed="false">Dunkel</button></div><button class="infobtn" id="installbtn" hidden>App installieren</button><a class="infobtn" id="infobtn" href="#info">Info &amp; Datenschutz</a></div></div>
     <h1>Wien aktuell – Statistik und Zahlen</h1>
-    <p class="lede">Wähle eine Ebene, schiebe durch die Jahre und tippe auf einen Bezirk oder „Wien gesamt“. Der Datenstand jeder Ebene steht direkt über der Karte. Die Farben bedeuten in jedem Jahr dasselbe: Wird ein Bezirk beim Durchschieben der Jahre dunkler, ist der Wert gestiegen.</p>
+    <p class="lede">Die Karte zeigt die gewählte Ebene. Darunter schiebst du durch Jahre oder Uhrzeit und wählst die Ebene. Tippe auf einen Bezirk oder „Wien gesamt“ für Details. Die Farben bedeuten in jedem Jahr dasselbe: Wird ein Bezirk beim Durchschieben dunkler, ist der Wert gestiegen. Datenstand und Quelle stehen unter der Rangliste.</p>
   </header>
 
   <section class="info" id="info" hidden aria-labelledby="info-h"></section>
   <div id="app">
-  <div class="lgroups" id="layers" aria-label="Datenebene"></div>
-  <div class="subs" id="subs" role="group" aria-label="Kennzahl"></div>
-  <div class="yearbar">
-    <span class="ylabel" id="ylabel">Jahr</span>
-    <div class="ynav">
-      <button class="ystep" id="yprev" aria-label="Vorheriges Jahr">‹</button>
-      <input type="range" id="yslider" min="0" max="0" step="1" value="0" aria-label="Jahr wählen">
-      <button class="ystep" id="ynext" aria-label="Nächstes Jahr">›</button>
-      <span class="yval" id="yval"></span>
-    </div>
-    <span class="yrange" id="yrange"></span>
-  </div>
-
   <div class="grid">
     <div class="mapbox">
-      <div class="maphead"><button class="wien" id="wien" aria-pressed="false">Wien gesamt</button><button class="wien" id="startbtn" aria-pressed="false">☆ Als Start</button><button class="wien" id="locate">Mein Standort</button><button class="wien zb" id="zin" aria-label="Hineinzoomen">+</button><button class="wien zb" id="zoutb" aria-label="Herauszoomen">−</button><button class="wien" id="zoomout" hidden>Ganze Stadt</button><button class="wien" id="basebtn" aria-pressed="false">Stadtplan</button>
+      <div class="maptitle"><h2 id="maptitle"></h2><button class="wien" id="startbtn" aria-pressed="false">☆ Als Start</button></div>
+      <p class="mapsub" id="mapsub"></p>
+      <div class="maphead"><button class="wien" id="wien" aria-pressed="false">Wien gesamt</button><button class="wien" id="locate">Mein Standort</button><button class="wien zb" id="zin" aria-label="Hineinzoomen">+</button><button class="wien zb" id="zoutb" aria-label="Herauszoomen">−</button><button class="wien" id="zoomout" hidden>Ganze Stadt</button><button class="wien" id="basebtn" aria-pressed="false">Stadtplan</button>
         <label class="baseop" id="baseop" hidden>Deckkraft <input type="range" id="baseopr" min="0.2" max="1" step="0.1" value="0.6"></label><span class="hint">Zahlen = gewählte Ebene · Bezirk antippen für Details · gezoomt: mit dem Finger verschieben</span></div>
       <p class="note" id="locmsg" hidden></p>
       <svg class="map" id="map" role="img" aria-label="Karte der Wiener Gemeindebezirke"></svg>
       <div class="legend"><div class="ramp" id="ramp"></div><div class="ticks" id="ticks"></div><div class="ticks blg" id="wlleg"></div></div>
       <p class="note" id="layernote"></p>
+      <div class="yearbar">
+        <span class="ylabel" id="ylabel">Jahr</span>
+        <div class="ynav">
+          <button class="ystep" id="yprev" aria-label="Vorheriges Jahr">‹</button>
+          <input type="range" id="yslider" min="0" max="0" step="1" value="0" aria-label="Jahr wählen">
+          <button class="ystep" id="ynext" aria-label="Nächstes Jahr">›</button>
+          <span class="yval" id="yval"></span>
+        </div>
+        <span class="yrange" id="yrange"></span>
+      </div>
+      <div class="lgroups" id="layers" aria-label="Datenebene"></div>
+      <div class="subs" id="subs" role="group" aria-label="Kennzahl"></div>
     </div>
     <div class="side">
       <div class="card" id="detail"></div>
@@ -963,8 +970,17 @@ function renderSpecial(){
   document.getElementById("detail").innerHTML=`<h2>Legionslager Vindobona</h2><p class="sub">Römisches Militärlager im heutigen 1. Bezirk</p>${vinPlan()}`;
   if(!BEF) loadBefunde().then(()=>{ if(layer.id==="vin") render(); }).catch(()=>{});
 }
+const MAP_TITLE={pop:"Einwohner je Bezirk",age:"Altersstruktur der Bevölkerung",cob:"Herkunft der Bevölkerung",bir:"Geburten",dea:"Sterbefälle",edu:"Höchster Bildungsabschluss",
+  veh:"Kraftfahrzeuge",brand:"Automarken im Pkw-Bestand",dog:"Hunde in Wien",fund:"Gefundene Tiere der letzten 30 Tage",fp:"Öffis unterwegs laut Fahrplan",wl:"Aktuelle Störungen der Wiener Linien",
+  waste:"Müll und Altstoffsammlung",infra:"Öffentliche Einrichtungen",vote:"Gemeinderatswahl Wien",antik:"Römisches Wien – Vindobona"};
+function updateTitle(){
+  document.getElementById("maptitle").textContent=MAP_TITLE[layer.id]||layer.label;
+  if(layer.special){ document.getElementById("mapsub").textContent="Siedlungen, Straßen und Legionslager"; return; }
+  const s=subOf(layer), y=yearOf(layer), when=layer.clock?hhmm(y)+" Uhr":(layer.fund||layer.live||isPts(layer))?"aktueller Stand":y;
+  document.getElementById("mapsub").textContent=[layer.subs.length>1&&s.id!=="all"?s.label:(layer.subs.length>1?"Alle":""),when].filter(Boolean).join(" · ");
+}
 function render(){
-  render2(); try{ drawTiles(); }catch(e){}
+  render2(); try{ updateTitle(); }catch(e){} try{ drawTiles(); }catch(e){}
   ls.set("lastView",{layer:layer.id,sub:state[layer.id].sub}); updateStartBtn();
 }
 let rankSplit=true;
