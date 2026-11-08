@@ -30,7 +30,7 @@ head = """<!doctype html>
 <link rel="icon" type="image/png" sizes="48x48" href="icons/favicon-48.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Wien aktuell">
+<meta name="apple-mobile-web-app-title" content="Wien live">
 <script>try{var th=localStorage.getItem("theme");if(th==="light"||th==="dark")document.documentElement.setAttribute("data-theme",th)}catch(e){}</script>
 <meta name="description" content="Wiens 23 Bezirke als Karte: Einwohner, Alter, Geburten, Bildung, Öffis und mehr – offene Daten der Stadt Wien.">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style>
