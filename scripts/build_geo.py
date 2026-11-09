@@ -69,6 +69,7 @@ POINTS = [
     ("schule", "SCHULEOGD", lambda p: " · ".join(filter(None, [clean(p.get("NAME")), clean(p.get("ART_TXT"))]))),
     ("defi", "DEFIBRILLATOROGD", lambda p: " · ".join(filter(None, [clean(p.get("ADRESSE")), clean(p.get("INFO"))]))),
     ("polizei", "POLIZEIOGD", lambda p: " · ".join(filter(None, [clean(p.get("NAME")), clean(p.get("ADRESSE"))]))),
+    ("taxi", "TAXIOGD", lambda p: " · ".join(filter(None, [clean(p.get("ADRESSE")), f'{p.get("STELLPLATZANZAHL")} Plätze' if p.get("STELLPLATZANZAHL") else "", clean(p.get("ZEITRAUM"))]))),
 ]
 # Altstoff-Sammelstellen zusätzlich je Fraktion (eine Sammelstelle kann mehrere haben)
 FRAKTIONEN = [("papier", "FRAKTION_PA"), ("glas", "FRAKTION_G"), ("lvp", "FRAKTION_KV"), ("bio", "FRAKTION_BI")]
@@ -90,9 +91,13 @@ for key, layer, label in POINTS:
     pts = []
     for f in fs:
         g = f["geometry"]
-        if not g or g["type"] != "Point":
+        if not g or g["type"] not in ("Point", "LineString", "MultiLineString"):
             continue
-        x, y = g["coordinates"][:2]
+        if g["type"] == "Point":
+            x, y = g["coordinates"][:2]
+        else:   # Linie (z. B. Taxistandplatz): Mittelpunkt
+            cs = g["coordinates"] if g["type"] == "LineString" else [c for l in g["coordinates"] for c in l]
+            x, y = cs[len(cs) // 2][:2] if len(cs) % 2 else [(cs[len(cs)//2-1][i] + cs[len(cs)//2][i]) / 2 for i in (0, 1)]
         try:
             b = int(str(f["properties"].get("BEZIRK") or "").strip().rstrip("."))
         except ValueError:

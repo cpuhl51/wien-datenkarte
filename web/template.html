@@ -85,6 +85,7 @@ h1{font-family:var(--display);font-weight:800;font-size:clamp(28px,5vw,44px);lin
 .nxlist .nxrow{display:grid;grid-template-columns:4.2em 5em 1fr;gap:8px;align-items:center;padding-left:6px}
 .nxl{display:grid;grid-template-columns:.9em 1fr .9em;align-items:center;gap:2px}
 .nxtri{font-size:11px;text-align:center}
+.nxacc{color:#1c5fd6;font-size:13px}
 .nxcool{color:#1c7ed6;font-size:13px}
 .nxdot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:0}
 .nxcd{font:600 14px var(--mono);text-align:right}
@@ -373,6 +374,32 @@ const causeOf = i => { if(i.k==="aufzug") return "aufzug"; const s=i.t+" "+i.d; 
 const CAUSE_COL = {bau:"#1a1a1a",einsatz:"#1c5fd6",unfall:"#c4161c",technik:"#5c6670",verkehr:"#c4161c",veranst:"#c4161c",sonst:"#e0a800",aufzug:"#3fa9e0"};
 /* Piktogramme je Ursache */
 const CAUSE_ICON = c => `icons/stoerung/${CAUSE_COL[c]?c:"sonst"}.png${IV}`;
+/* ---------- Leihräder: WienMobil Rad, GBFS direkt vom Betreiber (erlaubt Browser-Abfragen) ---------- */
+const BK={at:null,last:0,loading:false,err:null};
+const GBFS="https://gbfs.nextbike.net/maps/gbfs/v2/nextbike_wr/de/";
+function districtOf(lon,lat){
+  for(const f of GEO.features){ const P=f.geometry.type==="MultiPolygon"?f.geometry.coordinates:[f.geometry.coordinates];
+    for(const poly of P){ const r=poly[0]; let c=false; for(let i=0,j=r.length-1;i<r.length;j=i++){ const [xi,yi]=r[i],[xj,yj]=r[j]; if((yi>lat)!==(yj>lat)&&lon<(xj-xi)*(lat-yi)/(yj-yi)+xi) c=!c; } if(c) return f.properties.b; } }
+  return 0;
+}
+async function loadBikes(){
+  if(BK.loading||!PT||Date.now()-BK.last<60000) return;
+  BK.loading=true;
+  try{
+    const [si,ss]=await Promise.all(["station_information.json","station_status.json"].map(f=>fetch(GBFS+f,{cache:"no-store"}).then(r=>r.json())));
+    const st=Object.fromEntries(ss.data.stations.map(s=>[s.station_id,s]));
+    const pts=[], cb=Array(24).fill(0), cd=Array(24).fill(0);
+    si.data.stations.forEach(s=>{ const x=st[s.station_id]; if(!x||!x.is_installed) return; const b=districtOf(s.lon,s.lat);
+      const nb=x.is_renting?x.num_bikes_available:0, nd=x.is_returning&&s.capacity?x.num_docks_available:null;
+      pts.push([s.lon,s.lat,b,`${s.name} · ${nb} ${nb===1?"Rad":"Räder"} frei${nd!=null?` · ${nd} ${nd===1?"Platz":"Plätze"} zum Zurückgeben`:" · Rückgabe ohne Ständer (markierte Fläche)"}`]);
+      if(b){ cb[b]+=nb; cd[b]+=nd||0; } cb[0]+=nb; cd[0]+=nd||0; });
+    PT.points.bike={count:cb,pts}; PT.points.bikedock={count:cd,pts};
+    fillPointLayers(); BK.err=null; const n=new Date(); BK.at=`${String(n.getHours()).padStart(2,"0")}:${String(n.getMinutes()).padStart(2,"0")}`;
+  }catch(e){ BK.err="Leihrad-Daten konnten gerade nicht geladen werden."; }
+  BK.loading=false; BK.last=Date.now(); if(layer.id==="bike") render();
+}
+setInterval(()=>{ if(layer.id==="bike"&&!document.hidden) loadBikes(); },20000);
+
 let HS=null, HS_LOADING=null, wlPick=null, wlDrawn={c:new Set(),lines:false,off:0};
 function loadStops(){ if(HS) return Promise.resolve(HS); if(!HS_LOADING) HS_LOADING=fetch("haltestellen.json").then(r=>r.json()).then(d=>HS=d); return HS_LOADING; }
 const causeLabel = i => { const c=causeOf(i); return c==="aufzug"?"Aufzug":c==="sonst"?"Sonstiges":WL_CAUSE.find(x=>x[0]===c)[1]; };
@@ -424,6 +451,8 @@ const POINT_SETS = {
          ["problem","Problemstoffe","Batterien, Lacke, Medikamente","#ae3ec9"]],
   infra:[["brunnen","Trinkbrunnen","","#1c7ed6"],["wc","Öffentliche WCs","","#a07850"],["park","Parks","","#37b24d"],["spiel","Spielplätze","","#e64980"],
          ["defi","Defibrillatoren","","#fa5252"],["polizei","Polizei","","#4dabf7"]],
+  taxi:[["taxi","Taxistandplätze","Mittelpunkt des Standplatzes","#e0a800"]],
+  bike:[["bike","Freie Räder","Räder, die gerade an der Station ausgeliehen werden können","#c4161c"],["bikedock","Freie Rückgabeplätze","Freie Plätze zum Zurückgeben (nur an Stationen mit Ständern gezählt)","#2f9e44"]],
   dog:[["hundezone","Hundezonen","","#a07850"],["sackerl","Sackerl-Spender","Hundekotsackerl","#9aa3a7"]]
 };
 const isPts = L => !!(subOf(L)&&subOf(L).pts);
@@ -577,6 +606,12 @@ const LAYERS = [
    subs:POINT_SETS.waste.map(ptSub),note:"Anzahl je Bezirk, jeder Punkt auf der Karte ist ein Standort."},
   {id:"infra",label:"Einrichtungen",color:"#2f6f8f",src:SRC.pts,points:true,live:true,stand:()=>`Standorte laut Stadt Wien, abgerufen ${ABRUF}`,
    subs:POINT_SETS.infra.map(ptSub),note:"Anzahl je Bezirk, jeder Punkt auf der Karte ist ein Standort."},
+  {id:"bike",label:"Leihräder",color:"#c4161c",src:"WienMobil Rad – nextbike GBFS-Echtzeitdaten (CC0)",points:true,live:true,
+   stand:()=>BK.at?`Echtzeit, abgerufen ${BK.at} Uhr · jede Minute neu`:"Echtzeit von WienMobil Rad",
+   subs:POINT_SETS.bike.map(ptSub).map(s=>(s.src="WienMobil Rad – nextbike GBFS-Echtzeitdaten (CC0)",s)),
+   note:"Zurückgeben nur an WienMobil-Stationen – abseits davon verrechnet WienMobil Rad 20 € Servicegebühr. Ist eine Station voll, zeigt die nextbike-App Stationen in der Nähe."},
+  {id:"taxi",label:"Taxi",color:"#e0a800",src:SRC.pts,points:true,live:true,stand:()=>`Standplätze laut Stadt Wien, abgerufen ${ABRUF}`,
+   subs:POINT_SETS.taxi.map(ptSub),note:"Anzahl Taxistandplätze je Bezirk; beim Antippen steht die Zahl der Stellplätze."},
   {id:"next",label:"Nächstes Öffi",special:true,color:"#6e7d7a",src:"Wiener Linien – Echtzeitdaten (Open Data, CC BY 4.0)",
    stand:()=>NX.at?`Echtzeit, abgerufen ${NX.at} Uhr · alle 30 Sekunden neu`:"Echtzeit der Wiener Linien",
    subs:[{id:"all",label:"Alle",data:{0:Array(24).fill(0)},fmt:fmtInt,unit:""}]},
@@ -1018,7 +1053,7 @@ async function loadDepartures(force){
       const ls=m.locationStop.properties, g=st.find(x=>x.name===nxName(ls.title))||{d:null};
       (m.lines||[]).forEach(l=>(l.departures&&l.departures.departure||[]).slice(0,NX_PER_LINE).forEach(dp=>{
         const t=dp.departureTime||{}, cd=t.countdown; if(cd==null) return;
-        const v=dp.vehicle||{}; deps.push({cool:v.cooling===true,cd,real:!!t.timeReal,time:(t.timeReal||t.timePlanned||"").slice(11,16),line:l.name,to:l.towards,type:l.type,stop:nxName(ls.title),d:g.d});
+        const v=dp.vehicle||{}; deps.push({acc:v.barrierFree===true||(v.barrierFree==null&&l.barrierFree===true),cool:v.cooling===true,cd,real:!!t.timeReal,time:(t.timeReal||t.timePlanned||"").slice(11,16),line:l.name,to:l.towards,type:l.type,stop:nxName(ls.title),d:g.d});
       }));
     });
     /* je Haltestelle, Linie und Richtung nur die nächsten 2 Abfahrten */
@@ -1072,12 +1107,12 @@ function renderNext(bg){
   const dirs={}; NX.deps.forEach(d=>{ (dirs[d.line]=dirs[d.line]||new Set()).add(d.to); });
   const dirIdx=d=>[...dirs[d.line]].sort((a,b)=>a.localeCompare(b,"de")).indexOf(d.to);
   const row=d=>{ const c=lineCol(d.line,d.type), i=dirIdx(d), gc=gcol[d.stop]||"#6e7d7a";
-    return `<li class="nxrow" style="border-left:4px solid ${gc}"><span class="nxcd">${d.cd<=0?"jetzt":d.cd+" min"}${d.real?"":"*"}</span><span class="nxl"><b class="nxtri" style="color:${c}">${i===0?"◀":""}</b><span class="nxline" style="background:${c}">${esc(d.line)}</span><b class="nxtri" style="color:${c}">${i===1?"▶":""}</b></span><span class="nxto">${esc(d.to)}${d.cool?` <span class="nxcool" title="klimatisiert">❄</span>`:""}<small><i class="nxdot" style="background:${gc}"></i>${esc(d.stop)}${d.d!=null?" · "+fmtDist(d.d):""}${d.time?" · "+d.time:""}</small></span></li>`; };
+    return `<li class="nxrow" style="border-left:4px solid ${gc}"><span class="nxcd">${d.cd<=0?"jetzt":d.cd+" min"}${d.real?"":"*"}</span><span class="nxl"><b class="nxtri" style="color:${c}">${i===0?"◀":""}</b><span class="nxline" style="background:${c}">${esc(d.line)}</span><b class="nxtri" style="color:${c}">${i===1?"▶":""}</b></span><span class="nxto">${esc(d.to)}${d.acc?` <span class="nxacc" title="barrierefrei (Rollstuhl)">♿</span>`:""}${d.cool?` <span class="nxcool" title="klimatisiert">❄</span>`:""}<small><i class="nxdot" style="background:${gc}"></i>${esc(d.stop)}${d.d!=null?" · "+fmtDist(d.d):""}${d.time?" · "+d.time:""}</small></span></li>`; };
   box.innerHTML=`<div class="nxbox"><h3 style="margin:6px 0 2px">Nächste Abfahrten</h3>
     ${NX.err?`<p class="note">${NX.err}</p>`:""}
     ${groups.length?`<div class="nxstops">${groups.map(g=>`<button class="sub" data-nxs="${esc(g.name)}" aria-pressed="${nxStop===g.name}" style="--pc:${g.col}"><i class="nxdot" style="background:${g.col}"></i>${esc(g.name)}${g.u?" (U)":""} <small>${fmtDist(g.d)}</small></button>`).join("")}<button class="wien" id="nxmore">${nxCount===3?"3 weitere anzeigen":"weniger anzeigen"}</button></div>`:`<p class="note">Keine Haltestelle in der Nähe.</p>`}
     ${deps.length?`<ul class="flist nxlist">${deps.map(row).join("")}</ul>`:(NX.loading||!NX.at)&&groups.length?`<p class="note">Abfahrten werden geladen …</p>`:groups.length?`<p class="note">Gerade keine Abfahrten gemeldet.</p>`:""}
-    <p class="note" style="margin:6px 0 0">Die nächsten ${NX_PER_LINE} Abfahrten pro Linie und Richtung. ◀ ▶ = Fahrtrichtung, ❄ = klimatisiertes Fahrzeug (laut Wiener Linien). Haltestelle antippen zum Filtern.</p></div>`;
+    <p class="note" style="margin:6px 0 0">Die nächsten ${NX_PER_LINE} Abfahrten pro Linie und Richtung. ◀ ▶ = Fahrtrichtung, ♿ = barrierefrei, ❄ = klimatisiert (laut Wiener Linien). Haltestelle antippen zum Filtern.</p></div>`;
   const more=document.getElementById("nxmore"); if(more) more.onclick=()=>{ nxCount=nxCount===3?6:3; nxStop=null; NX.zoomed=false; NX.key=""; NX.active=null; NX.stops=[]; loadDepartures(true); render(); };
   box.querySelectorAll("[data-nxs]").forEach(b=>b.onclick=()=>{ nxStop=nxStop===b.dataset.nxs?null:b.dataset.nxs; render(); });
 }
@@ -1112,7 +1147,7 @@ function renderSpecial(){
   if(!BEF) loadBefunde().then(()=>{ if(layer.id==="vin") render(); }).catch(()=>{});
 }
 const MAP_TITLE={pop:"Einwohner je Bezirk",age:"Altersstruktur der Bevölkerung",cob:"Herkunft der Bevölkerung",bir:"Geburten",dea:"Sterbefälle",edu:"Höchster Bildungsabschluss",
-  veh:"Kraftfahrzeuge",brand:"Automarken im Pkw-Bestand",dog:"Hunde in Wien",fund:"Gefundene Tiere der letzten 30 Tage",fp:"Öffis unterwegs laut Fahrplan",next:"Nächste Abfahrten in deiner Nähe",wl:"Aktuelle Störungen der Wiener Linien",
+  veh:"Kraftfahrzeuge",brand:"Automarken im Pkw-Bestand",dog:"Hunde in Wien",fund:"Gefundene Tiere der letzten 30 Tage",fp:"Öffis unterwegs laut Fahrplan",next:"Nächste Abfahrten in deiner Nähe",bike:"Leihräder – WienMobil Rad",taxi:"Taxistandplätze",wl:"Aktuelle Störungen der Wiener Linien",
   waste:"Müll und Altstoffsammlung",infra:"Öffentliche Einrichtungen",vote:"Gemeinderatswahl Wien",antik:"Römisches Wien – Vindobona"};
 /* Was die Zahlen in den Bezirken bedeuten – je Ebene */
 function numHint(){
@@ -1122,6 +1157,7 @@ function numHint(){
   if(s.bars) return "Streifen = Anteile im Bezirk, oben der größte";
   if(layer.id==="wl") return "Zahlen = Anzahl der Meldungen im Bezirk";
   if(layer.id==="fund") return "Zahlen = Anzahl gefundener Tiere im Bezirk";
+  if(layer.id==="bike") return `Zahlen = ${s.label} im Bezirk · Punkt antippen für die Station`;
   if(isPts(layer)) return `Zahlen = Anzahl ${s.label} im Bezirk`;
   if(layer.id==="fp") return s.id==="rel"?"Zahlen = Fahrzeuge je 1.000 Einwohner":s.id==="ppv"?"Zahlen = Einwohner je Fahrzeug":`Zahlen = Fahrzeuge unterwegs (${s.label})`;
   const u=s.unit.trim();
@@ -1149,6 +1185,7 @@ function render2(){
   const s=subOf(layer), y=yearOf(layer), arr=s.data[y], [lo,hi]=scaleOf(s), bg=base(), c=colOf(layer);
   const t=v=>.12+.88*Math.max(0,Math.min(1,(v-lo)/(hi-lo||1)));
   drawOrient(isPts(layer));
+  if(layer.id==="bike"&&PT) loadBikes();
   if(isPts(layer)){ if(!PT){ loadPoints().then(()=>render()).catch(()=>{document.getElementById("layernote").textContent="Standorte konnten nicht geladen werden (nur auf der veröffentlichten Seite verfügbar).";}); } else drawPoints(s.pts,s.dot||c); }
   else overlay.innerHTML="";
   drawWl(s); drawFund(s);
@@ -1398,6 +1435,7 @@ function renderInfo(){
     <tr><td>app.wien-live-daten.puhl.ch (GitHub Pages)</td><td>immer</td><td>Die App selbst und alle aufbereiteten Daten</td></tr>
     <tr><td>wien-stoerungen.cpuhl51.workers.dev (Cloudflare)</td><td>nur Ebene „Öffi-Störungen“</td><td>Leitet die aktuellen Störungsmeldungen der Wiener Linien weiter (Zwischenspeicher 60 Sekunden)</td></tr>
     <tr><td>mapsneu.wien.gv.at (basemap.at)</td><td>nur mit „Stadtplan“</td><td>Kacheln des Stadtplans</td></tr>
+    <tr><td>gbfs.nextbike.net (WienMobil Rad)</td><td>nur Ebene „Leihräder“</td><td>Freie Räder und Rückgabeplätze in Echtzeit</td></tr>
     <tr><td>Google Maps</td><td>nur bei „Hin navigieren“</td><td>Routenplanung zum gewählten Ort</td></tr>
     <tr><td>Standort deines Geräts</td><td>nur bei „Mein Standort“, nach Erlaubnis</td><td>Karte zentrieren, Entfernungen</td></tr>
   </table>
@@ -1483,7 +1521,7 @@ svg.addEventListener("click",e=>{
 
 const lc=document.getElementById("layers");
 const LGROUPS=[["Infrastruktur","#2f6fb0",["infra","waste"]],
-  ["Mobilität","#6e7d7a",["fp","next","wl","veh","brand"]],
+  ["Mobilität","#6e7d7a",["next","wl","fp","bike","taxi","veh","brand"]],
   ["Tiere","#8a5a2b",["dog","fund"]],
   ["Demografie","#c4161c",["pop","age","cob","bir","dea","edu"]],
   ["Politik & Geschichte","#7a3db8",["vote","antik"]]];
