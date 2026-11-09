@@ -1781,7 +1781,11 @@
 "org": "TierQuarTier Wien,  1220 Wien, Süßenbrunner Straße 101",
 "tel": "+43 1 734 11 02 - 114",
 "mail": "tieraufnahme@tierquartier.at",
-"img": "/fundundvergabetiere/internet/Bild/Thumbnail/86539"
+"img": "/fundundvergabetiere/internet/Bild/Thumbnail/86539",
+"xy": [
+16.41708,
+48.27647
+]
 },
 {
 "id": "64573",
@@ -1797,7 +1801,11 @@
 "org": "TierQuarTier Wien,  1220 Wien, Süßenbrunner Straße 101",
 "tel": "+43 1 734 11 02 - 114",
 "mail": "tieraufnahme@tierquartier.at",
-"img": "/fundundvergabetiere/internet/Bild/Thumbnail/86543"
+"img": "/fundundvergabetiere/internet/Bild/Thumbnail/86543",
+"xy": [
+16.31504,
+48.21845
+]
 },
 {
 "id": "64577",
@@ -1813,7 +1821,11 @@
 "org": "TierQuarTier Wien,  1220 Wien, Süßenbrunner Straße 101",
 "tel": "+43 1 734 11 02 - 114",
 "mail": "tieraufnahme@tierquartier.at",
-"img": "/fundundvergabetiere/internet/Bild/Thumbnail/86545"
+"img": "/fundundvergabetiere/internet/Bild/Thumbnail/86545",
+"xy": [
+16.30423,
+48.15679
+]
 },
 {
 "id": "64578",
@@ -1829,7 +1841,11 @@
 "org": "TierQuarTier Wien,  1220 Wien, Süßenbrunner Straße 101",
 "tel": "+43 1 734 11 02 - 114",
 "mail": "tieraufnahme@tierquartier.at",
-"img": ""
+"img": "",
+"xy": [
+16.41777,
+48.1688
+]
 },
 {
 "id": "64580",
@@ -1845,7 +1861,11 @@
 "org": "TierQuarTier Wien,  1220 Wien, Süßenbrunner Straße 101",
 "tel": "+43 1 734 11 02 - 114",
 "mail": "tieraufnahme@tierquartier.at",
-"img": "/fundundvergabetiere/internet/Bild/Thumbnail/86547"
+"img": "/fundundvergabetiere/internet/Bild/Thumbnail/86547",
+"xy": [
+16.46405,
+48.23449
+]
 },
 {
 "id": "64581",
@@ -1881,7 +1901,11 @@
 "org": "TierQuarTier Wien,  1220 Wien, Süßenbrunner Straße 101",
 "tel": "+43 1 734 11 02 - 114",
 "mail": "tieraufnahme@tierquartier.at",
-"img": "/fundundvergabetiere/internet/Bild/Thumbnail/86549"
+"img": "/fundundvergabetiere/internet/Bild/Thumbnail/86549",
+"xy": [
+16.37142,
+48.22971
+]
 },
 {
 "id": "64583",
@@ -1897,7 +1921,11 @@
 "org": "TierQuarTier Wien,  1220 Wien, Süßenbrunner Straße 101",
 "tel": "+43 1 734 11 02 - 114",
 "mail": "tieraufnahme@tierquartier.at",
-"img": "/fundundvergabetiere/internet/Bild/Thumbnail/86546"
+"img": "/fundundvergabetiere/internet/Bild/Thumbnail/86546",
+"xy": [
+16.34024,
+48.1773
+]
 },
 {
 "id": "64586",
@@ -1913,6 +1941,10 @@
 "org": "Stadt Wien | Veterinäramt und Tierschutz",
 "tel": "+43 1 4000-8060",
 "mail": "post@ma60.wien.gv.at",
-"img": "/fundundvergabetiere/internet/Bild/Thumbnail/86551"
+"img": "/fundundvergabetiere/internet/Bild/Thumbnail/86551",
+"xy": [
+16.30824,
+48.12473
+]
 }
 ]

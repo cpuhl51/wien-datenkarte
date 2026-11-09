@@ -211,7 +211,10 @@ footer a{color:inherit}
 .ystep:disabled{opacity:.35;cursor:default}
 .ystep:focus-visible,#yslider:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 #yslider{flex:1;min-width:0;accent-color:var(--accent)}
-.yval{font:600 20px var(--mono);font-variant-numeric:tabular-nums;min-width:3.2em;text-align:center;color:var(--accent)}
+.yval{font:600 20px var(--mono);font-variant-numeric:tabular-nums;min-width:3.2em;text-align:center;color:var(--accent);line-height:1.1}
+.yval .yts{display:block;font:500 11px var(--mono);color:var(--muted);white-space:nowrap}
+#subsmob .subs{margin:10px 0 4px;padding:8px 10px;border-left:3px solid var(--gc);background:color-mix(in srgb,var(--gc) 8%,transparent);border-radius:0 8px 8px 0}
+.howto{font-size:13px;margin:12px 0 0}
 .yrange{font:12px var(--mono);color:var(--muted);white-space:nowrap}
 .spark{width:100%;height:auto;display:block;margin:4px 0 10px}
 .spark text{font:11px var(--mono);fill:var(--muted)}
@@ -270,7 +273,7 @@ svg.vin text.vl{font:600 13px var(--body);fill:#3a2e08;pointer-events:none}
   <header>
     <div class="topline"><div class="eyebrow">Prototyp · Open Data Wien</div><div class="tools"><div class="themesw" role="group" aria-label="Darstellung"><button data-th="auto" aria-pressed="true">Auto</button><button data-th="light" aria-pressed="false">Hell</button><button data-th="dark" aria-pressed="false">Dunkel</button></div><button class="infobtn" id="installbtn" hidden>App installieren</button><a class="infobtn" id="infobtn" href="#info">Info &amp; Datenschutz</a></div></div>
     <h1>Wien live - Daten &amp; Zahlen</h1>
-    <p class="lede">Die Karte zeigt die gewählte Ebene. Darunter schiebst du durch Jahre oder Uhrzeit und wählst die Ebene. Tippe auf einen Bezirk oder „Wien gesamt“ für Details. Die Farben bedeuten in jedem Jahr dasselbe: Wird ein Bezirk beim Durchschieben dunkler, ist der Wert gestiegen. Datenstand und Quelle stehen unter der Rangliste.</p>
+    <p class="lede">Livekarte. Finde was Du brauchst in deiner Nähe. Oder begib dich auf eine Zeitreise durch die politische und demografische Landschaft der lebenswertesten Stadt der Welt.</p>
   </header>
 
   <section class="info" id="info" hidden aria-labelledby="info-h"></section>
@@ -280,12 +283,14 @@ svg.vin text.vl{font:600 13px var(--body);fill:#3a2e08;pointer-events:none}
       <div class="maptitle"><h2 id="maptitle"></h2><button class="wien" id="startbtn" aria-pressed="false">☆ Als Start</button></div>
       <p class="mapsub" id="mapsub"></p>
       <div class="maphead"><button class="wien" id="wien" aria-pressed="false">Wien gesamt</button><button class="wien" id="locate">Mein Standort</button><button class="wien zb" id="zin" aria-label="Hineinzoomen">+</button><button class="wien zb" id="zoutb" aria-label="Herauszoomen">−</button><button class="wien" id="zoomout" hidden>Ganze Stadt</button><button class="wien" id="basebtn" aria-pressed="false">Stadtplan</button>
-        <label class="baseop" id="baseop" hidden>Deckkraft <input type="range" id="baseopr" min="0.2" max="1" step="0.1" value="0.6"></label><span class="hint"><span id="numhint"></span> · Bezirk antippen für Details · gezoomt: mit dem Finger verschieben</span></div>
+        <label class="baseop" id="baseop" hidden>Deckkraft <input type="range" id="baseopr" min="0.2" max="1" step="0.1" value="0.6"></label></div>
       <p class="note" id="locmsg" hidden></p>
       <svg class="map" id="map" role="img" aria-label="Karte der Wiener Gemeindebezirke"></svg>
+      <div id="subsmob"></div>
       <div id="mappick" aria-live="polite"></div>
       <div class="legend"><div class="ramp" id="ramp"></div><div class="ticks" id="ticks"></div><div class="ticks blg" id="wlleg"></div></div>
       <p class="note" id="layernote"></p>
+      <p class="hint"><span id="numhint"></span> · Bezirk antippen für Details · gezoomt: mit dem Finger verschieben</p>
       <div class="yearbar">
         <span class="ylabel" id="ylabel">Jahr</span>
         <div class="ynav">
@@ -306,6 +311,7 @@ svg.vin text.vl{font:600 13px var(--body);fill:#3a2e08;pointer-events:none}
   </div>
 
   <div class="stand" id="stand" aria-live="polite"></div>
+  <p class="note howto"><b>So funktioniert's:</b> Die Karte zeigt die gewählte Ebene. Darunter schiebst du durch Jahre oder Uhrzeit und wählst die Ebene. Tippe auf einen Bezirk oder „Wien gesamt“ für Details. Die Farben bedeuten in jedem Jahr dasselbe: Wird ein Bezirk beim Durchschieben dunkler, ist der Wert gestiegen. Datenstand und Quelle stehen unter der Rangliste.</p>
   </div>
   <footer>
     <span class="credit" id="credit-foot"></span>
@@ -453,7 +459,7 @@ const POINT_SETS = {
          ["problem","Problemstoffe","Batterien, Lacke, Medikamente","#ae3ec9"]],
   infra:[["brunnen","Trinkbrunnen","","#1c7ed6"],["wc","Öffentliche WCs","","#a07850"],["park","Parks","","#37b24d"],["spiel","Spielplätze","","#e64980"],
          ["defi","Defibrillatoren","","#fa5252"],["polizei","Polizei","","#4dabf7"]],
-  taxi:[["taxi","Taxistandplätze","Mittelpunkt des Standplatzes","#e0a800"]],
+  taxi:[["taxi","Taxistandplätze","","#e0a800"]],
   bike:[["bike","Freie Räder","Räder, die gerade an der Station ausgeliehen werden können","#2f9e44"],["bikedock","Freie Rückgabeplätze","Freie Plätze zum Zurückgeben (nur an Stationen mit Ständern gezählt)","#1c7ed6"]],
   dog:[["hundezone","Hundezonen","","#a07850"],["sackerl","Sackerl-Spender","Hundekotsackerl","#9aa3a7"]]
 };
@@ -613,7 +619,7 @@ const LAYERS = [
    subs:POINT_SETS.bike.map(ptSub).map(s=>(s.src="WienMobil Rad – nextbike GBFS-Echtzeitdaten (CC0)",s)),
    note:"Zurückgeben nur an WienMobil-Stationen – abseits davon verrechnet WienMobil Rad 20 € Servicegebühr. Ist eine Station voll, zeigt die nextbike-App Stationen in der Nähe."},
   {id:"taxi",label:"Taxi",color:"#e0a800",src:SRC.pts,points:true,live:true,stand:()=>`Standplätze laut Stadt Wien, abgerufen ${ABRUF}`,
-   subs:POINT_SETS.taxi.map(ptSub),note:"Anzahl Taxistandplätze je Bezirk; beim Antippen steht die Zahl der Stellplätze."},
+   subs:POINT_SETS.taxi.map(ptSub),note:"Antippen für Details."},
   {id:"next",label:"Nächstes Öffi",special:true,color:"#6e7d7a",src:"Wiener Linien – Echtzeitdaten (Open Data, CC BY 4.0)",
    stand:()=>NX.at?`Echtzeit, abgerufen ${NX.at} Uhr · alle 30 Sekunden neu`:"Echtzeit der Wiener Linien",
    subs:[{id:"all",label:"Alle",data:{0:Array(24).fill(0)},fmt:fmtInt,unit:""}]},
@@ -809,7 +815,8 @@ function pickCard(s){
   const bk=BIKE_COL[s.pts]&&p[6]!=null, pl=(n,a,b)=>`${n} ${n===1?a:b}`;
   const head=!bk?esc(s.label):s.pts==="bike"?pl(p[4],"Rad frei","Räder frei"):p[5]==null?"Rückgabe ohne Ständer":pl(p[5],"Platz frei","Plätze frei");
   const body=!bk?(p[3]?esc(p[3]):"Keine Adresse in den Daten der Stadt, nur die Lage."):esc(p[6])+" · "+(s.pts==="bike"?(p[5]==null?"Rückgabe auf markierter Fläche":pl(p[5],"Platz","Plätze")+" zum Zurückgeben"):pl(p[4],"Rad","Räder")+" zum Ausleihen");
-  return `<div class="pick" id="pick"><div class="pk-h"><b class="sw" style="background:${bk?bikeFill(s.pts,p):s.dot}"></b>${head}${p[2]?` · ${p[2]}. ${NAMES[p[2]]}`:""}</div>
+  const taxi=s.pts==="taxi";
+  return `<div class="pick" id="pick"><div class="pk-h">${taxi?`Standplatz ${p[2]?NAMES[p[2]]:""}`:`<b class="sw" style="background:${bk?bikeFill(s.pts,p):s.dot}"></b>${head}${p[2]?` · ${p[2]}. ${NAMES[p[2]]}`:""}`}</div>
     <div class="pk-a">${body}</div>
     ${d!=null?`<div class="pk-m">${fmtDist(d)} Luftlinie von deinem Standort</div>`:""}
     <div class="pk-b"><a class="navbtn" href="${navUrl(p)}" target="_blank" rel="noopener">Hin navigieren</a><button class="wien" id="pk-zoom">Auf Karte zeigen</button><button class="wien" id="pk-x">Schließen</button></div></div>`;
@@ -950,12 +957,26 @@ const mix=(a,b,t)=>{const A=hex(a),B=hex(b);return "rgb("+A.map((v,i)=>Math.roun
 /* Kartenfarben: Spannweite der Bezirke über alle Jahre (ohne Wien gesamt) */
 function scaleOf(s){ if(s.range) return s.range; let lo=Infinity,hi=-Infinity; Object.values(s.data).forEach(a=>{for(let b=1;b<=23;b++){ if(a[b]==null) continue; lo=Math.min(lo,a[b]);hi=Math.max(hi,a[b]);}}); return [lo,hi]; }
 
+/* Zeitpunkt des Datenbestands für Ebenen mit „aktuell“ */
+function liveWhen(){
+  const id=layer.id;
+  if(id==="bike"){ const n=new Date(); return BK.at?`${n.getDate()}.${n.getMonth()+1}.${n.getFullYear()}, ${BK.at} Uhr`:""; }
+  if(id==="next") return NX.at?`${NX.at} Uhr`:"";
+  if(id==="wl") return WL.fetched?WL.fetched.replace(/^(\d{4})-(\d\d)-(\d\d) (\d\d:\d\d).*$/,(m,y,mo,d,t)=>`${+d}.${+mo}.${y}, ${t} Uhr`):"";
+  if(layer.fund) return F.fetched?dmy(F.fetched):"";
+  return ABRUF;
+}
+const MOBILE=matchMedia("(max-width:820px)");
+MOBILE.addEventListener("change",()=>render());
 function renderControls(){
   document.querySelectorAll("#layers .chip").forEach(c=>c.setAttribute("aria-pressed",c.dataset.l===layer.id));
   const sc=document.getElementById("subs");
   /* Unterauswahl direkt unter der Kategorie der gewählten Ebene, in deren Farbe; eigener Punkt nur, wo die Farbe auf der Karte etwas bedeutet */
   const chip=document.getElementById("layer-"+layer.id), grp=chip&&chip.closest(".lgroup");
-  if(grp&&sc.parentNode!==grp) grp.appendChild(sc);
+  /* Handy: Unterauswahl direkt unter der Karte; Desktop: unter der Kategorie */
+  const slot=MOBILE.matches?document.getElementById("subsmob"):grp;
+  if(slot&&sc.parentNode!==slot) slot.appendChild(sc);
+  document.getElementById("subsmob").style.setProperty("--gc",grp?grp.style.getPropertyValue("--gc"):layer.color);
   const gc=grp?grp.style.getPropertyValue("--gc"):layer.color;
   const key=s=>s.dot||(layer.id==="vote"&&s.id!=="all"?s.color:null);
   const icon=s=>layer.id==="fund"&&FUND_KIND[s.id]?`icons/fund/${s.id}.png${IV}`:layer.id==="wl"&&CAUSE_COL[s.id]?`icons/stoerung/${s.id}.png${IV}`:null;
@@ -966,7 +987,9 @@ function renderControls(){
   const sl=document.getElementById("yslider");
   sl.max=ys.length-1; sl.value=i; sl.disabled=ys.length<2;
   document.getElementById("ylabel").textContent=layer.clock?"Uhrzeit":(layer.fund||layer.live||isPts(layer))?"Stand":"Jahr";
-  document.getElementById("yval").textContent=layer.clock?hhmm(y):(layer.fund||layer.live)?"aktuell":y;
+  const yv=document.getElementById("yval");
+  if(layer.clock||!(layer.fund||layer.live)) yv.textContent=layer.clock?hhmm(y):y;
+  else { const ts=liveWhen(); yv.innerHTML=`aktuell${ts?`<small class="yts">${esc(ts)}</small>`:""}`; }
   document.getElementById("yprev").disabled=i<=0;
   document.getElementById("ynext").disabled=i>=ys.length-1;
   document.getElementById("yrange").textContent=layer.clock?`Uhrzeit · ${dmy(FP_DAY)}`:layer.live?"Momentaufnahme":layer.fund?"laufender Feed":ys.length>1?`${ys.length} Jahre: ${ys[0]}–${ys[ys.length-1]}`:"nur dieses Jahr verfügbar";

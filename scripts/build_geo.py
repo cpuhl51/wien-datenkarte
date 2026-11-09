@@ -55,6 +55,22 @@ def clean(v):
 
 
 # Punkt-Datensätze: Schlüssel, Layername, Feld für die Beschriftung (oder None), Ebene
+
+def taxi_zeit(z):
+    """Zeitraum der Stadt Wien lesbar machen; ohne Angabe gilt der Standplatz laut Daten ohne Zeitbeschränkung."""
+    z = clean(z)
+    if not z:
+        return "keine Zeitbeschränkung angegeben"
+    z = z.replace("(werkt.)", "werktags")
+    z = re.sub(r"\bv\.\s*(?=\d)", "", z)
+    z = re.sub(r"\b(\d{1,2}(?:[:.]\d\d)?)\s*[-–]\s*(\d{1,2}(?:[:.]\d\d)?)\s*h\b", r"\1–\2 Uhr", z)
+    z = re.sub(r"\b(\d{1,2}(?:[:.]\d\d)?)\s*-\s*(\d{1,2}(?:[:.]\d\d)?)(?=$|,|\s)(?!\s*Uhr)", r"\1–\2 Uhr", z)
+    z = re.sub(r"werktags(?=\S)", "werktags ", z)
+    z = re.sub(r"(?<=\.)werktags", " werktags", z)
+    z = re.sub(r"\s*-\s*", "–", z)
+    z = re.sub(r"\bv\.\s*(?=\d)", "", z)
+    return "nur " + z
+
 POINTS = [
     ("altstoff", "ALTSTOFFSAMMLUNGOGD", lambda p: " ".join(filter(None, [clean(p.get("STRASSE")), clean(p.get("ONR"))]))),
     ("sackerl", "HUNDESACKERLOGD", lambda p: " ".join(filter(None, [clean(p.get("STRNAM")), clean(p.get("ONRTXT"))]))),
@@ -69,7 +85,7 @@ POINTS = [
     ("schule", "SCHULEOGD", lambda p: " · ".join(filter(None, [clean(p.get("NAME")), clean(p.get("ART_TXT"))]))),
     ("defi", "DEFIBRILLATOROGD", lambda p: " · ".join(filter(None, [clean(p.get("ADRESSE")), clean(p.get("INFO"))]))),
     ("polizei", "POLIZEIOGD", lambda p: " · ".join(filter(None, [clean(p.get("NAME")), clean(p.get("ADRESSE"))]))),
-    ("taxi", "TAXIOGD", lambda p: " · ".join(filter(None, [clean(p.get("ADRESSE")), f'{p.get("STELLPLATZANZAHL")} Plätze' if p.get("STELLPLATZANZAHL") else "", clean(p.get("ZEITRAUM"))]))),
+    ("taxi", "TAXIOGD", lambda p: " · ".join(filter(None, [re.sub(r"^\d+\.,\s*", "", clean(p.get("ADRESSE")) or ""), f'{p.get("STELLPLATZANZAHL")} Stellplätze' if p.get("STELLPLATZANZAHL") else "", taxi_zeit(p.get("ZEITRAUM"))]))),
 ]
 # Altstoff-Sammelstellen zusätzlich je Fraktion (eine Sammelstelle kann mehrere haben)
 FRAKTIONEN = [("papier", "FRAKTION_PA"), ("glas", "FRAKTION_G"), ("lvp", "FRAKTION_KV"), ("bio", "FRAKTION_BI")]
