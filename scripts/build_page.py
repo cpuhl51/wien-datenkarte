@@ -16,7 +16,8 @@ for key, path in [("__GEO__", p("data", "geo", "bezirke.json")),
 
 d = date.today()
 import time
-html = html.replace('const IV = "?v=dev";', f'const IV = "?v={int(time.time())}";')
+_iv = str(int(time.time()))
+html = html.replace('const IV = "?v=dev";', f'const IV = "?v={_iv}";')
 html = html.replace('const ABRUF = "2.11.2026";', f'const ABRUF = "{d.day}.{d.month}.{d.year}";')
 # Rahmen der Seite: ohne Viewport-Angabe zeigen Handys die Desktop-Breite verkleinert an
 head = """<!doctype html>
@@ -26,7 +27,7 @@ head = """<!doctype html>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#111715" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#f3f5f4" media="(prefers-color-scheme: light)">
-<link rel="manifest" href="manifest.webmanifest">
+<link rel="manifest" href="manifest.webmanifest?v=__IV__">
 <link rel="icon" type="image/png" sizes="48x48" href="icons/favicon-48.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="mobile-web-app-capable" content="yes">
@@ -37,6 +38,7 @@ head = """<!doctype html>
 </head>
 <body>
 """
+head = head.replace('__IV__', _iv)
 cut = html.index("</style>") + len("</style>")      # Titel, Schriften und Styles gehören in den Kopf
 html = head.replace("</head>", html[:cut] + "\n</head>") + html[cut:] + "\n</body>\n</html>\n"
 open(p("docs", "index.html"), "w", encoding="utf-8").write(html)
