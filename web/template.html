@@ -82,6 +82,14 @@ h1{font-family:var(--display);font-weight:800;font-size:clamp(28px,5vw,44px);lin
 .pick a.wien{text-decoration:none;display:inline-flex;align-items:center}
 .mapbox .yearbar{margin-top:12px}
 .mapbox .lgroups{margin-top:16px}
+.nxlist .nxrow{display:grid;grid-template-columns:4.2em 3.2em 1fr;gap:8px;align-items:center}
+.nxcd{font:600 14px var(--mono);text-align:right}
+.nxline{color:#fff;font:700 13px var(--body);text-align:center;border-radius:4px;padding:2px 0}
+.nxto{display:flex;flex-direction:column;line-height:1.25}
+.nxto small{color:var(--muted);font-size:12px}
+.nxbox{border-left:4px solid color-mix(in srgb,#6e7d7a 30%,transparent);padding-left:12px;margin:10px 0}
+.nxstops{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}
+.nxstops small{font:11px var(--mono);opacity:.8}
 .lgroups{display:flex;flex-direction:column;gap:8px}
 .lgroup{background:color-mix(in srgb,var(--gc) 7%,transparent);border-left:3px solid color-mix(in srgb,var(--gc) 65%,transparent);border-radius:0;padding:7px 10px 9px}
 .lgname{display:block;font:500 11px var(--mono);letter-spacing:.07em;text-transform:uppercase;color:color-mix(in srgb,var(--gc) 70%,var(--ink));margin-bottom:6px}
@@ -564,6 +572,9 @@ const LAYERS = [
    subs:POINT_SETS.waste.map(ptSub),note:"Anzahl je Bezirk, jeder Punkt auf der Karte ist ein Standort."},
   {id:"infra",label:"Einrichtungen",color:"#2f6f8f",src:SRC.pts,points:true,live:true,stand:()=>`Standorte laut Stadt Wien, abgerufen ${ABRUF}`,
    subs:POINT_SETS.infra.map(ptSub),note:"Anzahl je Bezirk, jeder Punkt auf der Karte ist ein Standort."},
+  {id:"next",label:"Nächstes Öffi",special:true,color:"#6e7d7a",src:"Wiener Linien – Echtzeitdaten (Open Data, CC BY 4.0)",
+   stand:()=>NX.at?`Echtzeit, abgerufen ${NX.at} Uhr · alle 30 Sekunden neu`:"Echtzeit der Wiener Linien",
+   subs:[{id:"all",label:"Alle",data:{0:Array(24).fill(0)},fmt:fmtInt,unit:""}]},
   {id:"antik",label:"Römisches Wien",special:true,color:"#8a5a2b",src:SRC.antik,stand:()=>"Rekonstruktion der Stadtarchäologie Wien nach Grabungen und Funden",
    subs:[{id:"x",label:"Antike",data:{0:Array(24).fill(0)},fmt:fmtInt,unit:""}],note:""},
   {id:"vote",label:"Wien-Wahl",color:"#d0021b",src:SRC.vote,stack:["vote"],
@@ -742,7 +753,7 @@ function locate(){
     btn.disabled=false; me={lat:p.coords.latitude, lon:p.coords.longitude, acc:p.coords.accuracy};
     const [x,y]=px([me.lon,me.lat]);
     if(x<-20||x>W+20||y<-20||y>H+20){ msg.textContent="Du bist gerade außerhalb von Wien. Die Karte zeigt nur Wien."; me=null; return; }
-    msg.hidden=true; zoom.k=6; zoom.cx=x; zoom.cy=y; applyZoom(); render();
+    msg.hidden=true; zoom.k=6; zoom.cx=x; zoom.cy=y; applyZoom(); showNextChip(); render();
   },e=>{ btn.disabled=false; msg.textContent=e.code===1?"Standortfreigabe abgelehnt. Du kannst sie in den Browser-Einstellungen für diese Seite erlauben.":"Standort konnte nicht ermittelt werden."; },{enableHighAccuracy:true,timeout:15000,maximumAge:60000});
 }
 function distM(a,b){ const R=6371000,toR=Math.PI/180, dLat=(b[1]-a[1])*toR, dLon=(b[0]-a[0])*toR, x=Math.sin(dLat/2)**2+Math.cos(a[1]*toR)*Math.cos(b[1]*toR)*Math.sin(dLon/2)**2; return 2*R*Math.asin(Math.sqrt(x)); }
@@ -919,7 +930,7 @@ document.getElementById("yslider").addEventListener("input",e=>setYearIdx(+e.tar
 document.getElementById("yprev").addEventListener("click",()=>setYearIdx(+document.getElementById("yslider").value-1));
 document.getElementById("ynext").addEventListener("click",()=>setYearIdx(+document.getElementById("yslider").value+1));
 document.getElementById("wien").addEventListener("click",()=>select(0));
-document.getElementById("locate").addEventListener("click",()=>{ if(!isPts(layer)){ layer=LAYERS.find(L=>L.id==="infra"); } locate(); });
+document.getElementById("locate").addEventListener("click",()=>{ if(!isPts(layer)&&layer.id!=="next"){ layer=LAYERS.find(L=>L.id==="infra"); } locate(); });
 document.getElementById("basebtn").addEventListener("click",()=>{ const on=baseOn===null?isPts(layer):baseOn; baseOn=!on; render(); });
 document.getElementById("baseopr").addEventListener("input",e=>{ baseOpacity=+e.target.value; tilesG.style.opacity=baseOpacity; });
 document.getElementById("zin").addEventListener("click",()=>{ if(zoom.k===1&&sel>0){ const L=labels.find(l=>l[0]===sel); if(L){zoom.cx=L[1];zoom.cy=L[2];} } zoom.k=Math.min(16,zoom.k*2); applyZoom(); render(); });
@@ -956,17 +967,88 @@ function histPlan(items){
     <div class="skey"><span><b style="background:#7d3a28"></b>Stadtmauer</span><span><b style="background:#e0a030"></b>Tore</span><span><b style="background:#d08a40"></b>Türme</span><span><b style="background:#4b7a9c"></b>Gräben</span></div>`;
 }
 
+/* ---------- Nächstes Öffi: Echtzeit-Abfahrten der Haltestellen in der Nähe ---------- */
+const NX_R=600, NX={at:null,deps:[],stops:[],err:null,loading:false,last:0,key:""};
+const NX_TYPE={ptMetro:"U-Bahn",ptTram:"Straßenbahn",ptBusCity:"Bus",ptBusNight:"Nachtbus",ptTrainS:"S-Bahn",ptTrain:"Zug",ptBusRegion:"Regionalbus"};
+const lineCol=(n,ty)=>{ const m=/^U(\d)$/.exec(n); return m?UCOL[m[1]]:ty==="ptTram"?"#c4161c":/^N/.test(n)?"#1a2a6c":ty&&ty.startsWith("ptBus")?"#1c5fd6":"#5c6670"; };
+function showNextChip(){ const c=document.getElementById("layer-next"); if(c) c.hidden=!me; }
+function nearStops(){
+  if(!HS||!me) return [];
+  return Object.entries(HS).map(([id,h])=>({id,lon:h[0],lat:h[1],name:h[2],d:distM([me.lon,me.lat],[h[0],h[1]])}))
+    .filter(s=>s.d<=NX_R).sort((a,b)=>a.d-b.d).slice(0,20);
+}
+async function loadDepartures(force){
+  if(!LIVE_URL||!me||NX.loading) return;
+  const st=nearStops(), key=st.map(s=>s.id).join(",");
+  if(!force&&key===NX.key&&Date.now()-NX.last<30000) return;
+  NX.stops=st; NX.key=key; if(!st.length){ NX.deps=[]; NX.err=null; render(); return; }
+  NX.loading=true;
+  try{
+    const u=LIVE_URL.replace(/\/$/,"")+"/monitor?"+st.map(s=>"stopId="+s.id).join("&");
+    const d=await (await fetch(u,{cache:"no-store"})).json();
+    const byId=Object.fromEntries(st.map(s=>[s.id,s])), deps=[];
+    (d.data&&d.data.monitors||[]).forEach(m=>{
+      const ls=m.locationStop.properties, sid=String(ls.attributes&&ls.attributes.rbl||""), s=byId[sid]||st.find(x=>x.name===ls.title)||{d:null};
+      (m.lines||[]).forEach(l=>(l.departures&&l.departures.departure||[]).slice(0,3).forEach(dp=>{
+        const t=dp.departureTime||{}, cd=t.countdown; if(cd==null) return;
+        deps.push({cd,real:!!t.timeReal,time:(t.timeReal||t.timePlanned||"").slice(11,16),line:l.name,to:l.towards,type:l.type,stop:ls.title,d:s.d,acc:!!l.barrierFree});
+      }));
+    });
+    deps.sort((a,b)=>a.cd-b.cd||a.line.localeCompare(b.line,"de",{numeric:true}));
+    NX.deps=deps; NX.err=null; const n=new Date(); NX.at=`${String(n.getHours()).padStart(2,"0")}:${String(n.getMinutes()).padStart(2,"0")}`;
+  }catch(e){ NX.err="Abfahrten konnten gerade nicht geladen werden."; }
+  NX.loading=false; NX.last=Date.now(); if(layer.id==="next") render();
+}
+let nxStop=null;
+function renderNext(bg){
+  for(let b=1;b<=23;b++){ paths[b].setAttribute("fill",bg); paths[b].classList.remove("sel"); labelEls[b].textContent=""; }
+  document.getElementById("ramp").style.background="none"; document.getElementById("ticks").innerHTML="";
+  document.getElementById("layernote").textContent="Abfahrtszeiten in Echtzeit, wo die Wiener Linien sie melden, sonst laut Fahrplan (mit * markiert). Entfernungen in Luftlinie.";
+  const det=document.getElementById("detail");
+  document.getElementById("mappick").innerHTML="";
+  if(!me){ det.innerHTML=`<h2>Nächstes Öffi</h2><p class="note">Tippe oben auf „Mein Standort“, dann erscheinen die Haltestellen in deiner Nähe.</p>`; return; }
+  if(!HS){ loadStops().then(()=>render()).catch(()=>{}); det.innerHTML=`<h2>Nächstes Öffi</h2><p class="note">Haltestellen werden geladen …</p>`; return; }
+  if(!PT){ loadPoints().then(()=>render()).catch(()=>{}); }
+  drawOrient(true);
+  if(!NX.zoomed){ const [x,y]=px([me.lon,me.lat]); zoom.k=14; zoom.cx=x; zoom.cy=y; applyZoom(); NX.zoomed=true; }
+  loadDepartures(false);
+  const st=NX.stops.length?NX.stops:nearStops(), u=mapUnitsPerPx(), r=5*u; NX.boxes=[];
+  const names=[...new Map(st.map(s=>[s.name,s])).values()];
+  overlay.removeAttribute("fill"); overlay.removeAttribute("stroke");
+  overlay.innerHTML=st.map(s=>{ const [x,y]=px([s.lon,s.lat]); const on=nxStop===s.name; return `<circle data-nx="${esc(s.name)}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(on?r*1.5:r).toFixed(2)}" style="fill:${on?"var(--ink)":"#6e7d7a"};stroke:#fff;stroke-width:${(1.5*u).toFixed(2)};pointer-events:all;cursor:pointer"><title>${esc(s.name)}</title></circle>`; }).join("")
+    +names.filter(s=>{ /* Beschriftung nur, wo sie nicht mit einer anderen überlappt */
+        const [x,y]=px([s.lon,s.lat]), w=s.name.length*6.2*u, h=13*u, bx=[x+6*u,y-8*u,x+6*u+w,y-8*u+h];
+        if((NX.boxes||[]).some(o=>!(bx[2]<o[0]||bx[0]>o[2]||bx[3]<o[1]||bx[1]>o[3]))) return false; (NX.boxes=NX.boxes||[]).push(bx); return true; })
+      .map(s=>{ const [x,y]=px([s.lon,s.lat]); return `<text x="${(x+7*u).toFixed(1)}" y="${(y+4*u).toFixed(1)}" class="stat" style="font-size:${(11*u).toFixed(2)}px;stroke-width:${(3*u).toFixed(2)}px">${esc(s.name)}</text>`; }).join("");
+  const deps=NX.deps.filter(d=>!nxStop||d.stop===nxStop).slice(0,40);
+  const row=d=>`<li class="nxrow"><span class="nxcd">${d.cd<=0?"jetzt":d.cd+" min"}${d.real?"":"*"}</span><span class="nxline" style="background:${lineCol(d.line,d.type)}">${esc(d.line)}</span><span class="nxto">${esc(d.to)}<small>${esc(d.stop)}${d.d!=null?" · "+fmtDist(d.d):""}${d.time?" · "+d.time:""}</small></span></li>`;
+  const box=document.getElementById("mappick");
+  det.innerHTML=`<h2>Nächstes Öffi</h2><p class="note">Die Abfahrten stehen direkt unter der Karte.</p>`;
+  box.innerHTML=`<div class="nxbox"><h3 style="margin:6px 0 2px">Nächste Abfahrten</h3>
+    <p class="sub">${names.length?`${names.length} Haltestelle${names.length>1?"n":""} im Umkreis von ${NX_R} m`:`Keine Haltestelle im Umkreis von ${NX_R} m`}${nxStop?` · gefiltert: <b>${esc(nxStop)}</b> <button class="wien" id="nxall">alle zeigen</button>`:""}</p>
+    ${NX.err?`<p class="note">${NX.err}</p>`:""}
+    ${names.length?`<div class="nxstops">${names.map(s=>`<button class="sub" data-nxs="${esc(s.name)}" aria-pressed="${nxStop===s.name}" style="--pc:#6e7d7a">${esc(s.name)} <small>${fmtDist(s.d)}</small></button>`).join("")}</div>`:""}
+    ${deps.length?`<ul class="flist nxlist">${deps.map(row).join("")}</ul>`:(NX.loading||!NX.at)&&names.length?`<p class="note">Abfahrten werden geladen …</p>`:names.length?`<p class="note">Gerade keine Abfahrten gemeldet.</p>`:""}</div>`;
+  box.querySelectorAll("[data-nxs]").forEach(b=>b.onclick=()=>{ nxStop=nxStop===b.dataset.nxs?null:b.dataset.nxs; render(); });
+  const all=document.getElementById("nxall"); if(all) all.onclick=()=>{ nxStop=null; render(); };
+}
+svg.addEventListener("click",e=>{ const el=e.target.closest&&e.target.closest("[data-nx]"); if(!el||layer.id!=="next") return; e.stopPropagation(); nxStop=el.dataset.nx; render();
+  document.getElementById("mappick").scrollIntoView({block:"nearest",behavior:"smooth"}); },true);
+setInterval(()=>{ if(layer.id==="next"&&!document.hidden) loadDepartures(false); },10000);
+
 function renderSpecial(){
   document.getElementById("mappick").innerHTML="";
+  if(layer.id!=="next") NX.zoomed=false;
   /* alles von der vorigen Ebene entfernen: Säulen, Störungs- und Fundtier-Symbole, Punkte, Legende */
   drawBars({}); wlG.innerHTML=""; fundG.innerHTML=""; overlay.innerHTML=""; document.getElementById("wlleg").innerHTML="";
   document.getElementById("ticks").classList.remove("blg"); document.getElementById("ramp").style.height="";
-  orient.innerHTML=""; if(zoom.k!==1){ zoom.k=1; zoom.cx=W/2; zoom.cy=H/2; applyZoom(); }
+  orient.innerHTML=""; if(zoom.k!==1&&layer.id!=="next"){ zoom.k=1; zoom.cx=W/2; zoom.cy=H/2; applyZoom(); }
   document.querySelector(".yearbar").hidden=true; document.querySelector(".rank").hidden=true;
   document.getElementById("stand").innerHTML=`<div><b>Datenstand:</b> ${layer.stand()}</div><div><span>Quelle:</span> ${layer.src}</div>`;
   document.querySelectorAll("#layers .chip").forEach(c=>c.setAttribute("aria-pressed",c.dataset.l===layer.id));
   const sc=document.getElementById("subs"); sc.innerHTML=""; sc.hidden=true;
   const bg=base();
+  if(layer.id==="next"){ renderNext(bg); return; }
   if(layer.id==="antik"){
     for(let b=1;b<=23;b++){ paths[b].setAttribute("fill",bg); paths[b].classList.remove("sel"); labelEls[b].textContent=""; }
     document.getElementById("ramp").style.background="none"; document.getElementById("ticks").innerHTML="";
@@ -980,10 +1062,11 @@ function renderSpecial(){
   if(!BEF) loadBefunde().then(()=>{ if(layer.id==="vin") render(); }).catch(()=>{});
 }
 const MAP_TITLE={pop:"Einwohner je Bezirk",age:"Altersstruktur der Bevölkerung",cob:"Herkunft der Bevölkerung",bir:"Geburten",dea:"Sterbefälle",edu:"Höchster Bildungsabschluss",
-  veh:"Kraftfahrzeuge",brand:"Automarken im Pkw-Bestand",dog:"Hunde in Wien",fund:"Gefundene Tiere der letzten 30 Tage",fp:"Öffis unterwegs laut Fahrplan",wl:"Aktuelle Störungen der Wiener Linien",
+  veh:"Kraftfahrzeuge",brand:"Automarken im Pkw-Bestand",dog:"Hunde in Wien",fund:"Gefundene Tiere der letzten 30 Tage",fp:"Öffis unterwegs laut Fahrplan",next:"Nächste Abfahrten in deiner Nähe",wl:"Aktuelle Störungen der Wiener Linien",
   waste:"Müll und Altstoffsammlung",infra:"Öffentliche Einrichtungen",vote:"Gemeinderatswahl Wien",antik:"Römisches Wien – Vindobona"};
 /* Was die Zahlen in den Bezirken bedeuten – je Ebene */
 function numHint(){
+  if(layer.id==="next") return "Punkte = Haltestellen in der Nähe, antippen für die Abfahrten";
   if(layer.special) return "Flächen antippen für Details";
   const s=subOf(layer);
   if(s.bars) return "Streifen = Anteile im Bezirk, oben der größte";
@@ -997,6 +1080,7 @@ function numHint(){
 function updateTitle(){
   const nh=document.getElementById("numhint"); if(nh) nh.textContent=numHint();
   document.getElementById("maptitle").textContent=MAP_TITLE[layer.id]||layer.label;
+  if(layer.id==="next"){ document.getElementById("mapsub").textContent=me?`im Umkreis von ${NX_R} m · Echtzeit`:"Standort nötig"; return; }
   if(layer.special){ document.getElementById("mapsub").textContent="Siedlungen, Straßen und Legionslager"; return; }
   const s=subOf(layer), y=yearOf(layer), when=layer.clock?hhmm(y)+" Uhr":(layer.fund||layer.live||isPts(layer))?"aktueller Stand":y;
   document.getElementById("mapsub").textContent=[layer.subs.length>1&&s.id!=="all"?s.label:(layer.subs.length>1?"Alle":""),when].filter(Boolean).join(" · ");
@@ -1007,6 +1091,7 @@ function render(){
 }
 let rankSplit=true;
 function render2(){
+  if(layer.id!=="next") NX.zoomed=false;
   if(layer.special){ renderSpecial(); return; }
   document.querySelector(".yearbar").hidden=false; document.querySelector(".rank").hidden=false;
   renderControls();
@@ -1213,7 +1298,7 @@ function sliderName(L){ return L.clock?"Uhrzeit":(L.subs.every(s=>s.pts)||L.spec
 function layerTree(){
   const order=LGROUPS.flatMap(([name,col,ids])=>ids.map((id,i)=>[LAYERS.find(L=>L.id===id),i===0?[name,col]:null])).filter(x=>x[0]);
   return order.map(([L,head])=>(head?`<div class="tg" style="color:color-mix(in srgb,${head[1]} 70%,var(--ink))">${esc(head[0])}</div>`:"")+(()=>{
-    const subs=L.special?Object.entries(SIED_COL).map(([n,c])=>({label:n,dot:c})).concat([{label:"Römerstraßen und mittelalterliche Befestigung"},{label:"Lagerplan Vindobona mit Grabungsbefunden"}]):(L.subs||[]);
+    const subs=L.id==="next"?[{label:"Haltestellen in der Nähe und nächste Abfahrten (nur mit Standort)"}]:L.special?Object.entries(SIED_COL).map(([n,c])=>({label:n,dot:c})).concat([{label:"Römerstraßen und mittelalterliche Befestigung"},{label:"Lagerplan Vindobona mit Grabungsbefunden"}]):(L.subs||[]);
     const col=L.color||"var(--accent)";
     return `<div class="tl"><span class="sq" style="background:${col}"></span>${esc(L.label)} <small>· ${sliderName(L)}</small></div>`
       +subs.map((s,i)=>{ const c=s.dot||(L.id==="vote"&&s.id!=="all"?s.color:L.id==="brand"&&BRAND_COL[s.id.toUpperCase()]?BRAND_COL[s.id.toUpperCase()]:null); return `<div class="ts">${i===subs.length-1?"└─":"├─"} ${c?`<b style="background:${c}"></b>`:""}<span>${esc(s.label)}</span></div>`; }).join("");
@@ -1347,7 +1432,7 @@ svg.addEventListener("click",e=>{
 
 const lc=document.getElementById("layers");
 const LGROUPS=[["Demografie","#c4161c",["pop","age","cob","bir","dea","edu"]],
-  ["Mobilität","#6e7d7a",["fp","wl","veh","brand"]],
+  ["Mobilität","#6e7d7a",["fp","next","wl","veh","brand"]],
   ["Infrastruktur","#2f6fb0",["infra","waste"]],
   ["Tiere","#8a5a2b",["dog","fund"]],
   ["Politik & Geschichte","#7a3db8",["vote","antik"]]];
@@ -1363,6 +1448,7 @@ LGROUPS.concat([["Weitere","#7f8c87",LAYERS.map(L=>L.id).filter(id=>!inGroup.has
   });
   lc.appendChild(g);
 });
+showNextChip(); if(layer.id==="next"&&!me){ layer=LAYERS.find(L=>L.id==="infra"); state.infra.sub="defi"; }
 /* Live-Abfrage: gleiche Regeln wie im Datenskript (nur gültige Meldungen, Bezirk über Haltestellen) */
 async function refreshLive(){
   if(!LIVE_URL || !WL.stopb) return;

@@ -10,7 +10,7 @@ Stand: 8.11.2026
 ## Wie die Teile zusammenspielen
 - **GitHub (Repo wien-datenkarte):** Code und aufbereitete Daten. GitHub Pages veröffentlicht den Ordner `docs/` als Website.
 - **GitHub Actions („Daten aktualisieren“):** Holt jede Nacht um 03:17 Wiener Zeit die offenen Daten der Stadt Wien, baut die Seite neu und speichert. Läuft automatisch, Fehler kommen per Mail von GitHub.
-- **Cloudflare Worker `wien-stoerungen`:** Kleiner Weiterleitungsdienst für die Live-Störungen der Wiener Linien. Nötig, weil die Wiener Linien keine direkten Abfragen aus dem Browser erlauben. Speichert 60 Sekunden zwischen, kostenlos. Adresse: https://wien-stoerungen.cpuhl51.workers.dev/ – der Code liegt im Repo unter `live/worker.js`.
+- **Cloudflare Worker `wien-stoerungen`:** Kleiner Weiterleitungsdienst für die Live-Störungen und die Echtzeit-Abfahrten („Nächstes Öffi“, Pfad `/monitor`) der Wiener Linien. Nötig, weil die Wiener Linien keine direkten Abfragen aus dem Browser erlauben. Speichert 60 Sekunden zwischen, kostenlos. Adresse: https://wien-stoerungen.cpuhl51.workers.dev/ – der Code liegt im Repo unter `live/worker.js`.
 - **all-inkl (DNS von puhl.ch):** Ein CNAME-Eintrag `app.wien-live-daten` → `cpuhl51.github.io.` verbindet die eigene Adresse mit GitHub. puhl.ch, www.puhl.ch und E-Mail sind davon nicht betroffen.
 
 ## Updates
