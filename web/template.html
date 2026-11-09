@@ -1482,10 +1482,10 @@ svg.addEventListener("click",e=>{
 },true);
 
 const lc=document.getElementById("layers");
-const LGROUPS=[["Demografie","#c4161c",["pop","age","cob","bir","dea","edu"]],
+const LGROUPS=[["Infrastruktur","#2f6fb0",["infra","waste"]],
   ["Mobilität","#6e7d7a",["fp","next","wl","veh","brand"]],
-  ["Infrastruktur","#2f6fb0",["infra","waste"]],
   ["Tiere","#8a5a2b",["dog","fund"]],
+  ["Demografie","#c4161c",["pop","age","cob","bir","dea","edu"]],
   ["Politik & Geschichte","#7a3db8",["vote","antik"]]];
 const inGroup=new Set(LGROUPS.flatMap(g=>g[2]));
 LGROUPS.concat([["Weitere","#7f8c87",LAYERS.map(L=>L.id).filter(id=>!inGroup.has(id))]]).forEach(([name,col,ids])=>{
