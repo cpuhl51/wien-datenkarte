@@ -264,7 +264,7 @@ svg.vin text.vl{font:600 13px var(--body);fill:#3a2e08;pointer-events:none}
       <div class="maptitle"><h2 id="maptitle"></h2><button class="wien" id="startbtn" aria-pressed="false">☆ Als Start</button></div>
       <p class="mapsub" id="mapsub"></p>
       <div class="maphead"><button class="wien" id="wien" aria-pressed="false">Wien gesamt</button><button class="wien" id="locate">Mein Standort</button><button class="wien zb" id="zin" aria-label="Hineinzoomen">+</button><button class="wien zb" id="zoutb" aria-label="Herauszoomen">−</button><button class="wien" id="zoomout" hidden>Ganze Stadt</button><button class="wien" id="basebtn" aria-pressed="false">Stadtplan</button>
-        <label class="baseop" id="baseop" hidden>Deckkraft <input type="range" id="baseopr" min="0.2" max="1" step="0.1" value="0.6"></label><span class="hint">Zahlen = gewählte Ebene · Bezirk antippen für Details · gezoomt: mit dem Finger verschieben</span></div>
+        <label class="baseop" id="baseop" hidden>Deckkraft <input type="range" id="baseopr" min="0.2" max="1" step="0.1" value="0.6"></label><span class="hint"><span id="numhint"></span> · Bezirk antippen für Details · gezoomt: mit dem Finger verschieben</span></div>
       <p class="note" id="locmsg" hidden></p>
       <svg class="map" id="map" role="img" aria-label="Karte der Wiener Gemeindebezirke"></svg>
       <div id="mappick" aria-live="polite"></div>
@@ -982,7 +982,20 @@ function renderSpecial(){
 const MAP_TITLE={pop:"Einwohner je Bezirk",age:"Altersstruktur der Bevölkerung",cob:"Herkunft der Bevölkerung",bir:"Geburten",dea:"Sterbefälle",edu:"Höchster Bildungsabschluss",
   veh:"Kraftfahrzeuge",brand:"Automarken im Pkw-Bestand",dog:"Hunde in Wien",fund:"Gefundene Tiere der letzten 30 Tage",fp:"Öffis unterwegs laut Fahrplan",wl:"Aktuelle Störungen der Wiener Linien",
   waste:"Müll und Altstoffsammlung",infra:"Öffentliche Einrichtungen",vote:"Gemeinderatswahl Wien",antik:"Römisches Wien – Vindobona"};
+/* Was die Zahlen in den Bezirken bedeuten – je Ebene */
+function numHint(){
+  if(layer.special) return "Flächen antippen für Details";
+  const s=subOf(layer);
+  if(s.bars) return "Streifen = Anteile im Bezirk, oben der größte";
+  if(layer.id==="wl") return "Zahlen = Anzahl der Meldungen im Bezirk";
+  if(layer.id==="fund") return "Zahlen = Anzahl gefundener Tiere im Bezirk";
+  if(isPts(layer)) return `Zahlen = Anzahl ${s.label} im Bezirk`;
+  if(layer.id==="fp") return s.id==="rel"?"Zahlen = Fahrzeuge je 1.000 Einwohner":s.id==="ppv"?"Zahlen = Einwohner je Fahrzeug":`Zahlen = Fahrzeuge unterwegs (${s.label})`;
+  const u=s.unit.trim();
+  return `Zahlen = ${layer.subs.length>1&&s.label!==layer.label?layer.label+" · "+s.label:layer.label}${u==="%"?" in %":u==="‰"?" in ‰":u==="J."?" in Jahren":mapThousand?" in Tausend":""}`;
+}
 function updateTitle(){
+  const nh=document.getElementById("numhint"); if(nh) nh.textContent=numHint();
   document.getElementById("maptitle").textContent=MAP_TITLE[layer.id]||layer.label;
   if(layer.special){ document.getElementById("mapsub").textContent="Siedlungen, Straßen und Legionslager"; return; }
   const s=subOf(layer), y=yearOf(layer), when=layer.clock?hhmm(y)+" Uhr":(layer.fund||layer.live||isPts(layer))?"aktueller Stand":y;
