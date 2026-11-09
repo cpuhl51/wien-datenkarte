@@ -737,7 +737,7 @@ function drawOrient(on){
   orient.innerHTML=(O.fluss||[]).map(g=>`<path d="${geoPath(g)}" style="fill:none;stroke:var(--water);stroke-width:${2.4/k};stroke-linecap:round"></path>`).join("")
     +(O.ubahn||[]).map(g=>`<path d="${geoPath(g)}" style="fill:none;stroke:${UCOL[g.l]||"#888"};stroke-width:${2/k};stroke-opacity:.9;stroke-linecap:round"></path>`).join("")
     +(k>2?(O.stat||[]).map(s=>{const [x,y]=px([s[0],s[1]]);return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${3/k}" style="fill:var(--surface);stroke:${UCOL[s[3]]||"#888"};stroke-width:${1.2/k}"></circle><text x="${(x+5/k).toFixed(1)}" y="${(y+3/k).toFixed(1)}" class="stat" style="font-size:${9/k}px;stroke-width:${2.5/k}px">${esc(s[2])}</text>`;}).join(""):"")
-    +(me?(()=>{const [x,y]=px([me.lon,me.lat]);return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${14/k}" style="fill:var(--ink);fill-opacity:.15;stroke:var(--ink);stroke-width:${1/k}"></circle><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${5/k}" style="fill:var(--ink);stroke:var(--surface);stroke-width:${2.5/k}"></circle>`;})():"");
+    +(me&&layer.id!=="next"?(()=>{const [x,y]=px([me.lon,me.lat]);return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${14/k}" style="fill:var(--ink);fill-opacity:.15;stroke:var(--ink);stroke-width:${1/k}"></circle><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${5/k}" style="fill:var(--ink);stroke:var(--surface);stroke-width:${2.5/k}"></circle>`;})():"");
 }
 /* Ausschnitt: zoom.k = Vergrößerung, Mittelpunkt in Kartenkoordinaten */
 const zoom={k:1,cx:W/2,cy:H/2};
@@ -1011,8 +1011,9 @@ async function loadDepartures(force){
   try{
     const u=LIVE_URL.replace(/\/$/,"")+"/monitor?"+st.map(s=>"stopId="+s.id).join("&");
     const d=await (await fetch(u,{cache:"no-store"})).json();
-    const deps=[];
+    const deps=[]; NX.active=new Set();
     (d.data&&d.data.monitors||[]).forEach(m=>{
+      const ls0=m.locationStop.properties; if(ls0.attributes&&ls0.attributes.rbl!=null&&(m.lines||[]).length) NX.active.add(String(ls0.attributes.rbl));
       const ls=m.locationStop.properties, g=st.find(x=>x.name===nxName(ls.title))||{d:null};
       (m.lines||[]).forEach(l=>(l.departures&&l.departures.departure||[]).slice(0,NX_PER_LINE).forEach(dp=>{
         const t=dp.departureTime||{}, cd=t.countdown; if(cd==null) return;
@@ -1046,7 +1047,7 @@ function renderNext(bg){
   if(!HS){ loadStops().then(()=>render()).catch(()=>{}); box.innerHTML=`<div class="nxbox"><p class="note">Haltestellen werden geladen …</p></div>`; return; }
   if(!PT){ loadPoints().then(()=>render()).catch(()=>{}); }
   drawOrient(true);
-  const st=NX.stops.length?NX.stops:nearStops(), groups=stopGroups(st);
+  const st0=NX.stops.length?NX.stops:nearStops(), st=NX.active&&NX.active.size?st0.filter(s=>NX.active.has(String(s.id))):st0, groups=stopGroups(st);
   if(!NX.zoomed){ /* auf Standort und die 3 Haltestellen einpassen, mindestens ca. 500 m Ausschnitt */
     const pts=[px([me.lon,me.lat]),...st.map(s=>px([s.lon,s.lat]))], xs=pts.map(p=>p[0]), ys=pts.map(p=>p[1]);
     const cx=(Math.min(...xs)+Math.max(...xs))/2, cy=(Math.min(...ys)+Math.max(...ys))/2;
@@ -1057,9 +1058,14 @@ function renderNext(bg){
   overlay.removeAttribute("fill"); overlay.removeAttribute("stroke");
   const gcol=Object.fromEntries(groups.map(g=>[g.name,g.col]));
   overlay.innerHTML=st.map(s=>{ const [x,y]=px([s.lon,s.lat]); const on=nxStop===s.name; return `<circle data-nx="${esc(s.name)}" cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${(on?r*1.3:r).toFixed(3)}" style="fill:${gcol[s.name]||"#6e7d7a"};stroke:${on?"var(--ink)":"#fff"};stroke-width:${(2*u).toFixed(3)};pointer-events:all;cursor:pointer"><title>${esc(s.name)}</title></circle>`; }).join("")
-    +groups.map(g=>{ const xs=g.pts.map(s=>px([s.lon,s.lat])), x=Math.max(...xs.map(p=>p[0])), y=xs.reduce((a,p)=>a+p[1],0)/xs.length;
-      return `<text x="${(x+9*u).toFixed(2)}" y="${(y+4.5*u).toFixed(2)}" class="stat" style="fill:${g.col};font-size:${(13*u).toFixed(3)}px;stroke-width:${(4*u).toFixed(3)}px;font-weight:700">${esc(g.name)}${g.u?" (U)":""}</text>`; }).join("")
-    +(()=>{ const [x,y]=px([me.lon,me.lat]); return `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${(7*u).toFixed(3)}" style="fill:#1c7ed6;stroke:#fff;stroke-width:${(2.5*u).toFixed(3)}"></circle>`; })();
+    +(()=>{ const boxes=[]; return groups.map(g=>{ const xs=g.pts.map(s=>px([s.lon,s.lat])), x0=Math.min(...xs.map(p=>p[0])), x1=Math.max(...xs.map(p=>p[0])), yc=xs.reduce((a,p)=>a+p[1],0)/xs.length;
+      /* Beschriftung rechts, sonst darunter, darüber oder links – je nachdem, wo sie keine andere überdeckt */
+      const w=(g.name.length+(g.u?4:0))*7.6*u, h=15*u, opts=[[x1+9*u,yc+4.5*u],[x0,yc+18*u],[x0,yc-11*u],[x0-9*u-w,yc+4.5*u]];
+      const hit=([lx,ly])=>boxes.some(b=>!(lx+w<b[0]||lx>b[2]||ly<b[1]||ly-h>b[3]));
+      const [x,yy]=opts.find(o=>!hit(o))||opts[0]; boxes.push([x,yy-h,x+w,yy]); const y=yy-4.5*u;
+      return `<text x="${(x).toFixed(2)}" y="${(y+4.5*u).toFixed(2)}" class="stat" style="fill:${g.col};font-size:${(13*u).toFixed(3)}px;stroke-width:${(4*u).toFixed(3)}px;font-weight:700">${esc(g.name)}${g.u?" (U)":""}</text>`; }).join(""); })()
+    +(()=>{ const [x,y]=px([me.lon,me.lat]); return `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${(14*u).toFixed(3)}" style="fill:#1c7ed6;fill-opacity:.2;stroke:none"></circle><circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${(7*u).toFixed(3)}" style="fill:#1c7ed6;stroke:#fff;stroke-width:${(2.5*u).toFixed(3)}"><title>Dein Standort</title></circle>`; })()
+;
   const deps=NX.deps.filter(d=>!nxStop||d.stop===nxStop);
   /* Richtung je Linie: erste Richtung (alphabetisch) ◀ links, zweite ▶ rechts */
   const dirs={}; NX.deps.forEach(d=>{ (dirs[d.line]=dirs[d.line]||new Set()).add(d.to); });
