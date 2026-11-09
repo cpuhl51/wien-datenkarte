@@ -87,6 +87,7 @@ h1{font-family:var(--display);font-weight:800;font-size:clamp(28px,5vw,44px);lin
 .nxline{color:#fff;font:700 13px var(--body);text-align:center;border-radius:4px;padding:2px 0}
 .nxto{display:flex;flex-direction:column;line-height:1.25}
 .nxto small{color:var(--muted);font-size:12px}
+.nxlist{max-height:none!important;overflow:visible!important}
 .nxbox{border-left:4px solid color-mix(in srgb,#6e7d7a 30%,transparent);padding-left:12px;margin:10px 0}
 .nxstops{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}
 .nxstops small{font:11px var(--mono);opacity:.8}
@@ -706,7 +707,7 @@ const unpx=(X,Y)=>[((X/SC)+minX)/K, maxY-(Y/SC)];
 const lon2x=(lon,z)=>(lon+180)/360*2**z, lat2y=(lat,z)=>(1-Math.log(Math.tan(lat*Math.PI/180)+1/Math.cos(lat*Math.PI/180))/Math.PI)/2*2**z;
 const x2lon=(x,z)=>x/2**z*360-180, y2lat=(y,z)=>{const n=Math.PI-2*Math.PI*y/2**z;return 180/Math.PI*Math.atan(.5*(Math.exp(n)-Math.exp(-n)));};
 function drawTiles(){
-  const on=baseOn===null?isPts(layer):baseOn;
+  const on=baseOn===null?(isPts(layer)||layer.id==="next"):baseOn;
   svg.classList.toggle("base",on);
   document.getElementById("basebtn").setAttribute("aria-pressed",on);
   document.getElementById("baseop").hidden=!on;
@@ -931,9 +932,9 @@ document.getElementById("yprev").addEventListener("click",()=>setYearIdx(+docume
 document.getElementById("ynext").addEventListener("click",()=>setYearIdx(+document.getElementById("yslider").value+1));
 document.getElementById("wien").addEventListener("click",()=>select(0));
 document.getElementById("locate").addEventListener("click",()=>{ if(!isPts(layer)&&layer.id!=="next"){ layer=LAYERS.find(L=>L.id==="infra"); } locate(); });
-document.getElementById("basebtn").addEventListener("click",()=>{ const on=baseOn===null?isPts(layer):baseOn; baseOn=!on; render(); });
+document.getElementById("basebtn").addEventListener("click",()=>{ const on=baseOn===null?(isPts(layer)||layer.id==="next"):baseOn; baseOn=!on; render(); });
 document.getElementById("baseopr").addEventListener("input",e=>{ baseOpacity=+e.target.value; tilesG.style.opacity=baseOpacity; });
-document.getElementById("zin").addEventListener("click",()=>{ if(zoom.k===1&&sel>0){ const L=labels.find(l=>l[0]===sel); if(L){zoom.cx=L[1];zoom.cy=L[2];} } zoom.k=Math.min(16,zoom.k*2); applyZoom(); render(); });
+document.getElementById("zin").addEventListener("click",()=>{ if(zoom.k===1&&sel>0){ const L=labels.find(l=>l[0]===sel); if(L){zoom.cx=L[1];zoom.cy=L[2];} } zoom.k=Math.min(64,zoom.k*2); applyZoom(); render(); });
 document.getElementById("zoutb").addEventListener("click",()=>{ zoom.k=Math.max(1,zoom.k/2); if(zoom.k===1){zoom.cx=W/2;zoom.cy=H/2;} applyZoom(); render(); });
 document.getElementById("zoomout").addEventListener("click",()=>{ zoom.k=1; zoom.cx=W/2; zoom.cy=H/2; applyZoom(); render(); });
 
@@ -971,12 +972,16 @@ function histPlan(items){
 const NX_R=600, NX={at:null,deps:[],stops:[],err:null,loading:false,last:0,key:""};
 const NX_TYPE={ptMetro:"U-Bahn",ptTram:"Straßenbahn",ptBusCity:"Bus",ptBusNight:"Nachtbus",ptTrainS:"S-Bahn",ptTrain:"Zug",ptBusRegion:"Regionalbus"};
 const lineCol=(n,ty)=>{ const m=/^U(\d)$/.exec(n); return m?UCOL[m[1]]:ty==="ptTram"?"#c4161c":/^N/.test(n)?"#1a2a6c":ty&&ty.startsWith("ptBus")?"#1c5fd6":"#5c6670"; };
-function showNextChip(){ const c=document.getElementById("layer-next"); if(c) c.hidden=!me; }
+function showNextChip(){ const c=document.getElementById("layer-next"); if(c) c.hidden=false; }
+/* die 3 nächstgelegenen Haltestellen (gleichnamige Haltepunkte, z. B. beide Bahnsteige, zählen als eine) */
+const NX_N=3, NX_PER_LINE=2;
 function nearStops(){
   if(!HS||!me) return [];
-  return Object.entries(HS).map(([id,h])=>({id,lon:h[0],lat:h[1],name:h[2],d:distM([me.lon,me.lat],[h[0],h[1]])}))
-    .filter(s=>s.d<=NX_R).sort((a,b)=>a.d-b.d).slice(0,20);
+  const all=Object.entries(HS).map(([id,h])=>({id,lon:h[0],lat:h[1],name:h[2],d:distM([me.lon,me.lat],[h[0],h[1]])})).filter(s=>s.d<=1500).sort((a,b)=>a.d-b.d);
+  const names=[]; all.forEach(s=>{ if(!names.includes(s.name)&&names.length<NX_N) names.push(s.name); });
+  return all.filter(s=>names.includes(s.name)).slice(0,20);
 }
+const stopGroups=st=>[...st.reduce((m,s)=>{ const g=m.get(s.name)||{name:s.name,d:s.d,pts:[]}; g.d=Math.min(g.d,s.d); g.pts.push(s); return m.set(s.name,g); },new Map()).values()].sort((a,b)=>a.d-b.d);
 async function loadDepartures(force){
   if(!LIVE_URL||!me||NX.loading) return;
   const st=nearStops(), key=st.map(s=>s.id).join(",");
@@ -986,53 +991,64 @@ async function loadDepartures(force){
   try{
     const u=LIVE_URL.replace(/\/$/,"")+"/monitor?"+st.map(s=>"stopId="+s.id).join("&");
     const d=await (await fetch(u,{cache:"no-store"})).json();
-    const byId=Object.fromEntries(st.map(s=>[s.id,s])), deps=[];
+    const deps=[];
     (d.data&&d.data.monitors||[]).forEach(m=>{
-      const ls=m.locationStop.properties, sid=String(ls.attributes&&ls.attributes.rbl||""), s=byId[sid]||st.find(x=>x.name===ls.title)||{d:null};
-      (m.lines||[]).forEach(l=>(l.departures&&l.departures.departure||[]).slice(0,3).forEach(dp=>{
+      const ls=m.locationStop.properties, g=st.find(x=>x.name===ls.title)||{d:null};
+      (m.lines||[]).forEach(l=>(l.departures&&l.departures.departure||[]).slice(0,NX_PER_LINE).forEach(dp=>{
         const t=dp.departureTime||{}, cd=t.countdown; if(cd==null) return;
-        deps.push({cd,real:!!t.timeReal,time:(t.timeReal||t.timePlanned||"").slice(11,16),line:l.name,to:l.towards,type:l.type,stop:ls.title,d:s.d,acc:!!l.barrierFree});
+        deps.push({cd,real:!!t.timeReal,time:(t.timeReal||t.timePlanned||"").slice(11,16),line:l.name,to:l.towards,type:l.type,stop:ls.title,d:g.d});
       }));
     });
+    /* je Haltestelle, Linie und Richtung nur die nächsten 2 Abfahrten */
     deps.sort((a,b)=>a.cd-b.cd||a.line.localeCompare(b.line,"de",{numeric:true}));
-    NX.deps=deps; NX.err=null; const n=new Date(); NX.at=`${String(n.getHours()).padStart(2,"0")}:${String(n.getMinutes()).padStart(2,"0")}`;
+    const cnt={}; NX.deps=deps.filter(x=>{ const k=x.stop+"|"+x.line+"|"+x.to; cnt[k]=(cnt[k]||0)+1; return cnt[k]<=NX_PER_LINE; });
+    NX.err=null; const n=new Date(); NX.at=`${String(n.getHours()).padStart(2,"0")}:${String(n.getMinutes()).padStart(2,"0")}`;
   }catch(e){ NX.err="Abfahrten konnten gerade nicht geladen werden."; }
   NX.loading=false; NX.last=Date.now(); if(layer.id==="next") render();
 }
-let nxStop=null;
+let nxStop=null, nxGeoTried=false;
 function renderNext(bg){
   for(let b=1;b<=23;b++){ paths[b].setAttribute("fill",bg); paths[b].classList.remove("sel"); labelEls[b].textContent=""; }
   document.getElementById("ramp").style.background="none"; document.getElementById("ticks").innerHTML="";
   document.getElementById("layernote").textContent="Abfahrtszeiten in Echtzeit, wo die Wiener Linien sie melden, sonst laut Fahrplan (mit * markiert). Entfernungen in Luftlinie.";
-  const det=document.getElementById("detail");
-  document.getElementById("mappick").innerHTML="";
-  if(!me){ det.innerHTML=`<h2>Nächstes Öffi</h2><p class="note">Tippe oben auf „Mein Standort“, dann erscheinen die Haltestellen in deiner Nähe.</p>`; return; }
-  if(!HS){ loadStops().then(()=>render()).catch(()=>{}); det.innerHTML=`<h2>Nächstes Öffi</h2><p class="note">Haltestellen werden geladen …</p>`; return; }
+  const det=document.getElementById("detail"), box=document.getElementById("mappick");
+  det.innerHTML=`<h2>Nächstes Öffi</h2><p class="note">Die Abfahrten stehen direkt unter der Karte.</p>`;
+  box.innerHTML="";
+  if(!me){
+    box.innerHTML=`<div class="nxbox"><p class="note" id="nxmsg">Standort wird ermittelt …</p></div>`;
+    if(!nxGeoTried&&navigator.geolocation){ nxGeoTried=true;
+      navigator.geolocation.getCurrentPosition(p=>{ const m={lat:p.coords.latitude,lon:p.coords.longitude,acc:p.coords.accuracy}, [x,y]=px([m.lon,m.lat]);
+        if(x<-20||x>W+20||y<-20||y>H+20){ nxNoGeo("Du bist gerade außerhalb von Wien."); return; } me=m; nxGeoTried=false; render(); },
+        ()=>{ nxGeoTried=false; nxNoGeo(); },{enableHighAccuracy:true,timeout:15000,maximumAge:60000});
+    } else if(!navigator.geolocation) nxNoGeo();
+    return;
+  }
+  if(!HS){ loadStops().then(()=>render()).catch(()=>{}); box.innerHTML=`<div class="nxbox"><p class="note">Haltestellen werden geladen …</p></div>`; return; }
   if(!PT){ loadPoints().then(()=>render()).catch(()=>{}); }
   drawOrient(true);
-  if(!NX.zoomed){ const [x,y]=px([me.lon,me.lat]); zoom.k=14; zoom.cx=x; zoom.cy=y; applyZoom(); NX.zoomed=true; }
+  const st=NX.stops.length?NX.stops:nearStops(), groups=stopGroups(st);
+  if(!NX.zoomed){ /* auf Standort und die 3 Haltestellen einpassen, mindestens ca. 500 m Ausschnitt */
+    const pts=[px([me.lon,me.lat]),...st.map(s=>px([s.lon,s.lat]))], xs=pts.map(p=>p[0]), ys=pts.map(p=>p[1]);
+    const cx=(Math.min(...xs)+Math.max(...xs))/2, cy=(Math.min(...ys)+Math.max(...ys))/2;
+    const span=Math.max(Math.max(...xs)-Math.min(...xs), (Math.max(...ys)-Math.min(...ys))*(W/H), 500/48)*1.5;
+    zoom.k=Math.max(8,Math.min(64,(W+8)/span)); zoom.cx=cx; zoom.cy=cy; applyZoom(); NX.zoomed=true; }
   loadDepartures(false);
-  const st=NX.stops.length?NX.stops:nearStops(), u=mapUnitsPerPx(), r=5*u; NX.boxes=[];
-  const names=[...new Map(st.map(s=>[s.name,s])).values()];
+  const u=mapUnitsPerPx(), r=6*u;
   overlay.removeAttribute("fill"); overlay.removeAttribute("stroke");
-  overlay.innerHTML=st.map(s=>{ const [x,y]=px([s.lon,s.lat]); const on=nxStop===s.name; return `<circle data-nx="${esc(s.name)}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(on?r*1.5:r).toFixed(2)}" style="fill:${on?"var(--ink)":"#6e7d7a"};stroke:#fff;stroke-width:${(1.5*u).toFixed(2)};pointer-events:all;cursor:pointer"><title>${esc(s.name)}</title></circle>`; }).join("")
-    +names.filter(s=>{ /* Beschriftung nur, wo sie nicht mit einer anderen überlappt */
-        const [x,y]=px([s.lon,s.lat]), w=s.name.length*6.2*u, h=13*u, bx=[x+6*u,y-8*u,x+6*u+w,y-8*u+h];
-        if((NX.boxes||[]).some(o=>!(bx[2]<o[0]||bx[0]>o[2]||bx[3]<o[1]||bx[1]>o[3]))) return false; (NX.boxes=NX.boxes||[]).push(bx); return true; })
-      .map(s=>{ const [x,y]=px([s.lon,s.lat]); return `<text x="${(x+7*u).toFixed(1)}" y="${(y+4*u).toFixed(1)}" class="stat" style="font-size:${(11*u).toFixed(2)}px;stroke-width:${(3*u).toFixed(2)}px">${esc(s.name)}</text>`; }).join("");
-  const deps=NX.deps.filter(d=>!nxStop||d.stop===nxStop).slice(0,40);
+  overlay.innerHTML=st.map(s=>{ const [x,y]=px([s.lon,s.lat]); const on=nxStop===s.name; return `<circle data-nx="${esc(s.name)}" cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${(on?r*1.4:r).toFixed(3)}" style="fill:${on?"var(--ink)":"#6e7d7a"};stroke:#fff;stroke-width:${(2*u).toFixed(3)};pointer-events:all;cursor:pointer"><title>${esc(s.name)}</title></circle>`; }).join("")
+    +groups.map(g=>{ const s=g.pts[0], [x,y]=px([s.lon,s.lat]); return `<text x="${(x+9*u).toFixed(2)}" y="${(y+4*u).toFixed(2)}" class="stat" style="font-size:${(13*u).toFixed(3)}px;stroke-width:${(3.5*u).toFixed(3)}px;font-weight:600">${esc(g.name)}</text>`; }).join("")
+    +(()=>{ const [x,y]=px([me.lon,me.lat]); return `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${(7*u).toFixed(3)}" style="fill:#1c7ed6;stroke:#fff;stroke-width:${(2.5*u).toFixed(3)}"></circle>`; })();
+  const deps=NX.deps.filter(d=>!nxStop||d.stop===nxStop);
   const row=d=>`<li class="nxrow"><span class="nxcd">${d.cd<=0?"jetzt":d.cd+" min"}${d.real?"":"*"}</span><span class="nxline" style="background:${lineCol(d.line,d.type)}">${esc(d.line)}</span><span class="nxto">${esc(d.to)}<small>${esc(d.stop)}${d.d!=null?" · "+fmtDist(d.d):""}${d.time?" · "+d.time:""}</small></span></li>`;
-  const box=document.getElementById("mappick");
-  det.innerHTML=`<h2>Nächstes Öffi</h2><p class="note">Die Abfahrten stehen direkt unter der Karte.</p>`;
   box.innerHTML=`<div class="nxbox"><h3 style="margin:6px 0 2px">Nächste Abfahrten</h3>
-    <p class="sub">${names.length?`${names.length} Haltestelle${names.length>1?"n":""} im Umkreis von ${NX_R} m`:`Keine Haltestelle im Umkreis von ${NX_R} m`}${nxStop?` · gefiltert: <b>${esc(nxStop)}</b> <button class="wien" id="nxall">alle zeigen</button>`:""}</p>
     ${NX.err?`<p class="note">${NX.err}</p>`:""}
-    ${names.length?`<div class="nxstops">${names.map(s=>`<button class="sub" data-nxs="${esc(s.name)}" aria-pressed="${nxStop===s.name}" style="--pc:#6e7d7a">${esc(s.name)} <small>${fmtDist(s.d)}</small></button>`).join("")}</div>`:""}
-    ${deps.length?`<ul class="flist nxlist">${deps.map(row).join("")}</ul>`:(NX.loading||!NX.at)&&names.length?`<p class="note">Abfahrten werden geladen …</p>`:names.length?`<p class="note">Gerade keine Abfahrten gemeldet.</p>`:""}</div>`;
+    ${groups.length?`<div class="nxstops">${groups.map(g=>`<button class="sub" data-nxs="${esc(g.name)}" aria-pressed="${nxStop===g.name}" style="--pc:#6e7d7a">${esc(g.name)} <small>${fmtDist(g.d)}</small></button>`).join("")}</div>`:`<p class="note">Keine Haltestelle in der Nähe.</p>`}
+    ${deps.length?`<ul class="flist nxlist">${deps.map(row).join("")}</ul>`:(NX.loading||!NX.at)&&groups.length?`<p class="note">Abfahrten werden geladen …</p>`:groups.length?`<p class="note">Gerade keine Abfahrten gemeldet.</p>`:""}
+    <p class="note" style="margin:6px 0 0">Je Linie und Richtung die nächsten ${NX_PER_LINE} Abfahrten. Haltestelle antippen zum Filtern.</p></div>`;
   box.querySelectorAll("[data-nxs]").forEach(b=>b.onclick=()=>{ nxStop=nxStop===b.dataset.nxs?null:b.dataset.nxs; render(); });
-  const all=document.getElementById("nxall"); if(all) all.onclick=()=>{ nxStop=null; render(); };
 }
-svg.addEventListener("click",e=>{ const el=e.target.closest&&e.target.closest("[data-nx]"); if(!el||layer.id!=="next") return; e.stopPropagation(); nxStop=el.dataset.nx; render();
+function nxNoGeo(extra){ const el=document.getElementById("nxmsg"); if(el&&layer.id==="next") el.textContent="Dein Standort kann aktuell nicht abgerufen werden."+(extra?" "+extra:""); }
+svg.addEventListener("click",e=>{ const el=e.target.closest&&e.target.closest("[data-nx]"); if(!el||layer.id!=="next") return; e.stopPropagation(); nxStop=nxStop===el.dataset.nx?null:el.dataset.nx; render();
   document.getElementById("mappick").scrollIntoView({block:"nearest",behavior:"smooth"}); },true);
 setInterval(()=>{ if(layer.id==="next"&&!document.hidden) loadDepartures(false); },10000);
 
@@ -1080,7 +1096,7 @@ function numHint(){
 function updateTitle(){
   const nh=document.getElementById("numhint"); if(nh) nh.textContent=numHint();
   document.getElementById("maptitle").textContent=MAP_TITLE[layer.id]||layer.label;
-  if(layer.id==="next"){ document.getElementById("mapsub").textContent=me?`im Umkreis von ${NX_R} m · Echtzeit`:"Standort nötig"; return; }
+  if(layer.id==="next"){ document.getElementById("mapsub").textContent=me?"die 3 nächsten Haltestellen · Echtzeit":"Standort nötig"; return; }
   if(layer.special){ document.getElementById("mapsub").textContent="Siedlungen, Straßen und Legionslager"; return; }
   const s=subOf(layer), y=yearOf(layer), when=layer.clock?hhmm(y)+" Uhr":(layer.fund||layer.live||isPts(layer))?"aktueller Stand":y;
   document.getElementById("mapsub").textContent=[layer.subs.length>1&&s.id!=="all"?s.label:(layer.subs.length>1?"Alle":""),when].filter(Boolean).join(" · ");
@@ -1391,7 +1407,7 @@ document.querySelectorAll(".themesw button").forEach(b=>b.addEventListener("clic
 document.getElementById("credit-foot").innerHTML=creditHtml();
 const pointers=new Map(); let drag=null, moved=false, tileTimer=null;
 function mapUnitsPerPx(){ const vb=svg.getAttribute("viewBox").split(" ").map(Number); return vb[2]/(svg.clientWidth||vb[2]); }
-function scheduleTiles(){ clearTimeout(tileTimer); tileTimer=setTimeout(()=>{ try{drawOrient(isPts(layer));drawTiles();if(!layer.special){drawBars(subOf(layer),yearOf(layer));drawWl(subOf(layer));drawFund(subOf(layer));}}catch(e){} },120); }
+function scheduleTiles(){ clearTimeout(tileTimer); tileTimer=setTimeout(()=>{ if(layer.id==="next"){ try{render();}catch(e){} return; } try{drawOrient(isPts(layer));drawTiles();if(!layer.special){drawBars(subOf(layer),yearOf(layer));drawWl(subOf(layer));drawFund(subOf(layer));}}catch(e){} },120); }
 svg.addEventListener("pointerdown",e=>{
   pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
   if(zoom.k>1||pointers.size===2){ drag={cx:zoom.cx,cy:zoom.cy,x:e.clientX,y:e.clientY,k:zoom.k,dist:null}; moved=false; }
@@ -1403,7 +1419,7 @@ svg.addEventListener("pointermove",e=>{
   const u=mapUnitsPerPx();
   if(pointers.size>=2&&drag.dist){
     const [a,b]=[...pointers.values()], d=Math.hypot(a.x-b.x,a.y-b.y);
-    zoom.k=Math.max(1,Math.min(32,drag.k*d/drag.dist)); moved=true;
+    zoom.k=Math.max(1,Math.min(64,drag.k*d/drag.dist)); moved=true;
   } else {
     const dx=e.clientX-drag.x, dy=e.clientY-drag.y;
     if(Math.abs(dx)+Math.abs(dy)>6) moved=true;
@@ -1448,7 +1464,7 @@ LGROUPS.concat([["Weitere","#7f8c87",LAYERS.map(L=>L.id).filter(id=>!inGroup.has
   });
   lc.appendChild(g);
 });
-showNextChip(); if(layer.id==="next"&&!me){ layer=LAYERS.find(L=>L.id==="infra"); state.infra.sub="defi"; }
+showNextChip();
 /* Standort schon freigegeben (frühere Erlaubnis): still im Hintergrund holen, ohne die Karte zu verschieben, damit „Nächstes Öffi“ gleich erscheint */
 function quietLocate(){
   if(!navigator.geolocation) return;
