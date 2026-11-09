@@ -57,10 +57,10 @@ def clean(v):
 # Punkt-Datensätze: Schlüssel, Layername, Feld für die Beschriftung (oder None), Ebene
 
 def taxi_zeit(z):
-    """Zeitraum der Stadt Wien lesbar machen; ohne Angabe gilt der Standplatz laut Daten ohne Zeitbeschränkung."""
+    """Zeitraum der Stadt Wien lesbar machen; ohne Angabe gilt der Standplatz laut Daten ohne Zeitangabe."""
     z = clean(z)
     if not z:
-        return "keine Zeitbeschränkung angegeben"
+        return ""
     z = z.replace("(werkt.)", "werktags")
     z = re.sub(r"\bv\.\s*(?=\d)", "", z)
     z = re.sub(r"\b(\d{1,2}(?:[:.]\d\d)?)\s*[-–]\s*(\d{1,2}(?:[:.]\d\d)?)\s*h\b", r"\1–\2 Uhr", z)
@@ -69,7 +69,7 @@ def taxi_zeit(z):
     z = re.sub(r"(?<=\.)werktags", " werktags", z)
     z = re.sub(r"\s*-\s*", "–", z)
     z = re.sub(r"\bv\.\s*(?=\d)", "", z)
-    return "nur " + z
+    return z
 
 POINTS = [
     ("altstoff", "ALTSTOFFSAMMLUNGOGD", lambda p: " ".join(filter(None, [clean(p.get("STRASSE")), clean(p.get("ONR"))]))),
