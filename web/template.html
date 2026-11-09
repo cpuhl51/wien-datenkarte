@@ -82,7 +82,10 @@ h1{font-family:var(--display);font-weight:800;font-size:clamp(28px,5vw,44px);lin
 .pick a.wien{text-decoration:none;display:inline-flex;align-items:center}
 .mapbox .yearbar{margin-top:12px}
 .mapbox .lgroups{margin-top:16px}
-.nxlist .nxrow{display:grid;grid-template-columns:4.2em 3.2em 1fr;gap:8px;align-items:center}
+.nxlist .nxrow{display:grid;grid-template-columns:4.2em 5em 1fr;gap:8px;align-items:center;padding-left:6px}
+.nxl{display:grid;grid-template-columns:.9em 1fr .9em;align-items:center;gap:2px}
+.nxtri{font-size:11px;text-align:center}
+.nxdot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:0}
 .nxcd{font:600 14px var(--mono);text-align:right}
 .nxline{color:#fff;font:700 13px var(--body);text-align:center;border-radius:4px;padding:2px 0}
 .nxto{display:flex;flex-direction:column;line-height:1.25}
@@ -975,13 +978,30 @@ const lineCol=(n,ty)=>{ const m=/^U(\d)$/.exec(n); return m?UCOL[m[1]]:ty==="ptT
 function showNextChip(){ const c=document.getElementById("layer-next"); if(c) c.hidden=false; }
 /* die 3 nächstgelegenen Haltestellen (gleichnamige Haltepunkte, z. B. beide Bahnsteige, zählen als eine) */
 const NX_N=3, NX_PER_LINE=2;
+const nxName = n => String(n||"").replace(/\s+/g," ").trim();
+const NX_COL=["#e8590c","#2f9e44","#9c36b5","#1098ad"];
 function nearStops(){
   if(!HS||!me) return [];
-  const all=Object.entries(HS).map(([id,h])=>({id,lon:h[0],lat:h[1],name:h[2],d:distM([me.lon,me.lat],[h[0],h[1]])})).filter(s=>s.d<=1500).sort((a,b)=>a.d-b.d);
+  const all=Object.entries(HS).map(([id,h])=>({id,lon:h[0],lat:h[1],name:nxName(h[2]),d:distM([me.lon,me.lat],[h[0],h[1]])})).filter(s=>s.d<=1500).sort((a,b)=>a.d-b.d);
   const names=[]; all.forEach(s=>{ if(!names.includes(s.name)&&names.length<NX_N) names.push(s.name); });
-  return all.filter(s=>names.includes(s.name)).slice(0,20);
+  let res=all.filter(s=>names.includes(s.name));
+  /* immer auch die nächste U-Bahn-Station, falls keine dabei ist */
+  const ust=PT&&PT.orient&&PT.orient.stat||[];
+  const isU=n=>ust.some(u=>normSt(u[2])===normSt(n));
+  if(ust.length&&!names.some(isU)){
+    const u=ust.map(u=>[distM([me.lon,me.lat],[u[0],u[1]]),u]).sort((a,b)=>a[0]-b[0])[0];
+    if(u){ const pts=Object.entries(HS).map(([id,h])=>({id,lon:h[0],lat:h[1],name:nxName(h[2]),d:distM([me.lon,me.lat],[h[0],h[1]])}))
+        .filter(s=>normSt(s.name)===normSt(u[1][2])&&distM([u[1][0],u[1][1]],[s.lon,s.lat])<400);
+      res=res.slice(0,16).concat(pts.slice(0,4)); }
+  }
+  return res.slice(0,20);
 }
-const stopGroups=st=>[...st.reduce((m,s)=>{ const g=m.get(s.name)||{name:s.name,d:s.d,pts:[]}; g.d=Math.min(g.d,s.d); g.pts.push(s); return m.set(s.name,g); },new Map()).values()].sort((a,b)=>a.d-b.d);
+function stopGroups(st){
+  const ust=PT&&PT.orient&&PT.orient.stat||[];
+  const gs=[...st.reduce((m,s)=>{ const g=m.get(s.name)||{name:s.name,d:s.d,pts:[]}; g.d=Math.min(g.d,s.d); g.pts.push(s); return m.set(s.name,g); },new Map()).values()].sort((a,b)=>a.d-b.d);
+  gs.forEach((g,i)=>{ g.col=NX_COL[i%NX_COL.length]; g.u=ust.some(u=>normSt(u[2])===normSt(g.name)); });
+  return gs;
+}
 async function loadDepartures(force){
   if(!LIVE_URL||!me||NX.loading) return;
   const st=nearStops(), key=st.map(s=>s.id).join(",");
@@ -993,10 +1013,10 @@ async function loadDepartures(force){
     const d=await (await fetch(u,{cache:"no-store"})).json();
     const deps=[];
     (d.data&&d.data.monitors||[]).forEach(m=>{
-      const ls=m.locationStop.properties, g=st.find(x=>x.name===ls.title)||{d:null};
+      const ls=m.locationStop.properties, g=st.find(x=>x.name===nxName(ls.title))||{d:null};
       (m.lines||[]).forEach(l=>(l.departures&&l.departures.departure||[]).slice(0,NX_PER_LINE).forEach(dp=>{
         const t=dp.departureTime||{}, cd=t.countdown; if(cd==null) return;
-        deps.push({cd,real:!!t.timeReal,time:(t.timeReal||t.timePlanned||"").slice(11,16),line:l.name,to:l.towards,type:l.type,stop:ls.title,d:g.d});
+        deps.push({cd,real:!!t.timeReal,time:(t.timeReal||t.timePlanned||"").slice(11,16),line:l.name,to:l.towards,type:l.type,stop:nxName(ls.title),d:g.d});
       }));
     });
     /* je Haltestelle, Linie und Richtung nur die nächsten 2 Abfahrten */
@@ -1035,16 +1055,22 @@ function renderNext(bg){
   loadDepartures(false);
   const u=mapUnitsPerPx(), r=6*u;
   overlay.removeAttribute("fill"); overlay.removeAttribute("stroke");
-  overlay.innerHTML=st.map(s=>{ const [x,y]=px([s.lon,s.lat]); const on=nxStop===s.name; return `<circle data-nx="${esc(s.name)}" cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${(on?r*1.4:r).toFixed(3)}" style="fill:${on?"var(--ink)":"#6e7d7a"};stroke:#fff;stroke-width:${(2*u).toFixed(3)};pointer-events:all;cursor:pointer"><title>${esc(s.name)}</title></circle>`; }).join("")
-    +groups.map(g=>{ const s=g.pts[0], [x,y]=px([s.lon,s.lat]); return `<text x="${(x+9*u).toFixed(2)}" y="${(y+4*u).toFixed(2)}" class="stat" style="font-size:${(13*u).toFixed(3)}px;stroke-width:${(3.5*u).toFixed(3)}px;font-weight:600">${esc(g.name)}</text>`; }).join("")
+  const gcol=Object.fromEntries(groups.map(g=>[g.name,g.col]));
+  overlay.innerHTML=st.map(s=>{ const [x,y]=px([s.lon,s.lat]); const on=nxStop===s.name; return `<circle data-nx="${esc(s.name)}" cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${(on?r*1.3:r).toFixed(3)}" style="fill:${gcol[s.name]||"#6e7d7a"};stroke:${on?"var(--ink)":"#fff"};stroke-width:${(2*u).toFixed(3)};pointer-events:all;cursor:pointer"><title>${esc(s.name)}</title></circle>`; }).join("")
+    +groups.map(g=>{ const xs=g.pts.map(s=>px([s.lon,s.lat])), x=Math.max(...xs.map(p=>p[0])), y=xs.reduce((a,p)=>a+p[1],0)/xs.length;
+      return `<text x="${(x+9*u).toFixed(2)}" y="${(y+4.5*u).toFixed(2)}" class="stat" style="fill:${g.col};font-size:${(13*u).toFixed(3)}px;stroke-width:${(4*u).toFixed(3)}px;font-weight:700">${esc(g.name)}${g.u?" (U)":""}</text>`; }).join("")
     +(()=>{ const [x,y]=px([me.lon,me.lat]); return `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${(7*u).toFixed(3)}" style="fill:#1c7ed6;stroke:#fff;stroke-width:${(2.5*u).toFixed(3)}"></circle>`; })();
   const deps=NX.deps.filter(d=>!nxStop||d.stop===nxStop);
-  const row=d=>`<li class="nxrow"><span class="nxcd">${d.cd<=0?"jetzt":d.cd+" min"}${d.real?"":"*"}</span><span class="nxline" style="background:${lineCol(d.line,d.type)}">${esc(d.line)}</span><span class="nxto">${esc(d.to)}<small>${esc(d.stop)}${d.d!=null?" · "+fmtDist(d.d):""}${d.time?" · "+d.time:""}</small></span></li>`;
+  /* Richtung je Linie: erste Richtung (alphabetisch) ◀ links, zweite ▶ rechts */
+  const dirs={}; NX.deps.forEach(d=>{ (dirs[d.line]=dirs[d.line]||new Set()).add(d.to); });
+  const dirIdx=d=>[...dirs[d.line]].sort((a,b)=>a.localeCompare(b,"de")).indexOf(d.to);
+  const row=d=>{ const c=lineCol(d.line,d.type), i=dirIdx(d), gc=gcol[d.stop]||"#6e7d7a";
+    return `<li class="nxrow" style="border-left:4px solid ${gc}"><span class="nxcd">${d.cd<=0?"jetzt":d.cd+" min"}${d.real?"":"*"}</span><span class="nxl"><b class="nxtri" style="color:${c}">${i===0?"◀":""}</b><span class="nxline" style="background:${c}">${esc(d.line)}</span><b class="nxtri" style="color:${c}">${i===1?"▶":""}</b></span><span class="nxto">${esc(d.to)}<small><i class="nxdot" style="background:${gc}"></i>${esc(d.stop)}${d.d!=null?" · "+fmtDist(d.d):""}${d.time?" · "+d.time:""}</small></span></li>`; };
   box.innerHTML=`<div class="nxbox"><h3 style="margin:6px 0 2px">Nächste Abfahrten</h3>
     ${NX.err?`<p class="note">${NX.err}</p>`:""}
-    ${groups.length?`<div class="nxstops">${groups.map(g=>`<button class="sub" data-nxs="${esc(g.name)}" aria-pressed="${nxStop===g.name}" style="--pc:#6e7d7a">${esc(g.name)} <small>${fmtDist(g.d)}</small></button>`).join("")}</div>`:`<p class="note">Keine Haltestelle in der Nähe.</p>`}
+    ${groups.length?`<div class="nxstops">${groups.map(g=>`<button class="sub" data-nxs="${esc(g.name)}" aria-pressed="${nxStop===g.name}" style="--pc:${g.col}"><i class="nxdot" style="background:${g.col}"></i>${esc(g.name)}${g.u?" (U)":""} <small>${fmtDist(g.d)}</small></button>`).join("")}</div>`:`<p class="note">Keine Haltestelle in der Nähe.</p>`}
     ${deps.length?`<ul class="flist nxlist">${deps.map(row).join("")}</ul>`:(NX.loading||!NX.at)&&groups.length?`<p class="note">Abfahrten werden geladen …</p>`:groups.length?`<p class="note">Gerade keine Abfahrten gemeldet.</p>`:""}
-    <p class="note" style="margin:6px 0 0">Je Linie und Richtung die nächsten ${NX_PER_LINE} Abfahrten. Haltestelle antippen zum Filtern.</p></div>`;
+    <p class="note" style="margin:6px 0 0">Die nächsten ${NX_PER_LINE} Abfahrten pro Linie und Richtung. ◀ ▶ = Fahrtrichtung. Haltestelle antippen zum Filtern.</p></div>`;
   box.querySelectorAll("[data-nxs]").forEach(b=>b.onclick=()=>{ nxStop=nxStop===b.dataset.nxs?null:b.dataset.nxs; render(); });
 }
 function nxNoGeo(extra){ const el=document.getElementById("nxmsg"); if(el&&layer.id==="next") el.textContent="Dein Standort kann aktuell nicht abgerufen werden."+(extra?" "+extra:""); }
