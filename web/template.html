@@ -82,13 +82,15 @@ h1{font-family:var(--display);font-weight:800;font-size:clamp(28px,5vw,44px);lin
 .pick a.wien{text-decoration:none;display:inline-flex;align-items:center}
 .mapbox .yearbar{margin-top:12px}
 .mapbox .lgroups{margin-top:16px}
-.nxlist .nxrow{display:grid;grid-template-columns:4.2em 5em 1fr;gap:8px;align-items:center;padding-left:6px}
+.nxlist .nxrow{display:grid;grid-template-columns:4.4em 5em minmax(0,1fr);gap:8px;align-items:center;padding-left:6px}
 .nxl{display:grid;grid-template-columns:.9em 1fr .9em;align-items:center;gap:2px}
 .nxtri{font-size:11px;text-align:center}
 .nxacc{color:#1c5fd6;font-size:13px}
 .nxcool{color:#1c7ed6;font-size:13px}
 .nxdot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:0}
-.nxcd{font:600 14px var(--mono);text-align:right}
+.nxcd{font:600 14px var(--mono);text-align:right;white-space:nowrap}
+.nx1,.nxto small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nx1 .nxacc,.nx1 .nxcool{margin-right:5px}
 .nxline{color:#fff;font:700 13px var(--body);text-align:center;border-radius:4px;padding:2px 0}
 .nxto{display:flex;flex-direction:column;line-height:1.25}
 .nxto small{color:var(--muted);font-size:12px}
@@ -391,7 +393,7 @@ async function loadBikes(){
     const pts=[], cb=Array(24).fill(0), cd=Array(24).fill(0);
     si.data.stations.forEach(s=>{ const x=st[s.station_id]; if(!x||!x.is_installed) return; const b=districtOf(s.lon,s.lat);
       const nb=x.is_renting?x.num_bikes_available:0, nd=x.is_returning&&s.capacity?x.num_docks_available:null;
-      pts.push([s.lon,s.lat,b,`${s.name} · ${nb} ${nb===1?"Rad":"Räder"} frei${nd!=null?` · ${nd} ${nd===1?"Platz":"Plätze"} zum Zurückgeben`:" · Rückgabe ohne Ständer (markierte Fläche)"}`]);
+      pts.push([s.lon,s.lat,b,`${s.name} · ${nb} ${nb===1?"Rad":"Räder"} frei${nd!=null?` · ${nd} ${nd===1?"Platz":"Plätze"} zum Zurückgeben`:" · Rückgabe ohne Ständer (markierte Fläche)"}`,nb,nd,s.name]);
       if(b){ cb[b]+=nb; cd[b]+=nd||0; } cb[0]+=nb; cd[0]+=nd||0; });
     PT.points.bike={count:cb,pts}; PT.points.bikedock={count:cd,pts};
     fillPointLayers(); BK.err=null; const n=new Date(); BK.at=`${String(n.getHours()).padStart(2,"0")}:${String(n.getMinutes()).padStart(2,"0")}`;
@@ -452,7 +454,7 @@ const POINT_SETS = {
   infra:[["brunnen","Trinkbrunnen","","#1c7ed6"],["wc","Öffentliche WCs","","#a07850"],["park","Parks","","#37b24d"],["spiel","Spielplätze","","#e64980"],
          ["defi","Defibrillatoren","","#fa5252"],["polizei","Polizei","","#4dabf7"]],
   taxi:[["taxi","Taxistandplätze","Mittelpunkt des Standplatzes","#e0a800"]],
-  bike:[["bike","Freie Räder","Räder, die gerade an der Station ausgeliehen werden können","#c4161c"],["bikedock","Freie Rückgabeplätze","Freie Plätze zum Zurückgeben (nur an Stationen mit Ständern gezählt)","#2f9e44"]],
+  bike:[["bike","Freie Räder","Räder, die gerade an der Station ausgeliehen werden können","#2f9e44"],["bikedock","Freie Rückgabeplätze","Freie Plätze zum Zurückgeben (nur an Stationen mit Ständern gezählt)","#1c7ed6"]],
   dog:[["hundezone","Hundezonen","","#a07850"],["sackerl","Sackerl-Spender","Hundekotsackerl","#9aa3a7"]]
 };
 const isPts = L => !!(subOf(L)&&subOf(L).pts);
@@ -606,7 +608,7 @@ const LAYERS = [
    subs:POINT_SETS.waste.map(ptSub),note:"Anzahl je Bezirk, jeder Punkt auf der Karte ist ein Standort."},
   {id:"infra",label:"Einrichtungen",color:"#2f6f8f",src:SRC.pts,points:true,live:true,stand:()=>`Standorte laut Stadt Wien, abgerufen ${ABRUF}`,
    subs:POINT_SETS.infra.map(ptSub),note:"Anzahl je Bezirk, jeder Punkt auf der Karte ist ein Standort."},
-  {id:"bike",label:"Leihräder",color:"#c4161c",src:"WienMobil Rad – nextbike GBFS-Echtzeitdaten (CC0)",points:true,live:true,
+  {id:"bike",label:"Leihräder",color:"#2f9e44",src:"WienMobil Rad – nextbike GBFS-Echtzeitdaten (CC0)",points:true,live:true,
    stand:()=>BK.at?`Echtzeit, abgerufen ${BK.at} Uhr · jede Minute neu`:"Echtzeit von WienMobil Rad",
    subs:POINT_SETS.bike.map(ptSub).map(s=>(s.src="WienMobil Rad – nextbike GBFS-Echtzeitdaten (CC0)",s)),
    note:"Zurückgeben nur an WienMobil-Stationen – abseits davon verrechnet WienMobil Rad 20 € Servicegebühr. Ist eine Station voll, zeigt die nextbike-App Stationen in der Nähe."},
@@ -804,9 +806,12 @@ function navUrl(p){ return `https://www.google.com/maps/dir/?api=1&destination=$
 function pickCard(s){
   if(!picked||picked.key!==s.pts) return "";
   const p=picked.p, d=me?distM([me.lon,me.lat],[p[0],p[1]]):null;
-  return `<div class="pick" id="pick"><div class="pk-h"><b class="sw" style="background:${s.dot}"></b>${esc(s.label)}${p[2]?` · ${p[2]}. ${NAMES[p[2]]}`:""}</div>
-    <div class="pk-a">${p[3]?esc(p[3]):"Keine Adresse in den Daten der Stadt, nur die Lage."}</div>
-    <div class="pk-m">${d!=null?`${fmtDist(d)} Luftlinie von deinem Standort · `:""}${p[1].toFixed(5)}, ${p[0].toFixed(5)}</div>
+  const bk=BIKE_COL[s.pts]&&p[6]!=null, pl=(n,a,b)=>`${n} ${n===1?a:b}`;
+  const head=!bk?esc(s.label):s.pts==="bike"?pl(p[4],"Rad frei","Räder frei"):p[5]==null?"Rückgabe ohne Ständer":pl(p[5],"Platz frei","Plätze frei");
+  const body=!bk?(p[3]?esc(p[3]):"Keine Adresse in den Daten der Stadt, nur die Lage."):esc(p[6])+" · "+(s.pts==="bike"?(p[5]==null?"Rückgabe auf markierter Fläche":pl(p[5],"Platz","Plätze")+" zum Zurückgeben"):pl(p[4],"Rad","Räder")+" zum Ausleihen");
+  return `<div class="pick" id="pick"><div class="pk-h"><b class="sw" style="background:${bk?bikeFill(s.pts,p):s.dot}"></b>${head}${p[2]?` · ${p[2]}. ${NAMES[p[2]]}`:""}</div>
+    <div class="pk-a">${body}</div>
+    ${d!=null?`<div class="pk-m">${fmtDist(d)} Luftlinie von deinem Standort</div>`:""}
     <div class="pk-b"><a class="navbtn" href="${navUrl(p)}" target="_blank" rel="noopener">Hin navigieren</a><button class="wien" id="pk-zoom">Auf Karte zeigen</button><button class="wien" id="pk-x">Schließen</button></div></div>`;
 }
 function wirePick(){
@@ -825,11 +830,15 @@ function nearList(s){
 }
 
 const overlay=document.createElementNS(NS,"g"); overlay.setAttribute("class","ovl"); svg.insertBefore(overlay, svg.querySelector("text"));
+/* Leihräder: grau = nichts frei, dunkel = nur 1–2 frei, hell = mehr als 2 */
+const BIKE_COL={bike:["#1e7a34","#5bd16f"],bikedock:["#1857a4","#6cb6f5"]};
+function bikeFill(key,p){ if(!BIKE_COL[key]) return null; const n=key==="bike"?p[4]:p[5];
+  if(n==null) return BIKE_COL[key][1]; return n<=0?"#9aa3a1":n<=2?BIKE_COL[key][0]:BIKE_COL[key][1]; }
 function drawPoints(key,c){
   overlay.innerHTML="";
   if(!PT||!PT.points[key]) return;
   const pts=PT.points[key].pts, r=(pts.length>2000?2:pts.length>500?2.6:4.5)*(zoom.k>1?2.2/zoom.k:1);
-  overlay.innerHTML=pts.map(p=>{const [x,y]=px([p[0],p[1]]);return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r}"/>`;}).join("");
+  overlay.innerHTML=pts.map(p=>{const [x,y]=px([p[0],p[1]]);const f=bikeFill(key,p);return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r}"${f?` style="fill:${f}"`:""}/>`;}).join("");
   if(picked&&picked.key===key){ const [x,y]=px([picked.p[0],picked.p[1]]); overlay.innerHTML+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r*2.6}" style="fill:none;stroke:var(--ink);stroke-width:${2/Math.max(1,zoom.k/2.2)}"></circle>`; }
   overlay.setAttribute("fill",c); overlay.setAttribute("stroke","var(--dotline)"); overlay.setAttribute("stroke-width",String((r>3?1:.6)/Math.max(1,zoom.k/2.2)));
 }
@@ -1106,8 +1115,9 @@ function renderNext(bg){
   /* Richtung je Linie: erste Richtung (alphabetisch) ◀ links, zweite ▶ rechts */
   const dirs={}; NX.deps.forEach(d=>{ (dirs[d.line]=dirs[d.line]||new Set()).add(d.to); });
   const dirIdx=d=>[...dirs[d.line]].sort((a,b)=>a.localeCompare(b,"de")).indexOf(d.to);
+  const cdTxt=d=>{ if(d.cd<=0) return "jetzt"+(d.real?"":"*"); const s=d.cd+" min"+(d.real?"":"*"); return s.length>6?d.cd+" m"+(d.real?"":"*"):s; };
   const row=d=>{ const c=lineCol(d.line,d.type), i=dirIdx(d), gc=gcol[d.stop]||"#6e7d7a";
-    return `<li class="nxrow" style="border-left:4px solid ${gc}"><span class="nxcd">${d.cd<=0?"jetzt":d.cd+" min"}${d.real?"":"*"}</span><span class="nxl"><b class="nxtri" style="color:${c}">${i===0?"◀":""}</b><span class="nxline" style="background:${c}">${esc(d.line)}</span><b class="nxtri" style="color:${c}">${i===1?"▶":""}</b></span><span class="nxto">${esc(d.to)}${d.acc?` <span class="nxacc" title="barrierefrei (Rollstuhl)">♿</span>`:""}${d.cool?` <span class="nxcool" title="klimatisiert">❄</span>`:""}<small><i class="nxdot" style="background:${gc}"></i>${esc(d.stop)}${d.d!=null?" · "+fmtDist(d.d):""}${d.time?" · "+d.time:""}</small></span></li>`; };
+    return `<li class="nxrow" style="border-left:4px solid ${gc}"><span class="nxcd">${cdTxt(d)}</span><span class="nxl"><b class="nxtri" style="color:${c}">${i===0?"◀":""}</b><span class="nxline" style="background:${c}">${esc(d.line)}</span><b class="nxtri" style="color:${c}">${i===1?"▶":""}</b></span><span class="nxto"><span class="nx1"><i class="nxdot" style="background:${gc}"></i>${d.acc?`<span class="nxacc" title="barrierefrei (Rollstuhl)">♿</span>`:""}${d.cool?`<span class="nxcool" title="klimatisiert">❄</span>`:""}${esc(d.to)}</span><small>${esc(d.stop)}${d.d!=null?" · "+fmtDist(d.d):""}${d.time?" · "+d.time:""}</small></span></li>`; };
   box.innerHTML=`<div class="nxbox"><h3 style="margin:6px 0 2px">Nächste Abfahrten</h3>
     ${NX.err?`<p class="note">${NX.err}</p>`:""}
     ${groups.length?`<div class="nxstops">${groups.map(g=>`<button class="sub" data-nxs="${esc(g.name)}" aria-pressed="${nxStop===g.name}" style="--pc:${g.col}"><i class="nxdot" style="background:${g.col}"></i>${esc(g.name)}${g.u?" (U)":""} <small>${fmtDist(g.d)}</small></button>`).join("")}<button class="wien" id="nxmore">${nxCount===3?"3 weitere anzeigen":"weniger anzeigen"}</button></div>`:`<p class="note">Keine Haltestelle in der Nähe.</p>`}
@@ -1204,7 +1214,7 @@ function render2(){
     document.getElementById("wlleg").innerHTML=Object.entries(FUND_KIND).filter(([k])=>it.some(i=>fkOf(i)===k)).map(([k,[l]])=>`<span class="lg"><img src="icons/fund/${k}.png${IV}" alt="" style="width:18px;height:18px;outline:none">${l}</span>`).join("")
       +`<span class="lg" style="color:var(--muted)">Symbol = ungefähre Lage (Mitte der Straße bzw. des Parks) · ${n} von ${it.length} Meldungen verortet · antippen für Details</span>`;
   } else document.getElementById("wlleg").innerHTML="";
-  const dotNote=isPts(layer)?`● = ein Standort (${s.label}). Bezirksfarbe und Zahl = Anzahl im Bezirk. `:"";
+  const dotNote=layer.id==="bike"?`● = eine Station: hell = mehr als 2 ${s.id==="bike"?"Räder":"Plätze"} frei, dunkel = nur 1–2, grau = keine. Bezirksfarbe und Zahl = Summe im Bezirk. `:isPts(layer)?`● = ein Standort (${s.label}). Bezirksfarbe und Zahl = Anzahl im Bezirk. `:"";
   document.getElementById("layernote").textContent=dotNote+(mapThousand?"Zahlen auf der Karte in Tausend. ":"")+(s.unit.trim()==="J."?"Zahlen auf der Karte in Jahren. ":"")+[layer.note,s.note].filter(Boolean).join(" ")+(!s.bars&&!s.range&&yearsOf(s).length>1?(layer.clock?" Kartenfarben: Spannweite der Bezirke über den ganzen Tag.":" Kartenfarben: Spannweite der Bezirke über alle Jahre."):"");
   const title=layer.subs.length>1&&s.label!==layer.label?`${layer.label} · ${s.label}`:layer.label;
   document.getElementById("ranktitle").textContent=`Rangliste · ${title} · ${layer.clock?hhmm(y)+" Uhr":(layer.fund||layer.live)?"aktuell":y}`;
@@ -1521,7 +1531,7 @@ svg.addEventListener("click",e=>{
 
 const lc=document.getElementById("layers");
 const LGROUPS=[["Infrastruktur","#2f6fb0",["infra","waste"]],
-  ["Mobilität","#6e7d7a",["next","wl","fp","bike","taxi","veh","brand"]],
+  ["Mobilität","#6e7d7a",["next","fp","wl","taxi","bike","veh","brand"]],
   ["Tiere","#8a5a2b",["dog","fund"]],
   ["Demografie","#c4161c",["pop","age","cob","bir","dea","edu"]],
   ["Politik & Geschichte","#7a3db8",["vote","antik"]]];
