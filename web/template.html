@@ -1449,6 +1449,13 @@ LGROUPS.concat([["Weitere","#7f8c87",LAYERS.map(L=>L.id).filter(id=>!inGroup.has
   lc.appendChild(g);
 });
 showNextChip(); if(layer.id==="next"&&!me){ layer=LAYERS.find(L=>L.id==="infra"); state.infra.sub="defi"; }
+/* Standort schon freigegeben (frühere Erlaubnis): still im Hintergrund holen, ohne die Karte zu verschieben, damit „Nächstes Öffi“ gleich erscheint */
+function quietLocate(){
+  if(!navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(p=>{ const m={lat:p.coords.latitude,lon:p.coords.longitude,acc:p.coords.accuracy}, [x,y]=px([m.lon,m.lat]);
+    if(x<-20||x>W+20||y<-20||y>H+20) return; me=m; showNextChip(); if(layer.id==="next"||isPts(layer)) render(); },()=>{},{enableHighAccuracy:false,timeout:15000,maximumAge:120000});
+}
+try{ navigator.permissions&&navigator.permissions.query({name:"geolocation"}).then(s=>{ if(s.state==="granted") quietLocate(); s.onchange=()=>{ if(s.state==="granted") quietLocate(); }; }).catch(()=>{}); }catch(e){}
 /* Live-Abfrage: gleiche Regeln wie im Datenskript (nur gültige Meldungen, Bezirk über Haltestellen) */
 async function refreshLive(){
   if(!LIVE_URL || !WL.stopb) return;
