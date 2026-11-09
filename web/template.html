@@ -108,10 +108,10 @@ h1{font-family:var(--display);font-weight:800;font-size:clamp(28px,5vw,44px);lin
 .chip:disabled{cursor:not-allowed;color:var(--muted);border-style:dashed;background:transparent}
 .chip:focus-visible,.sub:focus-visible,.row:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 .subs{display:flex;flex-wrap:wrap;gap:6px}
-.sub{font:600 13px var(--body);padding:5px 11px;border-radius:6px;border:2px solid var(--pc);background:transparent;color:var(--ink);cursor:pointer}
-.sub[aria-pressed="true"]{background:var(--pc);color:#fff}
+button.sub{font:600 13px var(--body);padding:5px 11px;border-radius:6px;border:2px solid var(--pc);background:transparent;color:var(--ink);cursor:pointer}
+button.sub[aria-pressed="true"]{background:var(--pc);color:#fff}
 .lgroup .subs{margin-top:9px;padding-top:9px;border-top:1px dashed color-mix(in srgb,var(--gc) 40%,transparent)}
-.sub{display:inline-flex;align-items:center;gap:6px}
+button.sub{display:inline-flex;align-items:center;gap:6px}
 .sub .sico{width:20px;height:20px;margin:-3px 0;flex:none}
 .sub .sdot{width:10px;height:10px;border-radius:50%;flex:none;box-shadow:0 0 0 1.5px #fff}
 .yearbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
@@ -237,7 +237,7 @@ svg.map.all path{stroke:var(--ink);stroke-width:.6}
 .row.ref .bar span{text-shadow:0 0 3px var(--surface),0 0 2px var(--surface)}
 .flist{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none;max-height:260px;overflow:auto}
 .flist li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:2px 10px;font-size:13px;border-bottom:1px solid var(--line);padding-bottom:5px}
-.flist .fd{font:12px var(--mono);color:var(--muted);grid-row:span 2}
+.flist .fd{font:12px var(--mono);color:var(--muted);grid-row:span 2;min-width:10ch}
 .flist .fo{color:var(--muted);font-size:12px}
 dl .exp{grid-column:1/-1;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:4px 0}
 .lbox{border-left:4px solid color-mix(in srgb,var(--lc) 30%,transparent);padding:2px 0 2px 12px;margin:12px 0}
