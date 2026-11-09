@@ -1133,7 +1133,8 @@ function render(){
 }
 let rankSplit=true;
 function render2(){
-  if(layer.id!=="next") NX.zoomed=false;
+  /* nach „Nächstes Öffi“ wieder ganz Wien zeigen */
+  if(layer.id!=="next"&&NX.zoomed){ NX.zoomed=false; zoom.k=1; zoom.cx=W/2; zoom.cy=H/2; applyZoom(); overlay.innerHTML=""; }
   if(layer.special){ renderSpecial(); return; }
   document.querySelector(".yearbar").hidden=false; document.querySelector(".rank").hidden=false;
   renderControls();
