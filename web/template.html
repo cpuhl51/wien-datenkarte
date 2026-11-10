@@ -425,6 +425,29 @@ async function loadBikes(){
 }
 setInterval(()=>{ if(layer.id==="bike"&&!document.hidden) loadBikes(); },20000);
 
+/* Verkehrshindernisse: verkehrswirksame Baustellen der Stadt Wien, direkt vom Geodatendienst (erlaubt Browser-Abfragen) */
+const BAU={at:null,last:0,loading:false,err:null};
+const BAU_URL=n=>`https://data.wien.gv.at/daten/geo?service=WFS&request=GetFeature&version=1.1.0&typeName=ogdwien:${n}&srsName=EPSG:4326&outputFormat=json`;
+async function loadBau(){
+  if(BAU.loading||!PT||Date.now()-BAU.last<600000) return;
+  BAU.loading=true;
+  try{
+    const fs=(await Promise.all(["BAUSTELLENPKTOGD","BAUSTELLENLINOGD"].map(n=>fetch(BAU_URL(n),{cache:"no-store"}).then(r=>r.json())))).flatMap(d=>d.features||[]);
+    const pts=[], cnt=Array(24).fill(0), dd=s=>String(s||"").slice(0,10);
+    fs.forEach(f=>{ const g=f.geometry, q=f.properties||{}; if(!g) return;
+      const line=g.type==="LineString"?g.coordinates:g.type==="MultiLineString"?g.coordinates.flat():null;
+      const c=line?line[Math.floor(line.length/2)]:g.coordinates; if(!c) return;
+      const b=+q.BEZIRK||districtOf(c[0],c[1]), beg=dd(q.OBJEKT_BEGINN), end=dd(q.OBJEKT_ENDE);
+      pts.push([c[0],c[1],b,`${q.BEZEICHNUNG||""} · ${q.BEHINDERUNGSART||"Baustelle"}${end?" · bis "+dmy(end):""}`,
+        q.BEHINDERUNGSART||"Baustelle",beg,end,line,q.PRESSETEXT||"",q.ANTRAGSTELLER||"",q.ANSPRECHPERSON_TEL||"",q.BEZEICHNUNG||""]);
+      if(b) cnt[b]++; cnt[0]++; });
+    PT.points.bau={count:cnt,pts}; fillPointLayers(); BAU.err=null;
+    const n=new Date(); BAU.at=`${String(n.getHours()).padStart(2,"0")}:${String(n.getMinutes()).padStart(2,"0")}`;
+  }catch(e){ BAU.err="Baustellen konnten gerade nicht geladen werden."; }
+  BAU.loading=false; BAU.last=Date.now(); if(layer.id==="bau") render();
+}
+setInterval(()=>{ if(layer.id==="bau"&&!document.hidden) loadBau(); },60000);
+
 let HS=null, HS_LOADING=null, wlPick=null, wlDrawn={c:new Set(),lines:false,off:0};
 function loadStops(){ if(HS) return Promise.resolve(HS); if(!HS_LOADING) HS_LOADING=fetch("haltestellen.json").then(r=>r.json()).then(d=>HS=d); return HS_LOADING; }
 const causeLabel = i => { const c=causeOf(i); return c==="aufzug"?"Aufzug":c==="sonst"?"Sonstiges":WL_CAUSE.find(x=>x[0]===c)[1]; };
@@ -477,6 +500,7 @@ const POINT_SETS = {
   infra:[["brunnen","Trinkbrunnen","","#1c7ed6"],["wc","Öffentliche WCs","","#a07850"],["park","Parks","","#37b24d"],["spiel","Spielplätze","","#e64980"],
          ["defi","Defibrillatoren","","#fa5252"],["polizei","Polizei","","#4dabf7"]],
   taxi:[["taxi","Taxistandplätze","","#e0a800"]],
+  bau:[["bau","Baustellen","","#e8590c"]],
   bike:[["bike","Freie Räder","Räder, die gerade an der Station ausgeliehen werden können","#2f9e44"],["bikedock","Freie Rückgabeplätze","Freie Plätze zum Zurückgeben (nur an Stationen mit Ständern gezählt)","#1c7ed6"]],
   dog:[["hundezone","Hundezonen","","#a07850"],["sackerl","Sackerl-Spender","Hundekotsackerl","#9aa3a7"]]
 };
@@ -635,6 +659,10 @@ const LAYERS = [
    stand:()=>BK.at?`Echtzeit, abgerufen ${BK.at} Uhr · jede Minute neu`:"Echtzeit von WienMobil Rad",
    subs:POINT_SETS.bike.map(ptSub).map(s=>(s.src="WienMobil Rad – nextbike GBFS-Echtzeitdaten (CC0)",s)),
    note:"Zurückgeben nur an WienMobil-Stationen – abseits davon verrechnet WienMobil Rad 20 € Servicegebühr. Ist eine Station voll, zeigt die nextbike-App Stationen in der Nähe."},
+  {id:"bau",label:"Verkehrshindernisse",color:"#e8590c",src:"Stadt Wien – verkehrswirksame Baustellen, live von data.wien.gv.at (CC BY 4.0)",points:true,live:true,
+   stand:()=>BAU.at?`Live von der Stadt Wien, abgerufen ${BAU.at} Uhr`:"Live von der Stadt Wien",
+   subs:POINT_SETS.bau.map(ptSub).map(s=>(s.src="Stadt Wien – verkehrswirksame Baustellen, live von data.wien.gv.at (CC BY 4.0)",s)),
+   note:"Baustellen mit Auswirkung auf den Verkehr laut Stadt Wien, mit Zeitraum und Art der Arbeiten. Unfälle und Staus sind nicht enthalten – dafür gibt es keine frei zugänglichen Live-Daten."},
   {id:"taxi",label:"Taxi",color:"#e0a800",src:SRC.pts,points:true,live:true,stand:()=>`Standplätze laut Stadt Wien, abgerufen ${ABRUF}`,
    subs:POINT_SETS.taxi.map(ptSub),note:""},
   {id:"next",label:"Nächstes Öffi",special:true,color:"#6e7d7a",src:"Wiener Linien – Echtzeitdaten (Open Data, CC BY 4.0)",
@@ -833,6 +861,14 @@ function pickCard(s){
   const head=!bk?esc(s.label):s.pts==="bike"?pl(p[4],"Rad frei","Räder frei"):p[5]==null?"Rückgabe ohne Ständer":pl(p[5],"Platz frei","Plätze frei");
   const body=!bk?(p[3]?esc(p[3]):"Keine Adresse in den Daten der Stadt, nur die Lage."):esc(p[6])+" · "+(s.pts==="bike"?(p[5]==null?"Rückgabe auf markierter Fläche":pl(p[5],"Platz","Plätze")+" zum Zurückgeben"):pl(p[4],"Rad","Räder")+" zum Ausleihen");
   const taxi=s.pts==="taxi";
+  if(s.pts==="bau"){ const tel=String(p[10]||"").replace(/^Tel\.?:?\s*/i,""), now=new Date().toISOString().slice(0,10);
+    return `<div class="pick" id="pick"><div class="pk-h"><img src="${CAUSE_ICON("bau")}" alt="" style="width:20px;height:20px;vertical-align:-5px;margin-right:6px">${esc(p[4])}${p[2]?` · ${NAMES[p[2]]}`:""}</div>
+    <div class="pk-a">${esc(p[11])}</div>
+    <div class="pk-m" style="font-family:var(--body)"><b>${p[5]?dmy(p[5]):"?"} – ${p[6]?dmy(p[6]):"?"}</b>${p[5]&&p[5]>now?" · beginnt erst":""}</div>
+    ${p[8]?`<div class="pk-m" style="font-family:var(--body)">${esc(p[8].replace(/([a-zäöüß])([A-ZÄÖÜ])/g,"$1 $2"))}</div>`:""}
+    ${p[9]||tel?`<div class="pk-m" style="font-family:var(--body)">Bauträger: ${esc(p[9]||"–")}${tel?` · Auskunft: <a href="tel:${esc(tel.replace(/[^+\d]/g,""))}">${esc(tel)}</a>`:""}</div>`:""}
+    ${d!=null?`<div class="pk-m">${fmtDist(d)} Luftlinie von deinem Standort</div>`:""}
+    <div class="pk-b"><button class="wien" id="pk-zoom">Auf Karte zeigen</button><button class="wien" id="pk-x">Schließen</button></div></div>`; }
   return `<div class="pick" id="pick"><div class="pk-h">${taxi?`Standplatz ${p[2]?NAMES[p[2]]:""}`:`<b class="sw" style="background:${bk?bikeFill(s.pts,p):s.dot}"></b>${head}${p[2]?` · ${p[2]}. ${NAMES[p[2]]}`:""}`}</div>
     <div class="pk-a">${body}</div>
     ${d!=null?`<div class="pk-m">${fmtDist(d)} Luftlinie von deinem Standort</div>`:""}
@@ -862,6 +898,12 @@ function drawPoints(key,c){
   overlay.innerHTML="";
   if(!PT||!PT.points[key]) return;
   const pts=PT.points[key].pts, r=(pts.length>2000?2:pts.length>500?2.6:4.5)*(zoom.k>1?2.2/zoom.k:1);
+  if(key==="bau"){ const u=mapUnitsPerPx(), zp=15*Math.min(1.7,1+(zoom.k-1)*.15)*u, on=p=>picked&&picked.key==="bau"&&picked.p===p;
+    overlay.removeAttribute("fill"); overlay.removeAttribute("stroke");
+    overlay.innerHTML=pts.filter(p=>p[7]).map(p=>`<path d="M${p[7].map(c=>px(c).map(v=>v.toFixed(1)).join(",")).join("L")}" style="fill:none;stroke:#e8590c;stroke-width:${((on(p)?6:4)*u).toFixed(2)};stroke-linecap:round;stroke-dasharray:${(5*u).toFixed(2)} ${(3*u).toFixed(2)};opacity:.9"></path>`).join("")
+      +pts.map(p=>{ const [x,y]=px([p[0],p[1]]), z=on(p)?zp*1.45:zp;
+        return `${on(p)?`<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${(z*.68).toFixed(2)}" style="fill:none;stroke:var(--ink);stroke-width:${(z*.09).toFixed(2)}"></circle>`:""}<image href="${CAUSE_ICON("bau")}" x="${(x-z/2).toFixed(2)}" y="${(y-z/2).toFixed(2)}" width="${z.toFixed(2)}" height="${z.toFixed(2)}"></image>`; }).join("");
+    return; }
   overlay.innerHTML=pts.map(p=>{const [x,y]=px([p[0],p[1]]);const f=bikeFill(key,p);return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r}"${f?` style="fill:${f}"`:""}/>`;}).join("");
   if(picked&&picked.key===key){ const [x,y]=px([picked.p[0],picked.p[1]]); overlay.innerHTML+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r*2.6}" style="fill:none;stroke:var(--ink);stroke-width:${2/Math.max(1,zoom.k/2.2)}"></circle>`; }
   overlay.setAttribute("fill",c); overlay.setAttribute("stroke","var(--dotline)"); overlay.setAttribute("stroke-width",String((r>3?1:.6)/Math.max(1,zoom.k/2.2)));
@@ -981,6 +1023,7 @@ function scaleOf(s){ if(s.range) return s.range; let lo=Infinity,hi=-Infinity; O
 function liveWhen(){
   const id=layer.id;
   if(id==="bike") return BK.at?`${BK.at} Uhr`:"";
+  if(id==="bau") return BAU.at?`${BAU.at} Uhr`:"";
   if(id==="next") return NX.at?`${NX.at} Uhr`:"";
   if(id==="wl") return WL.fetched?WL.fetched.replace(/^(\d{4})-(\d\d)-(\d\d) (\d\d:\d\d).*$/,(m,y,mo,d,t)=>{ const n=new Date(); return (+d===n.getDate()&&+mo===n.getMonth()+1?"":`${+d}.${+mo}., `)+t+" Uhr"; }):"";
   if(layer.fund) return F.fetched?dmy(F.fetched):"";
@@ -1200,7 +1243,7 @@ function renderSpecial(){
   if(!BEF) loadBefunde().then(()=>{ if(layer.id==="vin") render(); }).catch(()=>{});
 }
 const MAP_TITLE={pop:"Einwohner je Bezirk",age:"Altersstruktur der Bevölkerung",cob:"Herkunft der Bevölkerung",bir:"Geburten",dea:"Sterbefälle",edu:"Höchster Bildungsabschluss",
-  veh:"Kraftfahrzeuge",brand:"Automarken im Pkw-Bestand",dog:"Hunde in Wien",fund:"Gefundene Tiere der letzten 30 Tage",fp:"Öffis unterwegs laut Fahrplan",next:"Nächste Abfahrten in deiner Nähe",bike:"Leihräder – WienMobil Rad",taxi:"Taxistandplätze",wl:"Aktuelle Störungen der Wiener Linien",
+  veh:"Kraftfahrzeuge",brand:"Automarken im Pkw-Bestand",dog:"Hunde in Wien",fund:"Gefundene Tiere der letzten 30 Tage",fp:"Öffis unterwegs laut Fahrplan",next:"Nächste Abfahrten in deiner Nähe",bike:"Leihräder – WienMobil Rad",taxi:"Taxistandplätze",bau:"Verkehrshindernisse – Baustellen",wl:"Aktuelle Störungen der Wiener Linien",
   waste:"Müll und Altstoffsammlung",infra:"Öffentliche Einrichtungen",vote:"Gemeinderatswahl Wien",antik:"Römisches Wien – Vindobona"};
 /* Was die Zahlen in den Bezirken bedeuten – je Ebene */
 function numHint(){
@@ -1239,6 +1282,7 @@ function render2(){
   const t=v=>.12+.88*Math.max(0,Math.min(1,(v-lo)/(hi-lo||1)));
   drawOrient(isPts(layer));
   if(layer.id==="bike"&&PT) loadBikes();
+  if(layer.id==="bau"&&PT) loadBau();
   if(isPts(layer)){ if(!PT){ loadPoints().then(()=>render()).catch(()=>{document.getElementById("layernote").textContent="Standorte konnten nicht geladen werden (nur auf der veröffentlichten Seite verfügbar).";}); } else drawPoints(s.pts,s.dot||c); }
   else overlay.innerHTML="";
   drawWl(s); drawFund(s);
@@ -1257,7 +1301,7 @@ function render2(){
     document.getElementById("wlleg").innerHTML=Object.entries(FUND_KIND).filter(([k])=>it.some(i=>fkOf(i)===k)).map(([k,[l]])=>`<span class="lg"><img src="icons/fund/${k}.png${IV}" alt="" style="width:18px;height:18px;outline:none">${l}</span>`).join("")
       +`<span class="lg" style="color:var(--muted)">Symbol = ungefähre Lage (Mitte der Straße bzw. des Parks) · ${n} von ${it.length} Meldungen verortet · antippen für Details</span>`;
   } else document.getElementById("wlleg").innerHTML="";
-  const dotNote=layer.id==="bike"?`● = eine Station: hell = mehr als 2 ${s.id==="bike"?"Räder":"Plätze"} frei, dunkel = nur 1–2, grau = keine. `:isPts(layer)?`● = ein Standort, antippen für Details. `:"";
+  const dotNote=layer.id==="bau"?`Symbol = Baustelle, gestrichelte Linie = betroffener Abschnitt; antippen für Zeitraum und Details. ${BAU.err?BAU.err+" ":""}`:layer.id==="bike"?`● = eine Station: hell = mehr als 2 ${s.id==="bike"?"Räder":"Plätze"} frei, dunkel = nur 1–2, grau = keine. `:isPts(layer)?`● = ein Standort, antippen für Details. `:"";
   document.getElementById("layernote").textContent=dotNote+(mapThousand?"Zahlen auf der Karte in Tausend. ":"")+(s.unit.trim()==="J."?"Zahlen auf der Karte in Jahren. ":"")+[layer.note,s.note].filter(Boolean).join(" ")+(!s.bars&&!s.range&&yearsOf(s).length>1?(layer.clock?" Kartenfarben: Spannweite der Bezirke über den ganzen Tag.":" Kartenfarben: Spannweite der Bezirke über alle Jahre."):"");
   const title=layer.id==="taxi"?s.label:layer.subs.length>1&&s.label!==layer.label?`${layer.label} · ${s.label}`:layer.label;
   /* Taxi: neben der Zahl der Standplätze die Zahl der Stellplätze (Fahrzeuge) */
@@ -1495,6 +1539,7 @@ function renderInfo(){
     <tr><td>app.wien-live-daten.puhl.ch (GitHub Pages)</td><td>immer</td><td>Die App selbst und alle aufbereiteten Daten</td></tr>
     <tr><td>wien-stoerungen.cpuhl51.workers.dev (Cloudflare)</td><td>nur Ebene „Öffi-Störungen“</td><td>Leitet die aktuellen Störungsmeldungen der Wiener Linien weiter (Zwischenspeicher 60 Sekunden)</td></tr>
     <tr><td>mapsneu.wien.gv.at (basemap.at)</td><td>nur mit „Stadtplan“</td><td>Kacheln des Stadtplans</td></tr>
+    <tr><td>data.wien.gv.at (Geodaten der Stadt)</td><td>nur Ebene „Verkehrshindernisse“</td><td>Baustellen live</td></tr>
     <tr><td>gbfs.nextbike.net (WienMobil Rad)</td><td>nur Ebene „Leihräder“</td><td>Freie Räder und Rückgabeplätze in Echtzeit</td></tr>
     <tr><td>Google Maps</td><td>nur bei „Hin navigieren“</td><td>Routenplanung zum gewählten Ort</td></tr>
     <tr><td>Standort deines Geräts</td><td>nur bei „Mein Standort“, nach Erlaubnis</td><td>Karte zentrieren, Entfernungen</td></tr>
@@ -1603,12 +1648,14 @@ svg.addEventListener("click",e=>{
   const inv=m.inverse(), q=(window.DOMPoint?new DOMPoint(e.clientX,e.clientY):Object.assign(svg.createSVGPoint(),{x:e.clientX,y:e.clientY})).matrixTransform(inv);
   const tol=14/m.a; let best=null,bd=tol*tol;
   set.pts.forEach(p=>{ const [x,y]=px([p[0],p[1]]), dd=(x-q.x)**2+(y-q.y)**2; if(dd<bd){bd=dd;best=p;} });
+  if(s.pts==="bau") set.pts.forEach(p=>{ if(!p[7]) return; for(let i=1;i<p[7].length;i++){ const [ax,ay]=px(p[7][i-1]), [bx,by]=px(p[7][i]), vx=bx-ax, vy=by-ay, l2=vx*vx+vy*vy||1e-9;
+    const tt=Math.max(0,Math.min(1,((q.x-ax)*vx+(q.y-ay)*vy)/l2)), dx=ax+tt*vx-q.x, dy=ay+tt*vy-q.y, dd=dx*dx+dy*dy; if(dd<bd){bd=dd;best=p;} } });
   if(best){ e.stopPropagation(); pickPoint(s.pts,best); }
 },true);
 
 const lc=document.getElementById("layers");
 const LGROUPS=[["Infrastruktur","#2f6fb0",["infra","waste"]],
-  ["Mobilität","#6e7d7a",["next","fp","wl","taxi","bike","veh","brand"]],
+  ["Mobilität","#6e7d7a",["next","fp","wl","taxi","bike","veh","bau","brand"]],
   ["Tiere","#8a5a2b",["dog","fund"]],
   ["Demografie","#c4161c",["pop","age","cob","bir","dea","edu"]],
   ["Politik & Geschichte","#7a3db8",["vote","antik"]]];
