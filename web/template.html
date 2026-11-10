@@ -1275,7 +1275,7 @@ function numHint(){
 function updateTitle(){
   const nh=document.getElementById("numhint"); if(nh) nh.textContent=numHint();
   document.getElementById("maptitle").textContent=MAP_TITLE[layer.id]||layer.label;
-  if(layer.id==="next"){ document.getElementById("mapsub").textContent=me?`${NX.ngroups?NX.ngroups+" Haltestellen in der Nähe":"Haltestellen in der Nähe"} · Echtzeit`:"Standort nötig"; return; }
+  if(layer.id==="next"){ document.getElementById("mapsub").textContent=me?`${NX.ngroups?NX.ngroups+(NX.ngroups===1?" Haltestelle":" Haltestellen")+" in der Nähe":"Haltestellen in der Nähe"} · Echtzeit`:"Standort nötig"; return; }
   if(layer.special){ document.getElementById("mapsub").textContent="Siedlungen, Straßen und Legionslager"; return; }
   const s=subOf(layer), y=yearOf(layer), when=layer.clock?hhmm(y)+" Uhr":(layer.fund||layer.live||isPts(layer))?"aktueller Stand":y;
   document.getElementById("mapsub").textContent=[layer.subs.length>1&&s.id!=="all"?s.label:(layer.subs.length>1?"Alle":""),when].filter(Boolean).join(" · ");
