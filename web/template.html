@@ -1538,7 +1538,7 @@ function renderInfo(){
   <h3>Datenschutz</h3>
   <ul>
     <li><b>Kein Konto, keine Cookies, kein Tracking, keine Werbung.</b> Die App sammelt keine personenbezogenen Daten.</li>
-    <li><b>Standort:</b> Nur wenn du „Mein Standort“ antippst, fragt dein Browser um Erlaubnis. Der Standort wird ausschließlich auf deinem Gerät verwendet, um die Karte zu zentrieren und Entfernungen zu berechnen. Er wird nicht gespeichert und nirgendwohin gesendet.</li>
+    <li><b>Standort:</b> Nur wenn du „Mein Standort“ oder „Nächstes Öffi“ antippst, fragt dein Gerät um Erlaubnis. Hast du sie schon erteilt, nutzt die App den Standort auch beim Start, um nahe Haltestellen anzubieten. Der Standort wird ausschließlich auf deinem Gerät verwendet (Karte zentrieren, Entfernungen, nächste Haltestellen). Er wird nicht gespeichert und nirgendwohin gesendet – für die Abfahrtszeiten gehen nur die Nummern der Haltestellen an den Server.</li>
     <li><b>Server-Protokolle:</b> Wie bei jeder Webseite sehen die Server, von denen Inhalte geladen werden, technisch deine IP-Adresse und deinen Browsertyp. Welche das sind, steht unten. Die App selbst wertet nichts davon aus.</li>
     <li><b>Darstellung und Startansicht:</b> Deine Wahl (Auto/Hell/Dunkel, Startansicht, zuletzt gewählte Ansicht) wird nur in deinem Browser gespeichert (lokaler Speicher), nicht übertragen.</li>
     <li><b>Fotos der Fundtiere</b> stammen von der Stadt Wien und werden jede Nacht auf diese Seite kopiert, dein Gerät lädt sie nicht von wien.gv.at.</li>
@@ -1550,12 +1550,12 @@ function renderInfo(){
   <table>
     <tr><th>Was</th><th>Wann</th><th>Wozu</th></tr>
     <tr><td>app.wien-live-daten.puhl.ch (GitHub Pages)</td><td>immer</td><td>Die App selbst und alle aufbereiteten Daten</td></tr>
-    <tr><td>wien-stoerungen.cpuhl51.workers.dev (Cloudflare)</td><td>nur Ebene „Öffi-Störungen“</td><td>Leitet die aktuellen Störungsmeldungen der Wiener Linien weiter (Zwischenspeicher 60 Sekunden)</td></tr>
+    <tr><td>wien-stoerungen.cpuhl51.workers.dev (Cloudflare)</td><td>nur Ebenen „Öffi-Störungen“ und „Nächstes Öffi“</td><td>Leitet Störungsmeldungen und Abfahrtszeiten der Wiener Linien weiter (nur Haltestellennummern, kein Standort)</td></tr>
     <tr><td>mapsneu.wien.gv.at (basemap.at)</td><td>nur mit „Stadtplan“</td><td>Kacheln des Stadtplans</td></tr>
     <tr><td>data.wien.gv.at (Geodaten der Stadt)</td><td>nur Ebene „Verkehrshindernisse“</td><td>Baustellen live</td></tr>
     <tr><td>gbfs.nextbike.net (WienMobil Rad)</td><td>nur Ebene „Leihräder“</td><td>Freie Räder und Rückgabeplätze in Echtzeit</td></tr>
     <tr><td>Google Maps</td><td>nur bei „Hin navigieren“</td><td>Routenplanung zum gewählten Ort</td></tr>
-    <tr><td>Standort deines Geräts</td><td>nur bei „Mein Standort“, nach Erlaubnis</td><td>Karte zentrieren, Entfernungen</td></tr>
+    <tr><td>Standort deines Geräts</td><td>„Mein Standort“, „Nächstes Öffi“, nach Erlaubnis</td><td>Karte zentrieren, Entfernungen</td></tr>
   </table>
   <p class="note">Die Datenquellen (Stadt Wien – data.wien.gv.at, Statistik Austria, Wiener Linien, Veterinäramt MA 60, Stadtarchäologie Wien, vienna.at) werden nicht von deinem Gerät abgerufen, sondern jede Nacht von GitHub aus. Die genaue Quelle steht bei jeder Ebene über der Karte.</p>
 
