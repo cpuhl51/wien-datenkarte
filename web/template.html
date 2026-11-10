@@ -189,6 +189,7 @@ svg.map{touch-action:pan-x pan-y}
 .card h2{font-family:var(--display);font-weight:600;font-size:22px;margin:0 0 2px}
 .card .sub{font:12px var(--mono);color:var(--muted);margin:0 0 10px}
 dl{display:grid;grid-template-columns:1fr auto;gap:4px 12px;margin:0}
+.golayer{font-style:normal;cursor:pointer}
 dt{color:var(--muted)} dd{margin:0;text-align:right;font:500 14px var(--mono);font-variant-numeric:tabular-nums}
 dd.hl{color:var(--accent)}
 .rank h3{font:600 13px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
@@ -216,6 +217,15 @@ footer a{color:inherit}
 #subsmob .subs{margin:10px 0 4px;padding:8px 10px;border-left:3px solid var(--gc);background:color-mix(in srgb,var(--gc) 8%,transparent);border-radius:0 8px 8px 0}
 .howto{font-size:13px;margin:12px 0 0}
 .settingsrow{margin:14px 0 0}
+.fotos{max-width:1100px}
+.fgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 10px;margin:10px 0 20px}
+@media (min-width:700px){.fgrid{grid-template-columns:repeat(auto-fill,minmax(210px,1fr))}}
+.fcard{display:flex;flex-direction:column;gap:2px;text-align:left;background:none;border:0;padding:0;color:var(--ink);font:13px var(--body);cursor:pointer}
+.fcard img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;background:var(--line);margin-bottom:4px}
+.fcard b{font-size:14px}
+.fcard span{color:var(--muted)}
+.fdlg{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px}
+.fdlg .pick{max-width:520px;width:100%;max-height:88vh;overflow:auto;margin:0}
 #layernote{margin:14px 0 4px}
 #layernote:empty{display:none}
 .maphint{margin:0 0 12px}
@@ -282,6 +292,7 @@ svg.vin text.vl{font:600 13px var(--body);fill:#3a2e08;pointer-events:none}
   </header>
 
   <section class="info" id="info" hidden aria-labelledby="info-h"></section>
+  <section class="info fotos" id="fotos" hidden></section>
   <div id="app">
   <div class="grid">
     <div class="mapbox">
@@ -897,14 +908,17 @@ svg.addEventListener("click",e=>{ const el=e.target.closest&&e.target.closest("[
   const c=document.getElementById("fundpick"); if(c) c.scrollIntoView({block:"nearest",behavior:"smooth"}); },true);
 function fundPickCard(){
   if(layer.id!=="fund"||!fundPick) return ""; const i=F.items.find(x=>x.id===fundPick); if(!i) return "";
-  return `<div class="pick" id="fundpick"><div class="pk-h"><img src="icons/fund/${fkOf(i)}.png${IV}" alt="" style="width:20px;height:20px;vertical-align:-5px;margin-right:6px">${esc(FUND_KIND[fkOf(i)][0])} · gefunden am ${dmy(i.d)}</div>
+  return fundCard(i,"fundpick-x","fundpick");
+}
+function fundCard(i,closeId,id){
+  return `<div class="pick"${id?` id="${id}"`:""}><div class="pk-h"><img src="icons/fund/${fkOf(i)}.png${IV}" alt="" style="width:20px;height:20px;vertical-align:-5px;margin-right:6px">${esc(FUND_KIND[fkOf(i)][0])} · gefunden am ${dmy(i.d)}</div>
     <div class="pk-a">${esc(i.t)}${i.f?" · "+esc(i.f):""}${i.s&&i.s!=="unbekannt"?" · "+esc(i.s):""}</div>
     ${i.foto?`<img class="fundfoto" src="${i.foto}" alt="Foto: ${esc(i.t)}" loading="lazy">`:""}
     ${i.mx||i.j?`<div class="pk-m" style="font-family:var(--body)">${[esc(i.mx||""),i.j?"geboren "+esc(i.j):""].filter(Boolean).join(" · ")}</div>`:""}
     <div class="pk-m" style="font-family:var(--body)">Fundort: ${esc(i.o)} – ungefähre Lage, die Stadt nennt nur Straße oder Park</div>
     <div class="pk-m" style="font-family:var(--body)"><b>Fund-ID ${esc(i.id)}</b>${i.org?` · Tier ist bei: ${esc(i.org)}`:""}</div>
     <div class="pk-b">${i.tel?`<a class="navbtn" href="tel:${esc(i.tel.replace(/[^+\d]/g,""))}">Anrufen</a>`:""}${i.mail?`<a class="wien" href="mailto:${esc(i.mail)}?subject=${encodeURIComponent("Fundtier "+i.id)}">E-Mail</a>`:""}<a class="wien" href="https://www.wien.gv.at/zusammenleben/fundservice-tiere" target="_blank" rel="noopener">Fundtiere bei der Stadt</a></div>
-    <div class="pk-b"><button class="wien" id="fundpick-x">Schließen</button></div></div>`;
+    <div class="pk-b"><button class="wien" id="${closeId}">Schließen</button></div></div>`;
 }
 function drawWl(s){
   if(layer.id!=="wl"){ wlG.innerHTML=""; return; }
@@ -1339,7 +1353,8 @@ function fundList(b,L){
   if(!it.length) return `<p class="note">Keine Fundmeldung in diesem Zeitraum.</p>`;
   if(!L) return listBox("fund","Gemeldete Tiere",it.length,fundList(b,layer).replace(/^<h4>[^<]*<\/h4>/,""));
   return `<h4>Gemeldete Tiere (${it.length})</h4><ul class="flist">${it.slice(0,60).map(i=>`<li><span class="fd">${dmy(i.d)}</span><span>${i.t}${i.f?" · "+i.f:""}${i.s&&i.s!=="unbekannt"?" · "+i.s:""}</span><span class="fo">${i.o}</span></li>`).join("")}</ul>
-    <p class="note" style="margin:6px 0 0">Abholung und Kontakt: Seite „Fundtiere“ auf wien.gv.at.</p>`;
+    <p class="note" style="margin:6px 0 0">Abholung und Kontakt: Seite „Fundtiere“ auf wien.gv.at.</p>
+    ${it.some(i=>i.foto)?`<p style="margin:8px 0 0"><a class="wien" href="#fotos">Alle Fundtiere mit Foto anzeigen (${it.filter(i=>i.foto).length})</a></p>`:""}`;
 }
 
 function wlList(b,boxed){
@@ -1363,7 +1378,7 @@ function renderDetail(s,y,order,c){
   const b=sel, ys=yearsOf(s), first=s.data[ys[0]][b], now=s.data[y][b];
   const others=LAYERS.filter(L=>L!==layer&&!isPts(L)&&!L.special).map(L=>{
     const ss=subOf(L), yy=yearOf(L), lab=L.subs.length>1&&ss.label!==L.label?" · "+ss.label:"";
-    const name=`${L.label}${lab} (${L.clock?hhmm(yy)+" Uhr":(L.fund||L.live)?"aktuell":yy})`, val=`${ss.fmt(ss.data[yy][b])}${ss.unit}`;
+    const name=`<i class="golayer" data-go="${L.id}" role="button" tabindex="0">${L.label}${lab} (${L.clock?hhmm(yy)+" Uhr":(L.fund||L.live)?"aktuell":yy})</i>`, val=`${ss.fmt(ss.data[yy][b])}${ss.unit}`;
     if(L.fund||L.id==="wl") return `<details class="exp" id="exp-${L.id}"${openExp[L.id]?" open":""}><summary><span>${name}</span><b>${val}</b></summary>${L.fund?fundList(b,L):wlList(b)}</details>`;
     const extra=(L.id==="bir"||L.id==="dea")?`<span class="pd">${perDayTxt(L.id,b,yy)}</span>`:"";
     return `<dt>${name}${extra}</dt><dd>${val}</dd>`;
@@ -1491,14 +1506,40 @@ function renderInfo(){
   <p>Fehler gefunden oder eine Idee? Schreib an ${a_(LINKS.mail,"apps@puhl.ch")}.</p>
   <a class="back" href="#">‹ Zurück zur Karte</a>`;
 }
+/* „Weitere Werte“: Name antippen wechselt die Karte auf diese Statistik (Bezirk bleibt gewählt) */
+function goLayer(id){ const L=LAYERS.find(x=>x.id===id); if(!L) return; layer=L; render(); maybeLive();
+  document.getElementById("maptitle").scrollIntoView({block:"start",behavior:"smooth"}); }
+document.addEventListener("click",e=>{ const g=e.target.closest&&e.target.closest("[data-go]"); if(!g) return; e.preventDefault(); e.stopPropagation(); goLayer(g.dataset.go); },true);
+document.addEventListener("keydown",e=>{ const g=e.target.closest&&e.target.closest("[data-go]"); if(g&&(e.key==="Enter"||e.key===" ")){ e.preventDefault(); goLayer(g.dataset.go); } });
+
+/* Fundtiere mit Foto: eigene Ansicht (#fotos), gefiltert nach Tierart und gewähltem Bezirk */
+const FUND_ONE={katze:"Katze",hund:"Hund",vogel:"Vogel",kleintier:"Kleintier",reptil:"Reptil/Amphibie",andere:"anderes Tier"};
+const fundOrt=o=>String(o||"").replace(/^(\d+)\.,?\s*/,"$1, ");
+function fotoItems(){ return F.items.filter(i=>i.foto&&(sel===0||i.b===sel)&&(state.fund.sub==="all"||fkOf(i)===state.fund.sub)).sort((a,c)=>c.d.localeCompare(a.d)); }
+function renderFotos(){
+  const it=fotoItems(), s=state.fund.sub, kind=s==="all"?"Alle Tiere":FUND_KIND[s]?FUND_KIND[s][0]:"";
+  document.getElementById("fotos").innerHTML=`<a class="back" href="#">‹ Zurück zur Karte</a>
+  <h2>Fundtiere mit Foto</h2>
+  <p class="note">${sel===0?"Ganz Wien":sel+". "+NAMES[sel]} · ${kind} · ${it.length} ${it.length===1?"Tier":"Tiere"}. Filter wie auf der Karte; ändern über Bezirk und Tierart dort.</p>
+  ${it.length?`<div class="fgrid">${it.map(i=>`<button class="fcard" data-fid="${esc(i.id)}"><img src="${i.foto}" alt="Foto: ${esc(i.t)}" loading="lazy"><b>${esc(i.t)}</b><span>${esc([FUND_ONE[fkOf(i)]!==i.t?FUND_ONE[fkOf(i)]:i.f,i.s&&i.s!=="unbekannt"?i.s:""].filter(Boolean).join(" · ")||"\u00a0")}</span><span>Fundort ${esc(fundOrt(i.o))}</span></button>`).join("")}</div>`:`<p>Keine Fundtiere mit Foto für diese Auswahl.</p>`}
+  <a class="back" href="#">‹ Zurück zur Karte</a>`;
+}
+document.addEventListener("click",e=>{
+  const c=e.target.closest&&e.target.closest("[data-fid]");
+  if(c){ const i=F.items.find(x=>x.id===c.dataset.fid); if(!i) return; const d=document.createElement("div"); d.className="fdlg"; d.innerHTML=fundCard(i,"fdlg-x"); document.body.appendChild(d);
+    const close=()=>d.remove(); d.addEventListener("click",ev=>{ if(ev.target===d||ev.target.id==="fdlg-x") close(); }); return; }
+});
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ const d=document.querySelector(".fdlg"); if(d) d.remove(); } });
 function route(){
+  const fo=location.hash==="#fotos", fs=document.getElementById("fotos");
+  if(fo) renderFotos(); fs.hidden=!fo;
   const on=location.hash==="#info", info=document.getElementById("info");
   if(on&&!info.innerHTML) renderInfo();
   if(on){ const el=document.getElementById("svbox"); if(el) el.innerHTML=startViewHtml(); }
   if(on) appStatus().then(s=>{ const el=document.getElementById("appstatus"); if(el) el.textContent=s; });
-  info.hidden=!on; document.getElementById("app").hidden=on;
+  info.hidden=!on; document.getElementById("app").hidden=on||fo;
   document.getElementById("infobtn").hidden=on;
-  if(on) window.scrollTo(0,0); else { try{render();}catch(e){} }
+  if(on||fo) window.scrollTo(0,0); else { try{render();}catch(e){} }
 }
 window.addEventListener("hashchange",route);
 document.getElementById("startbtn").addEventListener("click",()=>{ const sv=ls.get("startView")||{}; const cur={layer:layer.id,sub:state[layer.id].sub};
@@ -1616,7 +1657,7 @@ if(LIVE_URL){ setInterval(maybeLive,15000); document.addEventListener("visibilit
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",render);
 new MutationObserver(render).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
 render();
-if(location.hash==="#info") route();
+if(location.hash==="#info"||location.hash==="#fotos") route();
 /* Service Worker: Installation als App und Offline-Betrieb */
 if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
 /* eigener Installieren-Knopf, sobald Chrome die App als installierbar meldet */
