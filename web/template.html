@@ -100,6 +100,8 @@ h1{font-family:var(--display);font-weight:800;font-size:clamp(28px,5vw,44px);lin
 .nxstops small{font:11px var(--mono);opacity:.8}
 .lgroups{display:flex;flex-direction:column;gap:8px}
 .lgroup{background:color-mix(in srgb,var(--gc) 7%,transparent);border-left:3px solid color-mix(in srgb,var(--gc) 65%,transparent);border-radius:0;padding:7px 10px 9px}
+.lgsub{display:block;font:500 10.5px var(--mono);color:color-mix(in srgb,var(--gc) 55%,var(--muted));margin:8px 0 4px}
+.lgname+.lgsub{margin-top:0}
 .lgname{display:block;font:500 11px var(--mono);letter-spacing:.07em;text-transform:uppercase;color:color-mix(in srgb,var(--gc) 70%,var(--ink));margin-bottom:6px}
 .lgroup .chip{border-color:color-mix(in srgb,var(--gc) 30%,var(--line))}
 .lgroup .chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink)}
@@ -177,6 +179,7 @@ svg.map .ovl path{pointer-events:auto}
 svg.map text.small{font-size:calc(9.5px / var(--zk,1))}
 svg.map text.tiny{font-size:calc(8px / var(--zk,1));stroke-width:calc(2px / var(--zk,1));letter-spacing:-.03em}
 svg.map text{font:600 11px var(--mono);fill:var(--ink);paint-order:stroke;stroke:var(--surface);stroke-width:3px;pointer-events:none}
+svg.map .labs text{stroke-width:4.5px;stroke-linejoin:round;font-weight:700}
 svg.map > text{font-size:calc(11px / var(--zk,1));stroke-width:calc(3px / var(--zk,1))}
 svg.map.zoomed > text.small,svg.map.zoomed > text.tiny{font-size:calc(11px / var(--zk,1));stroke-width:calc(3px / var(--zk,1));letter-spacing:0}
 /* Zwei-Finger-Geste gehört der Karte, nicht dem Seitenzoom des Browsers */
@@ -239,7 +242,12 @@ footer a{color:inherit}
 .skey span{display:inline-flex;align-items:center;gap:5px}
 .skey b{display:inline-block;width:10px;height:10px;border-radius:2px}
 .skey em{font-style:normal;color:var(--ink);font-family:var(--mono);font-variant-numeric:tabular-nums}
-.maphead{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.maphead{display:flex;justify-content:flex-start;align-items:center;gap:10px 14px;flex-wrap:wrap}
+.bgrp{display:flex;align-items:center;gap:6px}
+.bgrp.seg{gap:0}
+.bgrp.seg .zb:first-child{border-radius:999px 0 0 999px;border-right-width:0}
+.bgrp.seg .zb:last-child{border-radius:0 999px 999px 0}
+.bgrp.seg .zb{min-width:40px}
 .wien{font:600 13px var(--body);padding:6px 12px;border-radius:6px;border:1px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
 .wien[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
 .wien:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
@@ -298,8 +306,11 @@ svg.vin text.vl{font:600 13px var(--body);fill:#3a2e08;pointer-events:none}
     <div class="mapbox">
       <div class="maptitle"><h2 id="maptitle"></h2><button class="wien" id="startbtn" aria-pressed="false">☆ Als Start</button></div>
       <p class="mapsub" id="mapsub"></p>
-      <div class="maphead"><button class="wien" id="wien" aria-pressed="false">Wien gesamt</button><button class="wien" id="locate">Mein Standort</button><button class="wien zb" id="zin" aria-label="Hineinzoomen">+</button><button class="wien zb" id="zoutb" aria-label="Herauszoomen">−</button><button class="wien" id="zoomout" hidden>Ganze Stadt</button><button class="wien" id="basebtn" aria-pressed="false">Stadtplan</button>
-        <label class="baseop" id="baseop" hidden>Deckkraft <input type="range" id="baseopr" min="0.2" max="1" step="0.1" value="0.6"></label></div>
+      <div class="maphead">
+        <div class="bgrp"><button class="wien" id="wien" aria-pressed="false">Wien gesamt</button></div>
+        <div class="bgrp" aria-label="Ausschnitt"><button class="wien" id="locate">Mein Standort</button><button class="wien" id="zoomout" hidden>Ganze Stadt</button></div>
+        <div class="bgrp seg" aria-label="Zoom"><button class="wien zb" id="zoutb" aria-label="Herauszoomen">−</button><button class="wien zb" id="zin" aria-label="Hineinzoomen">+</button></div>
+        <div class="bgrp" aria-label="Stadtplan"><button class="wien" id="basebtn" aria-pressed="false">Stadtplan</button><label class="baseop" id="baseop" hidden>Deckkraft <input type="range" id="baseopr" min="0.2" max="1" step="0.1" value="0.6"></label></div></div>
       <p class="note" id="locmsg" hidden></p>
       <svg class="map" id="map" role="img" aria-label="Karte der Wiener Gemeindebezirke"></svg>
       <div id="mappick" aria-live="polite"></div>
@@ -935,6 +946,8 @@ function uSection(line,text){
 /* Fundtiere: ungefähre Lage (Mitte der genannten Straße bzw. des Parks), leicht gestreut, damit Meldungen derselben Straße sichtbar bleiben */
 const FUND_COL={"Katzen":"#e8590c","Hunde":"#8a5a2b","Andere Tiere":"#2b8a3e"};
 const fundG=document.createElementNS(NS,"g"); fundG.setAttribute("class","wlg"); svg.appendChild(fundG);
+/* Bezirkszahlen immer über Punkten und Symbolen, mit kräftigerem Rand */
+const labG=document.createElementNS(NS,"g"); labG.setAttribute("class","labs"); Object.values(labelEls).forEach(el=>labG.appendChild(el)); svg.appendChild(labG);
 let fundPick=null;
 const hash01=(s,k)=>{ let h=2166136261^k; for(const ch of String(s)) h=Math.imul(h^ch.charCodeAt(0),16777619); return ((h>>>0)%1000)/1000; };
 function fundItems(){ const sub=subOf(LAYERS.find(L=>L.id==="fund")); return F.items.filter(i=>sub.id==="all"||fkOf(i)===sub.id); }
@@ -1655,19 +1668,25 @@ svg.addEventListener("click",e=>{
 
 const lc=document.getElementById("layers");
 const LGROUPS=[["Infrastruktur","#2f6fb0",["infra","waste"]],
-  ["Mobilität","#6e7d7a",["next","fp","wl","taxi","bike","veh","bau","brand"]],
+  ["Mobilität","#6e7d7a",[["Öffentlicher Verkehr",["next","fp","wl"]],["Taxi & Leihrad",["taxi","bike"]],["Individualverkehr",["veh","bau","brand"]]]],
   ["Tiere","#8a5a2b",["dog","fund"]],
   ["Demografie","#c4161c",["pop","age","cob","bir","dea","edu"]],
   ["Politik & Geschichte","#7a3db8",["vote","antik"]]];
-const inGroup=new Set(LGROUPS.flatMap(g=>g[2]));
+const flatIds=ids=>ids.flatMap(x=>Array.isArray(x)?x[1]:[x]);
+const inGroup=new Set(LGROUPS.flatMap(g=>flatIds(g[2])));
 LGROUPS.concat([["Weitere","#7f8c87",LAYERS.map(L=>L.id).filter(id=>!inGroup.has(id))]]).forEach(([name,col,ids])=>{
-  const Ls=ids.map(id=>LAYERS.find(L=>L.id===id)).filter(Boolean); if(!Ls.length) return;
+  const rows=ids.some(Array.isArray)?ids:[[null,ids]];
+  if(!rows.some(r=>r[1].some(id=>LAYERS.find(L=>L.id===id)))) return;
   const g=document.createElement("div"); g.className="lgroup"; g.style.setProperty("--gc",col); g.setAttribute("role","group"); g.setAttribute("aria-label",name);
-  g.innerHTML=`<span class="lgname">${name}</span><div class="chips"></div>`;
-  Ls.forEach(L=>{
-    const btn=document.createElement("button");btn.className="chip";btn.id="layer-"+L.id;btn.dataset.l=L.id;btn.textContent=L.label;
-    btn.addEventListener("click",()=>{layer=L;render();maybeLive();});
-    g.querySelector(".chips").appendChild(btn);
+  g.innerHTML=`<span class="lgname">${name}</span>`;
+  rows.forEach(([sub,rid])=>{ const Ls=rid.map(id=>LAYERS.find(L=>L.id===id)).filter(Boolean); if(!Ls.length) return;
+    if(sub){ const s=document.createElement("span"); s.className="lgsub"; s.textContent=sub; g.appendChild(s); }
+    const ch=document.createElement("div"); ch.className="chips"; g.appendChild(ch);
+    Ls.forEach(L=>{
+      const btn=document.createElement("button");btn.className="chip";btn.id="layer-"+L.id;btn.dataset.l=L.id;btn.textContent=L.label;
+      btn.addEventListener("click",()=>{layer=L;render();maybeLive();});
+      ch.appendChild(btn);
+    });
   });
   lc.appendChild(g);
 });
