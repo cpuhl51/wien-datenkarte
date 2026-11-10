@@ -216,6 +216,10 @@ footer a{color:inherit}
 #subsmob .subs{margin:10px 0 4px;padding:8px 10px;border-left:3px solid var(--gc);background:color-mix(in srgb,var(--gc) 8%,transparent);border-radius:0 8px 8px 0}
 .howto{font-size:13px;margin:12px 0 0}
 .settingsrow{margin:14px 0 0}
+#layernote{margin:10px 0 4px}
+#layernote:empty{display:none}
+.maphint{margin:0 0 12px}
+.row .v small{font-size:11px;color:var(--muted);margin-left:3px}
 .yrange{font:12px var(--mono);color:var(--muted);white-space:nowrap}
 .spark{width:100%;height:auto;display:block;margin:4px 0 10px}
 .spark text{font:11px var(--mono);fill:var(--muted)}
@@ -274,7 +278,7 @@ svg.vin text.vl{font:600 13px var(--body);fill:#3a2e08;pointer-events:none}
   <header>
     <div class="topline"><div class="eyebrow">Live- und Informationskarte der Stadt Wien</div></div>
     <h1>Wien live - Daten &amp; Zahlen</h1>
-    <p class="lede">Livekarte. Finde was Du brauchst in deiner Nähe. Oder begib dich auf eine Zeitreise durch die politische und demografische Landschaft der lebenswertesten grünen Stadt der Welt.</p>
+    <p class="lede">Finde was Du brauchst in deiner Nähe. Oder begib dich auf eine Zeitreise durch die politische und demografische Landschaft der lebenswertesten grünen Stadt der Welt.</p>
   </header>
 
   <section class="info" id="info" hidden aria-labelledby="info-h"></section>
@@ -291,7 +295,7 @@ svg.vin text.vl{font:600 13px var(--body);fill:#3a2e08;pointer-events:none}
       <div id="mappick" aria-live="polite"></div>
       <div class="legend"><div class="ramp" id="ramp"></div><div class="ticks" id="ticks"></div><div class="ticks blg" id="wlleg"></div></div>
       <p class="note" id="layernote"></p>
-      <p class="hint"><span id="numhint"></span> · Bezirk antippen für Details · gezoomt: mit dem Finger verschieben</p>
+      <p class="hint maphint"><span id="numhint"></span> · Bezirk antippen für Details · gezoomt: mit dem Finger verschieben</p>
       <div class="yearbar">
         <span class="ylabel" id="ylabel">Jahr</span>
         <div class="ynav">
@@ -621,7 +625,7 @@ const LAYERS = [
    subs:POINT_SETS.bike.map(ptSub).map(s=>(s.src="WienMobil Rad – nextbike GBFS-Echtzeitdaten (CC0)",s)),
    note:"Zurückgeben nur an WienMobil-Stationen – abseits davon verrechnet WienMobil Rad 20 € Servicegebühr. Ist eine Station voll, zeigt die nextbike-App Stationen in der Nähe."},
   {id:"taxi",label:"Taxi",color:"#e0a800",src:SRC.pts,points:true,live:true,stand:()=>`Standplätze laut Stadt Wien, abgerufen ${ABRUF}`,
-   subs:POINT_SETS.taxi.map(ptSub),note:"Antippen für Details."},
+   subs:POINT_SETS.taxi.map(ptSub),note:""},
   {id:"next",label:"Nächstes Öffi",special:true,color:"#6e7d7a",src:"Wiener Linien – Echtzeitdaten (Open Data, CC BY 4.0)",
    stand:()=>NX.at?`Echtzeit, abgerufen ${NX.at} Uhr · alle 30 Sekunden neu`:"Echtzeit der Wiener Linien",
    subs:[{id:"all",label:"Alle",data:{0:Array(24).fill(0)},fmt:fmtInt,unit:""}]},
@@ -764,7 +768,7 @@ function drawTiles(){
   const vb=svg.getAttribute("viewBox").split(" ").map(Number);
   const [lonL,latT]=unpx(vb[0],vb[1]), [lonR,latB]=unpx(vb[0]+vb[2],vb[1]+vb[3]);
   const screenW=svg.clientWidth||380, dpr=Math.min(2,window.devicePixelRatio||1);
-  let z=Math.round(Math.log2(360*screenW*dpr/((lonR-lonL)*256*1.4))); z=Math.max(10,Math.min(18,z));
+  let z=Math.round(Math.log2(360*screenW*dpr/((lonR-lonL)*256*1.4))); z=Math.max(10,Math.min(19,z));
   const x0=Math.floor(lon2x(lonL,z)), x1=Math.floor(lon2x(lonR,z)), y0=Math.floor(lat2y(latT,z)), y1=Math.floor(lat2y(latB,z));
   if((x1-x0+1)*(y1-y0+1)>80) return;
   let h="";
@@ -1007,7 +1011,7 @@ document.getElementById("wien").addEventListener("click",()=>select(0));
 document.getElementById("locate").addEventListener("click",()=>{ if(!isPts(layer)&&layer.id!=="next"){ layer=LAYERS.find(L=>L.id==="infra"); } locate(); });
 document.getElementById("basebtn").addEventListener("click",()=>{ const on=baseOn===null?(isPts(layer)||layer.id==="next"):baseOn; baseOn=!on; render(); });
 document.getElementById("baseopr").addEventListener("input",e=>{ baseOpacity=+e.target.value; tilesG.style.opacity=baseOpacity; });
-document.getElementById("zin").addEventListener("click",()=>{ if(zoom.k===1&&sel>0){ const L=labels.find(l=>l[0]===sel); if(L){zoom.cx=L[1];zoom.cy=L[2];} } zoom.k=Math.min(64,zoom.k*2); applyZoom(); render(); });
+document.getElementById("zin").addEventListener("click",()=>{ if(zoom.k===1&&sel>0){ const L=labels.find(l=>l[0]===sel); if(L){zoom.cx=L[1];zoom.cy=L[2];} } zoom.k=Math.min(256,zoom.k*2); applyZoom(); render(); });
 document.getElementById("zoutb").addEventListener("click",()=>{ zoom.k=Math.max(1,zoom.k/2); if(zoom.k===1){zoom.cx=W/2;zoom.cy=H/2;} applyZoom(); render(); });
 document.getElementById("zoomout").addEventListener("click",()=>{ zoom.k=1; zoom.cx=W/2; zoom.cy=H/2; applyZoom(); render(); });
 
@@ -1193,7 +1197,7 @@ function numHint(){
   if(layer.id==="wl") return "Zahlen = Anzahl der Meldungen im Bezirk";
   if(layer.id==="fund") return "Zahlen = Anzahl gefundener Tiere im Bezirk";
   if(layer.id==="bike") return `Zahlen = ${s.label} im Bezirk · Punkt antippen für die Station`;
-  if(isPts(layer)) return `Zahlen = Anzahl ${s.label} im Bezirk`;
+  if(isPts(layer)) return `Zahlen und Farbe = Anzahl ${s.label} im Bezirk`;
   if(layer.id==="fp") return s.id==="rel"?"Zahlen = Fahrzeuge je 1.000 Einwohner":s.id==="ppv"?"Zahlen = Einwohner je Fahrzeug":`Zahlen = Fahrzeuge unterwegs (${s.label})`;
   const u=s.unit.trim();
   return `Zahlen = ${layer.subs.length>1&&s.label!==layer.label?layer.label+" · "+s.label:layer.label}${u==="%"?" in %":u==="‰"?" in ‰":u==="J."?" in Jahren":mapThousand?" in Tausend":""}`;
@@ -1239,9 +1243,11 @@ function render2(){
     document.getElementById("wlleg").innerHTML=Object.entries(FUND_KIND).filter(([k])=>it.some(i=>fkOf(i)===k)).map(([k,[l]])=>`<span class="lg"><img src="icons/fund/${k}.png${IV}" alt="" style="width:18px;height:18px;outline:none">${l}</span>`).join("")
       +`<span class="lg" style="color:var(--muted)">Symbol = ungefähre Lage (Mitte der Straße bzw. des Parks) · ${n} von ${it.length} Meldungen verortet · antippen für Details</span>`;
   } else document.getElementById("wlleg").innerHTML="";
-  const dotNote=layer.id==="bike"?`● = eine Station: hell = mehr als 2 ${s.id==="bike"?"Räder":"Plätze"} frei, dunkel = nur 1–2, grau = keine. Bezirksfarbe und Zahl = Summe im Bezirk. `:isPts(layer)?`● = ein Standort (${s.label}). Bezirksfarbe und Zahl = Anzahl im Bezirk. `:"";
+  const dotNote=layer.id==="bike"?`● = eine Station: hell = mehr als 2 ${s.id==="bike"?"Räder":"Plätze"} frei, dunkel = nur 1–2, grau = keine. `:isPts(layer)?`● = ein Standort, antippen für Details. `:"";
   document.getElementById("layernote").textContent=dotNote+(mapThousand?"Zahlen auf der Karte in Tausend. ":"")+(s.unit.trim()==="J."?"Zahlen auf der Karte in Jahren. ":"")+[layer.note,s.note].filter(Boolean).join(" ")+(!s.bars&&!s.range&&yearsOf(s).length>1?(layer.clock?" Kartenfarben: Spannweite der Bezirke über den ganzen Tag.":" Kartenfarben: Spannweite der Bezirke über alle Jahre."):"");
-  const title=layer.subs.length>1&&s.label!==layer.label?`${layer.label} · ${s.label}`:layer.label;
+  const title=layer.id==="taxi"?s.label:layer.subs.length>1&&s.label!==layer.label?`${layer.label} · ${s.label}`:layer.label;
+  /* Taxi: neben der Zahl der Standplätze die Zahl der Stellplätze (Fahrzeuge) */
+  const spots=layer.id==="taxi"&&PT&&PT.points.taxi?PT.points.taxi.pts.reduce((a,p)=>{ const m=/(\d+) Stellpl/.exec(p[3]||""), n=m?+m[1]:0; a[0]+=n; if(p[2]) a[p[2]]+=n; return a; },Array(24).fill(0)):null;
   document.getElementById("ranktitle").textContent=`Rangliste · ${title} · ${layer.clock?hhmm(y)+" Uhr":(layer.fund||layer.live)?"aktuell":y}`;
   const order=[...Array(23)].map((_,i)=>i+1).sort((a,b)=>(arr[b]??-1)-(arr[a]??-1));
   /* Summen-Werte (Anzahlen): Wien-Balken als gestapeltes Balkendiagramm der Bezirke, Bezirke auf den stärksten skaliert.
@@ -1253,7 +1259,7 @@ function render2(){
   const segs=()=>order.filter(b=>arr[b]>0).map(b=>`<i class="seg" style="width:${(100*arr[b]/dsum).toFixed(3)}%;background:${mix(bg,c,t(arr[b]))}" title="${b}. ${NAMES[b]}: ${s.fmt(arr[b])}${s.unit}"></i>`).join("");
   const row=(b,ref)=>{const v=arr[b],w=v==null?0:Math.max(2,(v/top)*100);
     const barIn=ref&&split?`<span class="segs">${segs()}</span>`:`<i style="width:${ref&&additive?100:w}%;background:${ref?c:v==null?bg:mix(bg,c,t(v))}"></i>`;
-    return `<button class="row${b===sel?" sel":""}${ref?" ref":""}" data-b="${b}"${ref&&additive?` aria-label="Wien gesamt – antippen wechselt die Balkenansicht"`:""}><span class="n">${ref?"Ø":b+"."}</span><span class="bar">${barIn}<span>${NAMES[b]}</span></span><span class="v">${s.fmt(v)}${s.unit}</span></button>`;};
+    return `<button class="row${b===sel?" sel":""}${ref?" ref":""}" data-b="${b}"${ref&&additive?` aria-label="Wien gesamt – antippen wechselt die Balkenansicht"`:""}><span class="n">${ref?"Ø":b+"."}</span><span class="bar">${barIn}<span>${NAMES[b]}</span></span><span class="v">${s.fmt(v)}${s.unit}${spots?`<small>(${spots[b]})</small>`:""}</span></button>`;};
   /* Säulen-Ansichten (Top 3, alle Parteien): statt einer Rangliste je Bezirk die Zusammensetzung als Balken */
   const barRow=b=>{ const ps=(s.bars(b,y)||[]).filter(p=>p.v>0), tot=s.norm?ps.reduce((a,p)=>a+p.v,0):100;
     return `<button class="row${b===sel?" sel":""}${b===0?" ref":""}" data-b="${b}"><span class="n">${b===0?"Ø":b+"."}</span><span class="bar"><span class="segs">${ps.map(p=>`<i class="seg" style="width:${(100*p.v/tot).toFixed(2)}%;background:${p.c}" title="${esc(p.l)} ${fmt1(p.v)} %"></i>`).join("")}</span><span>${NAMES[b]}</span></span><span class="v">${ps[0]?esc(ps[0].l.length>9?ps[0].l.slice(0,8)+"…":ps[0].l)+" "+fmt1(ps[0].v)+" %":"–"}</span></button>`; };
@@ -1267,6 +1273,7 @@ function render2(){
   }
   document.getElementById("rows").classList.remove("comp");
   document.getElementById("rows").innerHTML=row(0,true)+order.map(b=>row(b)).join("")
+    +(spots?`<p class="note" style="margin:6px 0 0">Zahl = Standplätze, in Klammern die Stellplätze, also wie viele Taxis dort insgesamt warten können.</p>`:"")
     +(additive?`<p class="note" style="margin:6px 0 0">${split?"Wien-Balken = Anteile der Bezirke, Bezirke im Maßstab des stärksten.":"Alle Balken im Maßstab von Wien gesamt."} Wien-Balken antippen zum Umschalten.</p>`:"");
   document.querySelectorAll(".row").forEach(r=>r.addEventListener("click",()=>{ if(+r.dataset.b===0&&additive){ rankSplit=!rankSplit; } select(+r.dataset.b); }));
   renderDetail(s,y,order,c);
@@ -1416,7 +1423,7 @@ function select(b){sel=b;render();}
 /* ---------- Info-Seite ---------- */
 const LINKS={mail:"mailto:apps@puhl.ch",donate:"https://paypal.me/PuhlChristoph",github:"https://github.com/cpuhl51/wien-datenkarte",author:"https://de.wikipedia.org/wiki/Christoph_Puhl",comics:"https://www.diezöno.se",puhl:"https://www.puhl.ch"};
 const a_=(u,t)=>`<a href="${u}" target="_blank" rel="noopener">${t}</a>`;
-const creditHtml=()=>`Diese kostenlose App wurde von ${a_(LINKS.mail,"Christoph Puhl")} entwickelt und von Claude.ai umgesetzt. Wenn Du möchtest, kannst Du ${a_(LINKS.donate,"hier")} gerne für einen Kaffee, ein Mohnbeugerl oder ein KI-Monatsabo spenden. Dieses Projekt auf ${a_(LINKS.github,"GitHub")} ansehen. Mehr über den ${a_(LINKS.author,"Autor")}, weitere Apps, ${a_(LINKS.comics,"Comics")} und Tools findest Du auf ${a_(LINKS.puhl,"puhl.ch")}.`;
+const creditHtml=()=>`Diese kostenlose App wurde von ${a_(LINKS.mail,"Christoph Puhl")} entwickelt und von Claude.ai umgesetzt. Wenn Du möchtest, kannst Du ${a_(LINKS.donate,"hier")} gerne für einen Kaffee, ein Mohnbeugerl oder ein KI-Monatsabo spenden. Dieses Projekt auf ${a_(LINKS.github,"GitHub")} ansehen. Mehr über den ${a_(LINKS.author,"Autor")}, weitere Apps, ${a_(LINKS.comics,"Comics")} und ${a_("https://puhl.ch/category/programme-und-apps/","Tools")} findest Du auf ${a_(LINKS.puhl,"puhl.ch")}.`;
 function sliderName(L){ return L.clock?"Uhrzeit":(L.subs.every(s=>s.pts)||L.special)?"Stand":L.id==="wl"?"live":L.fund?"laufend":"Jahr"; }
 function layerTree(){
   const order=LGROUPS.flatMap(([name,col,ids])=>ids.map((id,i)=>[LAYERS.find(L=>L.id===id),i===0?[name,col]:null])).filter(x=>x[0]);
@@ -1531,7 +1538,7 @@ svg.addEventListener("pointermove",e=>{
   const u=mapUnitsPerPx();
   if(pointers.size>=2&&drag.dist){
     const [a,b]=[...pointers.values()], d=Math.hypot(a.x-b.x,a.y-b.y);
-    zoom.k=Math.max(1,Math.min(64,drag.k*d/drag.dist)); moved=true;
+    zoom.k=Math.max(1,Math.min(256,drag.k*d/drag.dist)); moved=true;
   } else {
     const dx=e.clientX-drag.x, dy=e.clientY-drag.y;
     if(Math.abs(dx)+Math.abs(dy)>6) moved=true;
