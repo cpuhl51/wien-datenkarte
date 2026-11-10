@@ -1,0 +1,10 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "ch.puhl.wienaktuell",
+    "sha256_cert_fingerprints": [
+      "79:4B:83:5C:5B:2C:F7:FF:A6:98:4A:51:15:C2:79:E9:A6:F2:C5:84:A4:44:A9:52:6D:18:83:8B:29:AB:11:5C"
+    ]
+  }
+}]
