@@ -179,7 +179,11 @@ svg.map .ovl path{pointer-events:auto}
 svg.map text.small{font-size:calc(9.5px / var(--zk,1))}
 svg.map text.tiny{font-size:calc(8px / var(--zk,1));stroke-width:calc(2px / var(--zk,1));letter-spacing:-.03em}
 svg.map text{font:600 11px var(--mono);fill:var(--ink);paint-order:stroke;stroke:var(--surface);stroke-width:3px;pointer-events:none}
-svg.map .labs text{stroke-width:4.5px;stroke-linejoin:round;font-weight:700}
+svg.map .labs text{font-size:calc(11px / var(--zk,1));stroke-width:calc(4px / var(--zk,1));stroke-linejoin:round;font-weight:700}
+svg.map.zoomed .labs text.small,svg.map.zoomed .labs text.tiny{font-size:calc(11px / var(--zk,1));letter-spacing:0}
+svg.map .labs text.small{font-size:calc(9.5px / var(--zk,1))}
+svg.map .labs text.tiny{font-size:calc(8px / var(--zk,1));stroke-width:calc(2.5px / var(--zk,1))}
+svg.map.ptzoom .labs{display:none}
 svg.map > text{font-size:calc(11px / var(--zk,1));stroke-width:calc(3px / var(--zk,1))}
 svg.map.zoomed > text.small,svg.map.zoomed > text.tiny{font-size:calc(11px / var(--zk,1));stroke-width:calc(3px / var(--zk,1));letter-spacing:0}
 /* Zwei-Finger-Geste gehört der Karte, nicht dem Seitenzoom des Browsers */
@@ -245,9 +249,12 @@ footer a{color:inherit}
 .maphead{display:flex;justify-content:flex-start;align-items:center;gap:10px 14px;flex-wrap:wrap}
 .bgrp{display:flex;align-items:center;gap:6px}
 .bgrp.seg{gap:0}
-.bgrp.seg .zb:first-child{border-radius:999px 0 0 999px;border-right-width:0}
-.bgrp.seg .zb:last-child{border-radius:0 999px 999px 0}
+.bgrp.seg>button:first-child{border-radius:999px 0 0 999px;border-right-width:0}
+.bgrp.seg>button:last-child{border-radius:0 999px 999px 0}
+.bgrp.seg>button{padding-left:13px;padding-right:13px}
 .bgrp.seg .zb{min-width:40px}
+.bzname{max-width:11em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bzname.empty{color:var(--muted);font-weight:500}
 .wien{font:600 13px var(--body);padding:6px 12px;border-radius:6px;border:1px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
 .wien[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
 .wien:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
@@ -307,9 +314,9 @@ svg.vin text.vl{font:600 13px var(--body);fill:#3a2e08;pointer-events:none}
       <div class="maptitle"><h2 id="maptitle"></h2><button class="wien" id="startbtn" aria-pressed="false">☆ Als Start</button></div>
       <p class="mapsub" id="mapsub"></p>
       <div class="maphead">
-        <div class="bgrp"><button class="wien" id="wien" aria-pressed="false">Wien gesamt</button></div>
-        <div class="bgrp" aria-label="Ausschnitt"><button class="wien" id="locate">Mein Standort</button><button class="wien" id="zoomout" hidden>Ganze Stadt</button></div>
-        <div class="bgrp seg" aria-label="Zoom"><button class="wien zb" id="zoutb" aria-label="Herauszoomen">−</button><button class="wien zb" id="zin" aria-label="Hineinzoomen">+</button></div>
+        <div class="bgrp seg" role="group" aria-label="Daten für"><button class="wien" id="wien" aria-pressed="true">Wien</button><button class="wien bzname" id="bzbtn" aria-pressed="false">Bezirk</button></div>
+        <div class="bgrp seg" role="group" aria-label="Zoom"><button class="wien zb" id="zoutb" aria-label="Herauszoomen">−</button><button class="wien zb" id="zin" aria-label="Hineinzoomen">+</button></div>
+        <div class="bgrp seg" role="group" aria-label="Ausschnitt"><button class="wien" id="locate" aria-pressed="false">Mein Standort</button><button class="wien" id="zoomout" aria-pressed="true">Ganze Stadt</button></div>
         <div class="bgrp" aria-label="Stadtplan"><button class="wien" id="basebtn" aria-pressed="false">Stadtplan</button><label class="baseop" id="baseop" hidden>Deckkraft <input type="range" id="baseopr" min="0.2" max="1" step="0.1" value="0.6"></label></div></div>
       <p class="note" id="locmsg" hidden></p>
       <svg class="map" id="map" role="img" aria-label="Karte der Wiener Gemeindebezirke"></svg>
@@ -846,7 +853,10 @@ function applyZoom(){
   const x=Math.max(-4,Math.min(W+4-w,zoom.cx-w/2)), y=Math.max(-4,Math.min(H+4-h,zoom.cy-h/2));
   svg.setAttribute("viewBox",`${x.toFixed(1)} ${y.toFixed(1)} ${w.toFixed(1)} ${h.toFixed(1)}`);
   svg.classList.toggle("zoomed",zoom.k>1); svg.style.setProperty("--zk",Math.max(1,zoom.k*0.75).toFixed(3));
-  document.getElementById("zoomout").hidden=zoom.k===1;
+  /* Punkt-Ebenen: ab 3-fachem Zoom keine Bezirkszahlen, damit sie keine Standorte verdecken */
+  try{ svg.classList.toggle("ptzoom",zoom.k>=3&&(isPts(layer)||layer.id==="wl"||!!layer.fund)); }catch(e){}
+  const zo=document.getElementById("zoomout"); zo.setAttribute("aria-pressed",zoom.k===1);
+  const lc=document.getElementById("locate"); if(lc) lc.setAttribute("aria-pressed",!!(me&&zoom.k>1&&(()=>{ const [x,y]=px([me.lon,me.lat]); return Math.abs(x-zoom.cx)<W/zoom.k*.2&&Math.abs(y-zoom.cy)<H/zoom.k*.2; })()));
 }
 let me=null;
 function locate(){
@@ -1071,6 +1081,10 @@ function renderControls(){
   document.getElementById("yrange").textContent=layer.clock?`Uhrzeit · ${dmy(FP_DAY)}`:layer.live?"Momentaufnahme":layer.fund?"laufender Feed":ys.length>1?`${ys.length} Jahre: ${ys[0]}–${ys[ys.length-1]}`:"nur dieses Jahr verfügbar";
   document.getElementById("stand").innerHTML=`<div><b>Datenstand:</b> ${layer.stand(y)}</div><div><span>Quelle:</span> ${subOf(layer).src||layer.src}</div><div><span>Abgerufen:</span> ${ABRUF}</div>`;
   const w=document.getElementById("wien"); w.setAttribute("aria-pressed",sel===0);
+  svg.classList.toggle("ptzoom",zoom.k>=3&&(isPts(layer)||layer.id==="wl"||!!layer.fund));
+  if(sel) lastSel=sel; const bz=document.getElementById("bzbtn"), nb=sel||lastSel;
+  bz.textContent=nb?NAMES[nb]:"Bezirk"; bz.classList.toggle("empty",!nb); bz.setAttribute("aria-pressed",sel>0);
+  bz.title=nb?"":"Bezirk auf der Karte antippen";
   svg.classList.toggle("all",sel===0);
 }
 function setYearIdx(i){ const ys=yearsOf(subOf(layer)); i=Math.max(0,Math.min(ys.length-1,i)); state[layer.id].year=ys[i]; render(); }
@@ -1078,6 +1092,8 @@ document.getElementById("yslider").addEventListener("input",e=>setYearIdx(+e.tar
 document.getElementById("yprev").addEventListener("click",()=>setYearIdx(+document.getElementById("yslider").value-1));
 document.getElementById("ynext").addEventListener("click",()=>setYearIdx(+document.getElementById("yslider").value+1));
 document.getElementById("wien").addEventListener("click",()=>select(0));
+var lastSel=0;
+document.getElementById("bzbtn").addEventListener("click",()=>{ if(lastSel) select(lastSel); else { const h=document.getElementById("numhint"); const m=document.getElementById("locmsg"); m.textContent="Tippe auf einen Bezirk in der Karte, um ihn auszuwählen."; m.hidden=false; setTimeout(()=>{ m.hidden=true; },3500); } });
 document.getElementById("locate").addEventListener("click",()=>{ if(!isPts(layer)&&layer.id!=="next"){ layer=LAYERS.find(L=>L.id==="infra"); } locate(); });
 document.getElementById("basebtn").addEventListener("click",()=>{ const on=baseOn===null?(isPts(layer)||layer.id==="next"):baseOn; baseOn=!on; render(); });
 document.getElementById("baseopr").addEventListener("input",e=>{ baseOpacity=+e.target.value; tilesG.style.opacity=baseOpacity; });
@@ -1397,7 +1413,7 @@ function stackBar(key,b,y){
     <div class="skey">${vals.map(([l,v,c])=>`<span><b style="background:${c}"></b>${l} <em>${abs?fmtInt(v)+" · "+fmt1(100*v/sum)+" %":fmt1(v)+" %"}</em></span>`).join("")}</div>`;
 }
 
-const groupCol = L => { const g=LGROUPS.find(g=>g[2].includes(L.id)); return g?g[1]:"#7f8c87"; };
+const groupCol = L => { const g=LGROUPS.find(g=>flatIds(g[2]).includes(L.id)); return g?g[1]:"#7f8c87"; };
 const openBox = {};
 function listBox(key,title,count,inner,L){
   const open = openBox[key]!==false;
@@ -1498,7 +1514,7 @@ const a_=(u,t)=>`<a href="${u}" target="_blank" rel="noopener">${t}</a>`;
 const creditHtml=()=>`Diese kostenlose App wurde von ${a_(LINKS.mail,"Christoph Puhl")} entwickelt und von Claude.ai umgesetzt. Wenn Du möchtest, kannst Du ${a_(LINKS.donate,"hier")} gerne für einen Kaffee, ein Mohnbeugerl oder ein KI-Monatsabo spenden. Dieses Projekt auf ${a_(LINKS.github,"GitHub")} ansehen. Mehr über den ${a_(LINKS.author,"Autor")}, weitere Apps, ${a_(LINKS.comics,"Comics")} und ${a_("https://puhl.ch/category/programme-und-apps/","Tools")} findest Du auf ${a_(LINKS.puhl,"puhl.ch")}.`;
 function sliderName(L){ return L.clock?"Uhrzeit":(L.subs.every(s=>s.pts)||L.special)?"Stand":L.id==="wl"?"live":L.fund?"laufend":"Jahr"; }
 function layerTree(){
-  const order=LGROUPS.flatMap(([name,col,ids])=>ids.map((id,i)=>[LAYERS.find(L=>L.id===id),i===0?[name,col]:null])).filter(x=>x[0]);
+  const order=LGROUPS.flatMap(([name,col,ids])=>flatIds(ids).map((id,i)=>[LAYERS.find(L=>L.id===id),i===0?[name,col]:null])).filter(x=>x[0]);
   return order.map(([L,head])=>(head?`<div class="tg" style="color:color-mix(in srgb,${head[1]} 70%,var(--ink))">${esc(head[0])}</div>`:"")+(()=>{
     const subs=L.id==="next"?[{label:"Haltestellen in der Nähe und nächste Abfahrten (nur mit Standort)"}]:L.special?Object.entries(SIED_COL).map(([n,c])=>({label:n,dot:c})).concat([{label:"Römerstraßen und mittelalterliche Befestigung"},{label:"Lagerplan Vindobona mit Grabungsbefunden"}]):(L.subs||[]);
     const col=L.color||"var(--accent)";
@@ -1672,7 +1688,7 @@ const LGROUPS=[["Infrastruktur","#2f6fb0",["infra","waste"]],
   ["Tiere","#8a5a2b",["dog","fund"]],
   ["Demografie","#c4161c",["pop","age","cob","bir","dea","edu"]],
   ["Politik & Geschichte","#7a3db8",["vote","antik"]]];
-const flatIds=ids=>ids.flatMap(x=>Array.isArray(x)?x[1]:[x]);
+function flatIds(ids){ return ids.flatMap(x=>Array.isArray(x)?x[1]:[x]); }
 const inGroup=new Set(LGROUPS.flatMap(g=>flatIds(g[2])));
 LGROUPS.concat([["Weitere","#7f8c87",LAYERS.map(L=>L.id).filter(id=>!inGroup.has(id))]]).forEach(([name,col,ids])=>{
   const rows=ids.some(Array.isArray)?ids:[[null,ids]];
