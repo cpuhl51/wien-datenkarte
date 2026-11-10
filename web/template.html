@@ -215,6 +215,7 @@ footer a{color:inherit}
 .yval .yts{display:block;font:500 11px var(--mono);color:var(--muted);white-space:nowrap}
 #subsmob .subs{margin:10px 0 4px;padding:8px 10px;border-left:3px solid var(--gc);background:color-mix(in srgb,var(--gc) 8%,transparent);border-radius:0 8px 8px 0}
 .howto{font-size:13px;margin:12px 0 0}
+.settingsrow{margin:14px 0 0}
 .yrange{font:12px var(--mono);color:var(--muted);white-space:nowrap}
 .spark{width:100%;height:auto;display:block;margin:4px 0 10px}
 .spark text{font:11px var(--mono);fill:var(--muted)}
@@ -271,7 +272,7 @@ svg.vin text.vl{font:600 13px var(--body);fill:#3a2e08;pointer-events:none}
 
 <div class="wrap">
   <header>
-    <div class="topline"><div class="eyebrow">Prototyp · Open Data Wien</div><div class="tools"><div class="themesw" role="group" aria-label="Darstellung"><button data-th="auto" aria-pressed="true">Auto</button><button data-th="light" aria-pressed="false">Hell</button><button data-th="dark" aria-pressed="false">Dunkel</button></div><button class="infobtn" id="installbtn" hidden>App installieren</button><a class="infobtn" id="infobtn" href="#info">Info &amp; Datenschutz</a></div></div>
+    <div class="topline"><div class="eyebrow">Live- und Informationskarte der Stadt Wien</div></div>
     <h1>Wien live - Daten &amp; Zahlen</h1>
     <p class="lede">Livekarte. Finde was Du brauchst in deiner Nähe. Oder begib dich auf eine Zeitreise durch die politische und demografische Landschaft der lebenswertesten grünen Stadt der Welt.</p>
   </header>
@@ -311,6 +312,7 @@ svg.vin text.vl{font:600 13px var(--body);fill:#3a2e08;pointer-events:none}
   </div>
 
   <div class="stand" id="stand" aria-live="polite"></div>
+  <div class="tools settingsrow"><a class="infobtn" id="infobtn" href="#info">Einstellungen, Info und Datenschutz</a><button class="infobtn" id="installbtn" hidden>App installieren</button></div>
   <p class="note howto"><b>So funktioniert's:</b> Die Karte zeigt die gewählte Ebene. Darunter schiebst du durch Jahre oder Uhrzeit und wählst die Ebene. Tippe auf einen Bezirk oder „Wien gesamt“ für Details. Die Farben bedeuten in jedem Jahr dasselbe: Wird ein Bezirk beim Durchschieben dunkler, ist der Wert gestiegen. Datenstand und Quelle stehen unter der Rangliste.</p>
   </div>
   <footer>
@@ -1427,19 +1429,22 @@ function layerTree(){
 }
 function renderInfo(){
   document.getElementById("info").innerHTML=`<a class="back" href="#">‹ Zurück zur Karte</a>
-  <h2 id="info-h">Info &amp; Datenschutz</h2>
+  <h2 id="info-h">Einstellungen, Info und Datenschutz</h2>
   <p>Diese App zeigt offene Daten der Stadt Wien auf einer Karte der 23 Bezirke. Sie ist ein privates, nicht kommerzielles Projekt und kein Angebot der Stadt Wien.</p>
   <div class="creditbox">${creditHtml()}</div>
 
+  <h3>Darstellung</h3>
+  <div class="themesw" role="group" aria-label="Darstellung">${[["auto","Auto"],["light","Hell"],["dark","Dunkel"]].map(([v,l])=>`<button data-th="${v}" aria-pressed="${curTheme()===v}">${l}</button>`).join("")}</div>
+  <p class="note">Auto folgt der Einstellung deines Geräts.</p>
   <h3>Startansicht</h3>
   <div id="svbox">${startViewHtml()}</div>
   <h3>App installieren</h3>
-  <p>In Chrome: ⋮ → „Zum Startbildschirm hinzufügen“ → „Installieren“, oder der Knopf „App installieren“ oben, sobald er erscheint.</p>
+  <p>In Chrome: ⋮ → „Zum Startbildschirm hinzufügen“ → „Installieren“, oder der Knopf „App installieren“ unter der Karte neben den Einstellungen, sobald er erscheint.</p>
   <p class="note" id="appstatus">App-Status wird ermittelt …</p>
 
   <h3>So funktioniert die App</h3>
   <ul>
-    <li><b>Ebene wählen:</b> Die Knöpfe oben (z. B. Einwohner, Herkunft, Müll) bestimmen, was die Karte zeigt. Darunter wählst du die Kennzahl.</li>
+    <li><b>Ebene wählen:</b> Die Knöpfe unter der Karte (z. B. Einwohner, Herkunft, Müll) bestimmen, was die Karte zeigt. Die Kennzahl wählst du am Handy direkt unter der Karte, am Computer bei der Kategorie.</li>
     <li><b>Regler:</b> Je nach Ebene schiebst du durch die Jahre, durch die Uhrzeit (Öffis unterwegs) oder siehst den aktuellen Stand.</li>
     <li><b>Bezirk antippen:</b> Rechts bzw. darunter erscheinen Details, Verlauf und Rangliste. „Wien gesamt“ zeigt die ganze Stadt.</li>
     <li><b>Zoomen und verschieben:</b> mit + und −, mit zwei Fingern oder durch Ziehen mit einem Finger, wenn die Karte vergrößert ist. „Stadtplan“ blendet einen Straßenplan darunter ein.</li>
@@ -1508,7 +1513,8 @@ function applyTheme(v){
   document.querySelectorAll('meta[name="theme-color"]').forEach(m=>{ if(!m.dataset.orig) m.dataset.orig=m.content; m.content=v==="dark"?"#111715":v==="light"?"#f3f5f4":m.dataset.orig; });
   try{ v&&v!=="auto"?localStorage.setItem("theme",v):localStorage.removeItem("theme"); }catch(e){}
 }
-document.querySelectorAll(".themesw button").forEach(b=>b.addEventListener("click",()=>applyTheme(b.dataset.th)));
+function curTheme(){ let v=null; try{ v=localStorage.getItem("theme"); }catch(e){} return v==="light"||v==="dark"?v:"auto"; }
+document.addEventListener("click",e=>{ const b=e.target.closest&&e.target.closest(".themesw button"); if(b) applyTheme(b.dataset.th); });
 (()=>{ let v=null; try{ v=localStorage.getItem("theme"); }catch(e){} applyTheme(v||"auto"); })();
 document.getElementById("credit-foot").innerHTML=creditHtml();
 const pointers=new Map(); let drag=null, moved=false, tileTimer=null;
