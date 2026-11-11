@@ -138,6 +138,9 @@ svg.map .tiles{pointer-events:none}
 :root[data-theme="dark"] svg.map .tiles{filter:invert(1) hue-rotate(180deg) brightness(.85) contrast(.9)}
 .wien.zb{min-width:34px;padding:6px 0;font-size:16px;line-height:1}
 .baseop{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.baseop[hidden]{display:none}
+.smw{display:none}
+@media (max-width:380px){.lgw{display:none}.smw{display:inline}}
 .baseop input{width:90px;accent-color:var(--accent)}
 .wien[aria-pressed="true"]#basebtn{background:var(--ink);color:var(--bg)}
 svg.map.zoomed{touch-action:none;cursor:grab}
@@ -248,6 +251,7 @@ footer a{color:inherit}
 .skey em{font-style:normal;color:var(--ink);font-family:var(--mono);font-variant-numeric:tabular-nums}
 .maphead{display:flex;flex-direction:column;gap:10px}
 .maprow{display:flex;align-items:center;gap:10px 12px;flex-wrap:wrap}
+@media (max-width:420px){.maprow{gap:8px}.maprow .wien{font-size:12.5px;padding-left:9px;padding-right:9px}.bgrp.seg .zb{min-width:34px}.bzname{max-width:6.2em}.baseop input{width:70px}}
 .baseop span{font-size:16px}
 .pickmsg{margin:10px 0 0;padding:8px 12px;border-radius:8px;background:color-mix(in srgb,var(--accent) 14%,transparent);border:1px solid var(--accent);font:600 14px var(--body)}
 .linkbtn{background:none;border:0;padding:0 0 0 6px;color:var(--accent);font:600 14px var(--body);text-decoration:underline;cursor:pointer}
@@ -324,7 +328,7 @@ svg.vin text.vl{font:600 13px var(--body);fill:#3a2e08;pointer-events:none}
       <div class="maphead">
         <div class="maprow">
           <div class="bgrp seg" role="group" aria-label="Daten für"><button class="wien" id="wien" aria-pressed="true">Wien</button><button class="wien bzname" id="bzbtn" aria-pressed="false">Bezirk</button></div>
-          <button class="wien" id="basebtn" aria-pressed="false">Stadtplan</button>
+          <button class="wien" id="basebtn" aria-pressed="false" aria-label="Stadtplan"><span class="lgw">Stadtplan</span><span class="smw">Plan</span></button>
           <div class="bgrp seg" role="group" aria-label="Zoom"><button class="wien zb" id="zoutb" aria-label="Herauszoomen">−</button><button class="wien zb" id="zin" aria-label="Hineinzoomen">+</button></div></div>
         <div class="maprow">
           <div class="bgrp seg" role="group" aria-label="Ausschnitt"><button class="wien" id="locate" aria-pressed="false">Mein Standort</button><button class="wien" id="zoomout" aria-pressed="true">Ganze Stadt</button></div>
