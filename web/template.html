@@ -260,6 +260,9 @@ svg.map.pickmode .ovl,svg.map.pickmode .wlg{display:none}
 .bgrp.seg .zb{min-width:40px}
 .bzname{max-width:8.5em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bzname.empty{color:var(--muted);font-weight:500}
+.bzname.blink{animation:bzblink 1s ease-in-out infinite;color:var(--accent);font-weight:600}
+@keyframes bzblink{50%{background:color-mix(in srgb,var(--accent) 25%,transparent)}}
+@media (prefers-reduced-motion:reduce){.bzname.blink{animation:none;background:color-mix(in srgb,var(--accent) 20%,transparent)}}
 .wien{font:600 13px var(--body);padding:6px 12px;border-radius:6px;border:1px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
 .wien[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
 .wien:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
@@ -321,8 +324,8 @@ svg.vin text.vl{font:600 13px var(--body);fill:#3a2e08;pointer-events:none}
       <div class="maphead">
         <div class="maprow">
           <div class="bgrp seg" role="group" aria-label="Daten für"><button class="wien" id="wien" aria-pressed="true">Wien</button><button class="wien bzname" id="bzbtn" aria-pressed="false">Bezirk</button></div>
-          <div class="bgrp seg" role="group" aria-label="Zoom"><button class="wien zb" id="zoutb" aria-label="Herauszoomen">−</button><button class="wien zb" id="zin" aria-label="Hineinzoomen">+</button></div>
-          <button class="wien" id="basebtn" aria-pressed="false">Stadtplan</button></div>
+          <button class="wien" id="basebtn" aria-pressed="false">Stadtplan</button>
+          <div class="bgrp seg" role="group" aria-label="Zoom"><button class="wien zb" id="zoutb" aria-label="Herauszoomen">−</button><button class="wien zb" id="zin" aria-label="Hineinzoomen">+</button></div></div>
         <div class="maprow">
           <div class="bgrp seg" role="group" aria-label="Ausschnitt"><button class="wien" id="locate" aria-pressed="false">Mein Standort</button><button class="wien" id="zoomout" aria-pressed="true">Ganze Stadt</button></div>
           <label class="baseop" id="baseop" hidden><span aria-hidden="true">◐</span><input type="range" id="baseopr" min="0.2" max="1" step="0.1" value="0.6" aria-label="Deckkraft des Stadtplans"></label></div></div>
@@ -1089,12 +1092,11 @@ function renderControls(){
   document.getElementById("ynext").disabled=i>=ys.length-1;
   document.getElementById("yrange").textContent=layer.clock?`Uhrzeit · ${dmy(FP_DAY)}`:layer.live?"Momentaufnahme":layer.fund?"laufender Feed":ys.length>1?`${ys.length} Jahre: ${ys[0]}–${ys[ys.length-1]}`:"nur dieses Jahr verfügbar";
   document.getElementById("stand").innerHTML=`<div><b>Datenstand:</b> ${layer.stand(y)}</div><div><span>Quelle:</span> ${subOf(layer).src||layer.src}</div><div><span>Abgerufen:</span> ${ABRUF}</div>`;
-  const w=document.getElementById("wien"); w.setAttribute("aria-pressed",sel===0);
+  const w=document.getElementById("wien"); w.setAttribute("aria-pressed",sel===0&&!pickMode);
   svg.classList.toggle("ptzoom",zoom.k>=3&&(isPts(layer)||layer.id==="wl"||!!layer.fund));
   svg.classList.toggle("pickmode",pickMode); document.getElementById("pickmsg").hidden=!pickMode;
-  if(pickMode) document.getElementById("bzbtn").setAttribute("aria-pressed","true");
   if(sel) lastSel=sel; const bz=document.getElementById("bzbtn"), nb=sel||lastSel;
-  bz.textContent=nb?NAMES[nb]:"Bezirk"; bz.classList.toggle("empty",!nb); bz.setAttribute("aria-pressed",sel>0||pickMode);
+  bz.textContent=nb?NAMES[nb]:"Bezirk"; bz.classList.toggle("empty",!nb); bz.setAttribute("aria-pressed",sel>0); bz.classList.toggle("blink",pickMode);
   bz.title=nb?"":"Bezirk auf der Karte antippen";
   svg.classList.toggle("all",sel===0);
 }
