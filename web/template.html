@@ -227,6 +227,17 @@ footer a{color:inherit}
 #subsmob .subs{margin:10px 0 4px;padding:8px 10px;border-left:3px solid var(--gc);background:color-mix(in srgb,var(--gc) 8%,transparent);border-radius:0 8px 8px 0}
 .howto{font-size:13px;margin:12px 0 0}
 .settingsrow{margin:14px 0 0}
+.fotobtn{display:flex;align-items:center;gap:10px;margin:12px 0 4px;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);font:600 15px var(--body);text-decoration:none}
+.fotobtn b{margin-left:auto;font:600 13px var(--mono);color:var(--muted)}
+.fotobtn .fbx{font-size:20px;color:var(--muted)}
+.fotobtn:active{background:var(--line)}
+.vhist summary{cursor:pointer;font-weight:600}
+.vhist ul{margin:6px 0 10px;padding-left:18px}
+.vhist .vd{color:var(--muted);font:12px var(--mono)}
+.moreapps{display:grid;gap:8px;margin:6px 0 0}
+.moreapps a{display:flex;align-items:center;gap:10px;color:var(--ink);text-decoration:none}
+.moreapps img{width:36px;height:36px;border-radius:8px}
+.moreapps small{display:block;color:var(--muted)}
 .fotos{max-width:1100px}
 .fgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 10px;margin:10px 0 20px}
 @media (min-width:700px){.fgrid{grid-template-columns:repeat(auto-fill,minmax(210px,1fr))}}
@@ -337,6 +348,7 @@ svg.vin text.vl{font:600 13px var(--body);fill:#3a2e08;pointer-events:none}
       <p class="note" id="locmsg" hidden></p>
       <svg class="map" id="map" role="img" aria-label="Karte der Wiener Gemeindebezirke"></svg>
       <div id="mappick" aria-live="polite"></div>
+      <a class="fotobtn" id="fotobtn" href="#fotos" hidden></a>
       <div class="legend"><div class="ramp" id="ramp"></div><div class="ticks" id="ticks"></div><div class="ticks blg" id="wlleg"></div></div>
       <div class="yearbar">
         <span class="ylabel" id="ylabel">Jahr</span>
@@ -1446,7 +1458,7 @@ function fundList(b,L){
   if(!L) return listBox("fund","Gemeldete Tiere",it.length,fundList(b,layer).replace(/^<h4>[^<]*<\/h4>/,""));
   return `<h4>Gemeldete Tiere (${it.length})</h4><ul class="flist">${it.slice(0,60).map(i=>`<li><span class="fd">${dmy(i.d)}</span><span>${i.t}${i.f?" · "+i.f:""}${i.s&&i.s!=="unbekannt"?" · "+i.s:""}</span><span class="fo">${i.o}</span></li>`).join("")}</ul>
     <p class="note" style="margin:6px 0 0">Abholung und Kontakt: Seite „Fundtiere“ auf wien.gv.at.</p>
-    ${it.some(i=>i.foto)?`<p style="margin:8px 0 0"><a class="wien" href="#fotos">Alle Fundtiere mit Foto anzeigen (${it.filter(i=>i.foto).length})</a></p>`:""}`;
+`;
 }
 
 function wlList(b,boxed){
@@ -1485,6 +1497,8 @@ function renderDetail(s,y,order,c){
     <p class="note" style="margin:0">${Object.entries(DOG_ATT).map(([yr,v])=>`${yr}: ${v.human} Mensch, ${v.all-v.human} sonstige`).join(" · ")}. Bissstatistik der MA 58; „sonstige“ = Vorfälle ohne gebissenen Menschen. Für 2024 ist der Download-Link der Stadt derzeit defekt.</p>`:"";
   /* angetippter Ort, Tier oder Störung: Kärtchen direkt unter der Karte */
   document.getElementById("mappick").innerHTML=(isPts(layer)&&PT&&PT.points[s.pts]?pickCard(s):"")+wlPickCard()+fundPickCard();
+  { const fb=document.getElementById("fotobtn"), n=layer.fund&&F.items?fotoItems().length:0;
+    fb.hidden=!n; if(n) fb.innerHTML=`<span aria-hidden="true">📷</span> Fundtiere mit Foto ansehen <b>${n}</b><span class="fbx" aria-hidden="true">›</span>`; }
   document.getElementById("detail").innerHTML=`
     <h2>${b===0?"Wien gesamt":b+". "+NAMES[b]}</h2>
     ${place}${pd}
@@ -1531,7 +1545,9 @@ function select(b){sel=b;pickMode=false;render();}
 /* ---------- Info-Seite ---------- */
 const LINKS={mail:"mailto:apps@puhl.ch",donate:"https://paypal.me/PuhlChristoph",github:"https://github.com/cpuhl51/wien-datenkarte",author:"https://de.wikipedia.org/wiki/Christoph_Puhl",comics:"https://www.diezöno.se",puhl:"https://www.puhl.ch"};
 const a_=(u,t)=>`<a href="${u}" target="_blank" rel="noopener">${t}</a>`;
-const creditHtml=()=>`Diese kostenlose App wurde von ${a_(LINKS.mail,"Christoph Puhl")} entwickelt und von Claude.ai umgesetzt. Wenn Du möchtest, kannst Du ${a_(LINKS.donate,"hier")} gerne für einen Kaffee, ein Mohnbeugerl oder ein KI-Monatsabo spenden. Dieses Projekt auf ${a_(LINKS.github,"GitHub")} ansehen. Mehr über den ${a_(LINKS.author,"Autor")}, weitere Apps, ${a_(LINKS.comics,"Comics")} und ${a_("https://puhl.ch/category/programme-und-apps/","Tools")} findest Du auf ${a_(LINKS.puhl,"puhl.ch")}.`;
+/* In der Play-Store-App (TWA) kein Spendenlink: Google verlangt für Trinkgeld an Entwickler vermutlich die Play-Abrechnung */
+const IS_TWA=(()=>{ try{ if(document.referrer.startsWith("android-app://ch.puhl.wienaktuell")) sessionStorage.setItem("twa","1"); return sessionStorage.getItem("twa")==="1"; }catch(e){ return document.referrer.startsWith("android-app://"); } })();
+const creditHtml=()=>`Diese kostenlose App wurde von ${a_(LINKS.mail,"Christoph Puhl")} entwickelt und von Claude.ai umgesetzt. ${IS_TWA?"":`Wenn Du möchtest, kannst Du ${a_(LINKS.donate,"hier")} gerne für einen Kaffee, ein Mohnbeugerl oder ein KI-Monatsabo spenden. `}Dieses Projekt auf ${a_(LINKS.github,"GitHub")} ansehen. Mehr über den ${a_(LINKS.author,"Autor")}, weitere Apps, ${a_(LINKS.comics,"Comics")} und ${a_("https://puhl.ch/category/programme-und-apps/","Tools")} findest Du auf ${a_(LINKS.puhl,"puhl.ch")}.`;
 function sliderName(L){ return L.clock?"Uhrzeit":(L.subs.every(s=>s.pts)||L.special)?"Stand":L.id==="wl"?"live":L.fund?"laufend":"Jahr"; }
 function layerTree(){
   const order=LGROUPS.flatMap(([name,col,ids])=>flatIds(ids).map((id,i)=>[LAYERS.find(L=>L.id===id),i===0?[name,col]:null])).filter(x=>x[0]);
@@ -1542,11 +1558,28 @@ function layerTree(){
       +subs.map((s,i)=>{ const c=s.dot||(L.id==="vote"&&s.id!=="all"?s.color:L.id==="brand"&&BRAND_COL[s.id.toUpperCase()]?BRAND_COL[s.id.toUpperCase()]:null); return `<div class="ts">${i===subs.length-1?"└─":"├─"} ${c?`<b style="background:${c}"></b>`:""}<span>${esc(s.label)}</span></div>`; }).join("");
   })()).join("");
 }
+/* Version und weitere Apps (App-Standard) */
+let VER=null, APPS=null;
+let aboutLoaded=false;
+function loadAbout(){ if(aboutLoaded) return fillAbout(); aboutLoaded=true;
+  fetch("version.json",{cache:"no-cache"}).then(r=>r.json()).then(v=>{ VER=v; fillAbout(); }).catch(()=>{});
+  fetch("https://apps.puhl.ch/apps.json").then(r=>r.ok?r.json():null).then(a=>{ APPS=Array.isArray(a)?a:null; fillAbout(); }).catch(()=>{}); }
+function fillAbout(){
+  const av=document.getElementById("appver"); if(!av) return;
+  if(VER){ av.textContent="Version "+VER.version; const h=document.getElementById("vhist"); h.hidden=false;
+    document.getElementById("vhistbody").innerHTML=(VER.verlauf||[]).map(x=>`<p style="margin:8px 0 0"><b>${esc(x.version)}</b> <span class="vd">${esc(dmy(x.datum))}</span></p><ul>${(x.aenderungen||[]).map(c=>`<li>${esc(c)}</li>`).join("")}</ul>`).join(""); }
+  const others=(APPS||[]).filter(a=>a&&a.url&&!/wien-live-daten\.puhl\.ch/.test(a.url));
+  if(others.length){ document.getElementById("moreapps").hidden=false;
+    document.getElementById("moreappsbody").innerHTML=others.map(a=>`<a href="${esc(a.playstore||a.url)}" target="_blank" rel="noopener">${a.icon?`<img src="${esc(a.icon)}" alt="">`:""}<span>${esc(a.name||"")}<small>${esc(a.beschreibung||"")}</small></span></a>`).join(""); }
+}
 function renderInfo(){
   document.getElementById("info").innerHTML=`<a class="back" href="#">‹ Zurück zur Karte</a>
   <h2 id="info-h">Einstellungen, Info und Datenschutz</h2>
+  <p><b>Wien live - Daten &amp; Zahlen</b> <span id="appver" class="vd"></span></p>
   <p>Diese App zeigt offene Daten der Stadt Wien auf einer Karte der 23 Bezirke. Sie ist ein privates, nicht kommerzielles Projekt und kein Angebot der Stadt Wien.</p>
   <div class="creditbox">${creditHtml()}</div>
+  <details class="vhist" id="vhist" hidden><summary>Versionsgeschichte</summary><div id="vhistbody"></div></details>
+  <div id="moreapps" hidden><h3>Weitere Apps</h3><div class="moreapps" id="moreappsbody"></div></div>
 
   <h3>Darstellung</h3>
   <div class="themesw" role="group" aria-label="Darstellung">${[["auto","Auto"],["light","Hell"],["dark","Dunkel"]].map(([v,l])=>`<button data-th="${v}" aria-pressed="${curTheme()===v}">${l}</button>`).join("")}</div>
@@ -1572,6 +1605,7 @@ function renderInfo(){
   <div class="tree">${layerTree()}</div>
 
   <h3>Datenschutz</h3>
+  <p>Ausführlich: <a href="datenschutz.html">Datenschutzerklärung</a></p>
   <ul>
     <li><b>Kein Konto, keine Cookies, kein Tracking, keine Werbung.</b> Die App sammelt keine personenbezogenen Daten.</li>
     <li><b>Standort:</b> Nur wenn du „Mein Standort“ oder „Nächstes Öffi“ antippst, fragt dein Gerät um Erlaubnis. Hast du sie schon erteilt, nutzt die App den Standort auch beim Start, um nahe Haltestellen anzubieten. Der Standort wird ausschließlich auf deinem Gerät verwendet (Karte zentrieren, Entfernungen, nächste Haltestellen). Er wird nicht gespeichert und nirgendwohin gesendet – für die Abfahrtszeiten gehen nur die Nummern der Haltestellen an den Server.</li>
@@ -1588,6 +1622,7 @@ function renderInfo(){
     <tr><td>app.wien-live-daten.puhl.ch (GitHub Pages)</td><td>immer</td><td>Die App selbst und alle aufbereiteten Daten</td></tr>
     <tr><td>wien-stoerungen.cpuhl51.workers.dev (Cloudflare)</td><td>nur Ebenen „Öffi-Störungen“ und „Nächstes Öffi“</td><td>Leitet Störungsmeldungen und Abfahrtszeiten der Wiener Linien weiter (nur Haltestellennummern, kein Standort)</td></tr>
     <tr><td>mapsneu.wien.gv.at (basemap.at)</td><td>nur mit „Stadtplan“</td><td>Kacheln des Stadtplans</td></tr>
+    <tr><td>apps.puhl.ch</td><td>nur auf dieser Info-Seite</td><td>Liste weiterer Apps</td></tr>
     <tr><td>data.wien.gv.at (Geodaten der Stadt)</td><td>nur Ebene „Verkehrshindernisse“</td><td>Baustellen live</td></tr>
     <tr><td>gbfs.nextbike.net (WienMobil Rad)</td><td>nur Ebene „Leihräder“</td><td>Freie Räder und Rückgabeplätze in Echtzeit</td></tr>
     <tr><td>Google Maps</td><td>nur bei „Hin navigieren“</td><td>Routenplanung zum gewählten Ort</td></tr>
@@ -1609,7 +1644,7 @@ document.addEventListener("keydown",e=>{ const g=e.target.closest&&e.target.clos
 /* Fundtiere mit Foto: eigene Ansicht (#fotos), gefiltert nach Tierart und gewähltem Bezirk */
 const FUND_ONE={katze:"Katze",hund:"Hund",vogel:"Vogel",kleintier:"Kleintier",reptil:"Reptil/Amphibie",andere:"anderes Tier"};
 const fundOrt=o=>String(o||"").replace(/^(\d+)\.,?\s*/,"$1, ");
-function fotoItems(){ return F.items.filter(i=>i.foto&&(sel===0||i.b===sel)&&(state.fund.sub==="all"||fkOf(i)===state.fund.sub)).sort((a,c)=>c.d.localeCompare(a.d)); }
+function fotoItems(){ return F.items.filter(i=>i.foto&&(sel===0||i.b===sel)&&(state.fund.sub==="all"||fkOf(i)===state.fund.sub)).sort((a,c)=>c.d.localeCompare(a.d)||(+c.id||0)-(+a.id||0)); }
 function renderFotos(){
   const it=fotoItems(), s=state.fund.sub, kind=s==="all"?"Alle Tiere":FUND_KIND[s]?FUND_KIND[s][0]:"";
   document.getElementById("fotos").innerHTML=`<a class="back" href="#">‹ Zurück zur Karte</a>
@@ -1629,6 +1664,7 @@ function route(){
   if(fo) renderFotos(); fs.hidden=!fo;
   const on=location.hash==="#info", info=document.getElementById("info");
   if(on&&!info.innerHTML) renderInfo();
+  if(on) loadAbout();
   if(on){ const el=document.getElementById("svbox"); if(el) el.innerHTML=startViewHtml(); }
   if(on) appStatus().then(s=>{ const el=document.getElementById("appstatus"); if(el) el.textContent=s; });
   info.hidden=!on; document.getElementById("app").hidden=on||fo;

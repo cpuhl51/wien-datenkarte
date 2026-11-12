@@ -1,0 +1,8 @@
+{
+  "version": "1.0.1",
+  "verlauf": [
+    {"version": "1.0.1", "datum": "2026-11-13", "aenderungen": ["Fundtiere-Fotos: neueste Funde zuerst", "Knopf „Fundtiere mit Foto“ direkt unter der Karte", "Versionsgeschichte und weitere Apps auf der Info-Seite"]},
+    {"version": "1.0.0", "datum": "2026-11-11", "aenderungen": ["Erste Version für Google Play", "Umschalter Wien | Bezirk und Mein Standort | Ganze Stadt", "Bezirk wählen ohne störende Punkte", "Neue Ebene Verkehrshindernisse (Baustellen live)", "Fundtiere mit Fotogalerie", "Eigene Datenschutzseite"]},
+    {"version": "0.9", "datum": "2026-11-10", "aenderungen": ["Frühere Versionen (2.–10.11.2026): Karte der 23 Bezirke mit Einwohnern, Alter, Herkunft, Wahlen 2005–2025, Hunden, Fundtieren, Öffi-Störungen, nächsten Abfahrten, Leihrädern, Taxistandplätzen, Römischem Wien; eigene Adresse app.wien-live-daten.puhl.ch; installierbar als App"]}
+  ]
+}
