@@ -2042,5 +2042,37 @@
 "tel": "+43 1 734 11 02 - 114",
 "mail": "tieraufnahme@tierquartier.at",
 "img": "/fundundvergabetiere/internet/Bild/Thumbnail/86675"
+},
+{
+"id": "64610",
+"t": "Katze",
+"k": "Katzen",
+"d": "2026-11-11",
+"s": "unbekannt",
+"f": "weiß",
+"o": "14., Hühnersteigstraße",
+"b": 14,
+"j": "",
+"mx": "",
+"org": "Stadt Wien | Veterinäramt und Tierschutz",
+"tel": "+43 1 4000-8060",
+"mail": "post@ma60.wien.gv.at",
+"img": "/fundundvergabetiere/internet/Bild/Thumbnail/86704"
+},
+{
+"id": "64615",
+"t": "Deutscher Schäferhund",
+"k": "Hunde",
+"d": "2026-11-11",
+"s": "unbekannt",
+"f": "Schwarz/braun",
+"o": "10., Bürgergasse",
+"b": 10,
+"j": "",
+"mx": "",
+"org": "TierQuarTier Wien,  1220 Wien, Süßenbrunner Straße 101",
+"tel": "+43 1 734 11 02 - 114",
+"mail": "tieraufnahme@tierquartier.at",
+"img": "/fundundvergabetiere/internet/Bild/Thumbnail/86726"
 }
 ]
