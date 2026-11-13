@@ -125,6 +125,12 @@ button.sub{display:inline-flex;align-items:center;gap:6px}
 .stand .warn{color:var(--accent);font-weight:500}
 .grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:20px;align-items:start}
 @media (max-width:820px){.grid{grid-template-columns:minmax(0,1fr)}}
+.mapwrap{position:relative;min-width:0}
+.mapwrap svg.map{display:block;width:100%}
+.maprefresh{position:absolute;top:8px;left:8px;width:40px;height:40px;padding:0;font-size:20px!important;line-height:1;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:600 13px var(--body);box-shadow:0 2px 8px rgba(0,0,0,.18);cursor:pointer}
+.maprefresh[disabled]{opacity:.7}
+.maprefresh.spin{animation:nxspin 1s linear infinite}
+@keyframes nxspin{to{transform:rotate(360deg)}}
 .mapbox{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:10px;min-width:0}
 svg.map{width:100%;height:auto;display:block;touch-action:manipulation}
 svg.map path{stroke:var(--surface);stroke-width:1.2;cursor:pointer;transition:fill .25s}
@@ -346,7 +352,8 @@ svg.vin text.vl{font:600 13px var(--body);fill:#3a2e08;pointer-events:none}
           <label class="baseop" id="baseop" hidden><span aria-hidden="true">◐</span><input type="range" id="baseopr" min="0.2" max="1" step="0.1" value="0.6" aria-label="Deckkraft des Stadtplans"></label></div></div>
       <p class="pickmsg" id="pickmsg" hidden>Tippe auf einen Bezirk in der Karte. <button class="linkbtn" id="pickcancel">Abbrechen</button></p>
       <p class="note" id="locmsg" hidden></p>
-      <svg class="map" id="map" role="img" aria-label="Karte der Wiener Gemeindebezirke"></svg>
+      <div class="mapwrap"><svg class="map" id="map" role="img" aria-label="Karte der Wiener Gemeindebezirke"></svg>
+        <button class="maprefresh" id="nxrefresh" hidden aria-label="Standort und Abfahrten aktualisieren" title="Standort und Abfahrten aktualisieren">↻</button></div>
       <div id="mappick" aria-live="polite"></div>
       <a class="fotobtn" id="fotobtn" href="#fotos" hidden></a>
       <div class="legend"><div class="ramp" id="ramp"></div><div class="ticks" id="ticks"></div><div class="ticks blg" id="wlleg"></div></div>
@@ -1222,6 +1229,16 @@ let nxStop=null, nxGeoTried=false;
 /* Linienverläufe der hier abfahrenden Linien (Stadt Wien, OEFFLINIENOGD), nur bei „Nächstes Öffi“ geladen */
 let LINES=null, LINES_LOADING=false;
 const NX_GRP={ptTram:"tram",ptMetro:"metro",ptBusCity:"bus",ptBusNight:"night",ptTramWLB:"wlb"};
+/* „97A 3′ · U2 jetzt“: je Linie die nächste Abfahrt an dieser Haltestelle (max. 3 Linien) */
+function nxNextAt(name){ const m=new Map(); NX.deps.filter(d=>d.stop===name).sort((a,b)=>a.cd-b.cd).forEach(d=>{ if(!m.has(d.line)) m.set(d.line,d.cd); });
+  return [...m].slice(0,3).map(([l,cd])=>`${l} ${cd<=0?"jetzt":cd+"′"}`).join(" · "); }
+function nxRefresh(){
+  const b=document.getElementById("nxrefresh"); b.disabled=true; b.classList.add("spin");
+  const done=()=>{ NX.zoomed=false; NX.key=""; loadDepartures(true).finally(()=>{ b.disabled=false; b.classList.remove("spin"); }); };
+  if(!navigator.geolocation) return done();
+  navigator.geolocation.getCurrentPosition(p=>{ me={lat:p.coords.latitude,lon:p.coords.longitude,acc:p.coords.accuracy}; done(); }, done, {enableHighAccuracy:true,timeout:15000,maximumAge:0});
+}
+document.getElementById("nxrefresh").addEventListener("click",nxRefresh);
 function nxRoutes(u){
   if(!LINES){ if(!LINES_LOADING){ LINES_LOADING=true; fetch("linien.json").then(r=>r.json()).then(d=>{ LINES=d; if(layer.id==="next") render(); }).catch(()=>{}); } return ""; }
   const seen=new Map();
@@ -1257,7 +1274,7 @@ function renderNext(bg){
   }
   if(!HS){ loadStops().then(()=>render()).catch(()=>{}); box.innerHTML=`<div class="nxbox"><p class="note">Haltestellen werden geladen …</p></div>`; return; }
   if(!PT){ loadPoints().then(()=>render()).catch(()=>{}); }
-  drawOrient(true);
+  drawOrient(true); document.getElementById("nxrefresh").hidden=false;
   const st0=NX.stops.length?NX.stops:nearStops(), st=NX.active&&NX.active.size?st0.filter(s=>NX.active.has(String(s.id))):st0, groups=stopGroups(st); NX.ngroups=groups.length;
   if(!NX.zoomed){ /* auf Standort und die 3 Haltestellen einpassen, mindestens ca. 500 m Ausschnitt */
     const pts=[px([me.lon,me.lat]),...st.map(s=>px([s.lon,s.lat]))], xs=pts.map(p=>p[0]), ys=pts.map(p=>p[1]);
@@ -1269,12 +1286,13 @@ function renderNext(bg){
   overlay.removeAttribute("fill"); overlay.removeAttribute("stroke");
   const gcol=Object.fromEntries(groups.map(g=>[g.name,g.col]));
   overlay.innerHTML=nxRoutes(u)+st.map(s=>{ const [x,y]=px([s.lon,s.lat]); const on=nxStop===s.name; return `<circle data-nx="${esc(s.name)}" cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${(on?r*1.3:r).toFixed(3)}" style="fill:${gcol[s.name]||"#6e7d7a"};stroke:${on?"var(--ink)":"#fff"};stroke-width:${(2*u).toFixed(3)};pointer-events:all;cursor:pointer"><title>${esc(s.name)}</title></circle>`; }).join("")
-    +(()=>{ const boxes=[]; return groups.map(g=>{ const xs=g.pts.map(s=>px([s.lon,s.lat])), x0=Math.min(...xs.map(p=>p[0])), x1=Math.max(...xs.map(p=>p[0])), yc=xs.reduce((a,p)=>a+p[1],0)/xs.length;
+    +(()=>{ const bx0=zoom.cx-W/zoom.k/2, by0=zoom.cy-H/zoom.k/2, boxes=[[bx0,by0,bx0+52*u,by0+52*u]]; /* Platz für den Aktualisieren-Knopf */ return groups.map(g=>{ const xs=g.pts.map(s=>px([s.lon,s.lat])), x0=Math.min(...xs.map(p=>p[0])), x1=Math.max(...xs.map(p=>p[0])), yc=xs.reduce((a,p)=>a+p[1],0)/xs.length;
       /* Beschriftung rechts, sonst darunter, darüber oder links – je nachdem, wo sie keine andere überdeckt */
-      const w=(g.name.length+(g.u?4:0))*7.6*u, h=15*u, opts=[[x1+9*u,yc+4.5*u],[x0,yc+18*u],[x0,yc-11*u],[x0-9*u-w,yc+4.5*u]];
-      const hit=([lx,ly])=>boxes.some(b=>!(lx+w<b[0]||lx>b[2]||ly<b[1]||ly-h>b[3]));
-      const [x,yy]=opts.find(o=>!hit(o))||opts[0]; boxes.push([x,yy-h,x+w,yy]); const y=yy-4.5*u;
-      return `<text x="${(x).toFixed(2)}" y="${(y+4.5*u).toFixed(2)}" class="stat" style="fill:${g.col};font-size:${(13*u).toFixed(3)}px;stroke-width:${(4*u).toFixed(3)}px;font-weight:700">${esc(g.name)}${g.u?" (U)":""}</text>`; }).join(""); })()
+      const nx=nxNextAt(g.name), w=Math.max((g.name.length+(g.u?4:0))*7.6,nx.length*6.3)*u, h=(nx?28:15)*u, opts=[[x1+9*u,yc+4.5*u],[x0,yc+18*u],[x0,yc-11*u-(nx?13*u:0)],[x0-9*u-w,yc+4.5*u]];
+      const vx0=zoom.cx-W/zoom.k/2, vx1=zoom.cx+W/zoom.k/2;
+      const hit=([lx,ly])=>lx<vx0||lx+w>vx1||boxes.some(b=>!(lx+w<b[0]||lx>b[2]||ly<b[1]||ly-h>b[3]));
+      const [x,yy]=opts.find(o=>!hit(o))||opts[0]; boxes.push([x,yy-15*u,x+w,yy-15*u+h]); const y=yy-4.5*u;
+      return `<text x="${(x).toFixed(2)}" y="${(y+4.5*u).toFixed(2)}" class="stat" style="fill:${g.col};font-size:${(13*u).toFixed(3)}px;stroke-width:${(4*u).toFixed(3)}px;font-weight:700">${esc(g.name)}${g.u?" (U)":""}</text>${nx?`<text x="${x.toFixed(2)}" y="${(y+17.5*u).toFixed(2)}" class="stat" style="fill:var(--ink);font-size:${(11*u).toFixed(3)}px;stroke-width:${(3.5*u).toFixed(3)}px;font-weight:600">${esc(nx)}</text>`:""}`; }).join(""); })()
     +(()=>{ const [x,y]=px([me.lon,me.lat]); return `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${(14*u).toFixed(3)}" style="fill:#1c7ed6;fill-opacity:.2;stroke:none"></circle><circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${(7*u).toFixed(3)}" style="fill:#1c7ed6;stroke:#fff;stroke-width:${(2.5*u).toFixed(3)}"><title>Dein Standort</title></circle>`; })()
 ;
   const deps=NX.deps.filter(d=>!nxStop||d.stop===nxStop);
@@ -1354,6 +1372,7 @@ function render(){
 let rankSplit=true;
 function render2(){
   /* nach „Nächstes Öffi“ wieder ganz Wien zeigen */
+  if(layer.id!=="next") document.getElementById("nxrefresh").hidden=true;
   if(layer.id!=="next"&&NX.zoomed){ NX.zoomed=false; zoom.k=1; zoom.cx=W/2; zoom.cy=H/2; applyZoom(); overlay.innerHTML=""; }
   if(layer.special){ renderSpecial(); return; }
   document.querySelector(".yearbar").hidden=false; document.querySelector(".rank").hidden=false;
