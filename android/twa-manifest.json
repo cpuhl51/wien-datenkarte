@@ -17,8 +17,8 @@
   "maskableIconUrl": "https://app.wien-live-daten.puhl.ch/icons/maskable-512.png?v=4",
   "splashScreenFadeOutDuration": 300,
   "signingKey": { "path": "./upload-key.jks", "alias": "upload" },
-  "appVersionName": "1.0.0",
-  "appVersionCode": 1,
+  "appVersionName": "1.3.0",
+  "appVersionCode": 2,
   "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
   "webManifestUrl": "https://app.wien-live-daten.puhl.ch/manifest.webmanifest",
@@ -34,5 +34,5 @@
   "fingerprints": [],
   "additionalTrustedOrigins": [],
   "retainedBundles": [],
-  "appVersion": "1.0.0"
+  "appVersion": "1.3.0"
 }

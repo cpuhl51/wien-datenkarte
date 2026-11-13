@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/w_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/widget_bg"
+    android:padding="8dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+        <TextView android:id="@+id/w_tab_next" style="@style/WidgetTab" android:text="Öffi" />
+        <TextView android:id="@+id/w_tab_taxi" style="@style/WidgetTab" android:text="Taxi" />
+        <TextView android:id="@+id/w_tab_bike" style="@style/WidgetTab" android:text="Rad" />
+        <TextView android:id="@+id/w_tab_brunnen" style="@style/WidgetTab" android:text="Wasser" />
+        <TextView
+            android:id="@+id/w_refresh"
+            android:layout_width="34dp"
+            android:layout_height="30dp"
+            android:layout_marginStart="2dp"
+            android:background="@drawable/widget_tab"
+            android:gravity="center"
+            android:text="↻"
+            android:textColor="#1B1F1E"
+            android:textSize="17sp"
+            android:contentDescription="Standort und Daten aktualisieren" />
+    </LinearLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="6dp">
+        <ImageView
+            android:id="@+id/w_map"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:contentDescription="Karte" />
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end|top"
+            android:layout_margin="4dp"
+            android:orientation="vertical">
+            <TextView android:id="@+id/w_zin" style="@style/WidgetMapBtn" android:text="+" />
+            <TextView android:id="@+id/w_zout" style="@style/WidgetMapBtn" android:layout_marginTop="4dp" android:text="−" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start|bottom"
+            android:layout_margin="4dp"
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
+            <TextView android:id="@+id/w_up" style="@style/WidgetMapBtn" android:text="▲" />
+            <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="horizontal">
+                <TextView android:id="@+id/w_left" style="@style/WidgetMapBtn" android:text="◀" />
+                <TextView android:id="@+id/w_center" style="@style/WidgetMapBtn" android:text="◎" android:layout_marginStart="2dp" android:layout_marginEnd="2dp" />
+                <TextView android:id="@+id/w_right" style="@style/WidgetMapBtn" android:text="▶" />
+            </LinearLayout>
+            <TextView android:id="@+id/w_down" style="@style/WidgetMapBtn" android:text="▼" />
+        </LinearLayout>
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/w_info"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:maxLines="3"
+        android:ellipsize="end"
+        android:text="Tippe ↻, um deinen Standort zu holen."
+        android:textColor="#1B1F1E"
+        android:textSize="12.5sp" />
+    <TextView
+        android:id="@+id/w_time"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#5D6663"
+        android:textSize="10.5sp" />
+</LinearLayout>

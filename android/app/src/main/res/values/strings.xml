@@ -39,4 +39,6 @@
     }]
     
   </string>  
+    <string name="widgetDescription">Nächstes Öffi, Taxi, Leihrad oder Trinkbrunnen in deiner Nähe – mit Kartenausschnitt</string>
+    <string name="widgetName">Wien live in der Nähe</string>
 </resources>

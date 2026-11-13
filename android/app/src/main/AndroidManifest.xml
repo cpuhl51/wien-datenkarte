@@ -30,6 +30,10 @@
 
     
 
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
     <application
         android:name="Application"
         android:allowBackup="true"
@@ -188,5 +192,18 @@
         
 
         
+        <!-- Home-Screen-Widget „Wien live in der Nähe“ -->
+        <receiver android:name=".WienWidget" android:exported="false" android:label="@string/widgetName">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/wien_widget_info" />
+        </receiver>
+        <activity android:name=".WidgetRefreshActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:theme="@style/Translucent" />
     </application>
 </manifest>

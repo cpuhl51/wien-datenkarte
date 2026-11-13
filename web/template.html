@@ -748,6 +748,9 @@ if(layer.id==="infra") state.infra.sub="defi";
 const ls={get:k=>{try{return JSON.parse(localStorage.getItem(k));}catch(e){return null;}},set:(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(k,JSON.stringify(v));}catch(e){}}};
 function applyView(v){ const L=v&&LAYERS.find(x=>x.id===v.layer); if(!L) return; layer=L; if(v.sub&&L.subs.some(s=>s.id===v.sub)) state[L.id].sub=v.sub; }
 (()=>{ const sv=ls.get("startView"); if(sv&&sv.mode==="fixed") applyView(sv); else if(sv&&sv.mode==="last") applyView(ls.get("lastView")); })();
+/* Direktaufruf, z. B. vom Android-Widget: #ebene=next | taxi | bike | infra:brunnen */
+(()=>{ const m=/^#ebene=([a-z]+)(?::([a-z]+))?$/.exec(location.hash); if(!m) return; applyView({layer:m[1],sub:m[2]});
+  if(m[1]==="next"||m[1]==="bike"||m[1]==="taxi"||m[2]) window.__autoLocate=true; history.replaceState(null,"",location.pathname); })();
 const viewName = v => { const L=LAYERS.find(x=>x.id===v.layer); if(!L) return "–"; const s=L.subs.find(x=>x.id===v.sub); return L.label+(s&&L.subs.length>1?" · "+s.label:""); };
 function updateStartBtn(){
   const b=document.getElementById("startbtn"); if(!b) return; const sv=ls.get("startView")||{mode:"default"};
@@ -1834,6 +1837,7 @@ if(LIVE_URL){ setInterval(maybeLive,15000); document.addEventListener("visibilit
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",render);
 new MutationObserver(render).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
 render();
+if(window.__autoLocate&&layer.id!=="next") setTimeout(()=>locate(),300);
 if(location.hash==="#info"||location.hash==="#fotos") route();
 /* Service Worker: Installation als App und Offline-Betrieb */
 if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
