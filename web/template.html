@@ -1219,6 +1219,26 @@ async function loadDepartures(force){
   NX.loading=false; NX.last=Date.now(); if(layer.id==="next") render();
 }
 let nxStop=null, nxGeoTried=false;
+/* Linienverläufe der hier abfahrenden Linien (Stadt Wien, OEFFLINIENOGD), nur bei „Nächstes Öffi“ geladen */
+let LINES=null, LINES_LOADING=false;
+const NX_GRP={ptTram:"tram",ptMetro:"metro",ptBusCity:"bus",ptBusNight:"night",ptTramWLB:"wlb"};
+function nxRoutes(u){
+  if(!LINES){ if(!LINES_LOADING){ LINES_LOADING=true; fetch("linien.json").then(r=>r.json()).then(d=>{ LINES=d; if(layer.id==="next") render(); }).catch(()=>{}); } return ""; }
+  const seen=new Map();
+  NX.deps.filter(d=>!nxStop||d.stop===nxStop).forEach(d=>{ const g=NX_GRP[d.type]||(/^U\d$/.test(d.line)?"metro":/^N/.test(d.line)?"night":/^\d+[AB]$/.test(d.line)?"bus":"tram"), k=g+":"+d.line;
+    if(!seen.has(k)&&LINES.lines[k]) seen.set(k,lineCol(d.line,d.type)); });
+  /* gleicher Abschnitt mehrerer Linien: nebeneinander statt übereinander ist zu aufwendig – leicht versetzte Breite */
+  let out="", labs=""; const vw=W/zoom.k, [mx,my]=px([me.lon,me.lat]), used=[];
+  [...seen].forEach(([k,col],i)=>{ const w=(seen.size>1?5.5-Math.min(i,4)*0.9:4.5)*u;
+    let best=null, bd=-1;
+    out+=LINES.lines[k].map(si=>{ const P=LINES.seg[si].map(c=>px(c));
+      P.forEach(([x,y])=>{ const d=Math.hypot(x-mx,y-my); if(d<vw*.42&&d>bd&&!used.some(([ux,uy])=>Math.hypot(ux-x,uy-y)<vw*.08)){ bd=d; best=[x,y]; } });
+      return `<path d="M${P.map(q=>q.map(v=>v.toFixed(1)).join(",")).join("L")}" style="fill:none;stroke:${col};stroke-width:${w.toFixed(2)};stroke-linecap:round;stroke-linejoin:round;opacity:.55;pointer-events:none"></path>`; }).join("");
+    /* Liniennummer am Rand des Ausschnitts, damit man die Verläufe unterscheiden kann */
+    if(best){ used.push(best); const nm=k.split(":")[1], bw=(nm.length*7+10)*u, bh=15*u;
+      labs+=`<g style="pointer-events:none"><rect x="${(best[0]-bw/2).toFixed(2)}" y="${(best[1]-bh/2).toFixed(2)}" width="${bw.toFixed(2)}" height="${bh.toFixed(2)}" rx="${(3*u).toFixed(2)}" style="fill:${col};stroke:#fff;stroke-width:${(1.2*u).toFixed(2)}"></rect><text x="${best[0].toFixed(2)}" y="${(best[1]+4*u).toFixed(2)}" text-anchor="middle" style="font:700 ${(11*u).toFixed(3)}px var(--body);fill:#fff;stroke:none">${esc(nm)}</text></g>`; } });
+  return out+labs;
+}
 function renderNext(bg){
   for(let b=1;b<=23;b++){ paths[b].setAttribute("fill",bg); paths[b].classList.remove("sel"); labelEls[b].textContent=""; }
   document.getElementById("ramp").style.background="none"; document.getElementById("ticks").innerHTML="";
@@ -1248,7 +1268,7 @@ function renderNext(bg){
   const u=mapUnitsPerPx(), r=6*u;
   overlay.removeAttribute("fill"); overlay.removeAttribute("stroke");
   const gcol=Object.fromEntries(groups.map(g=>[g.name,g.col]));
-  overlay.innerHTML=st.map(s=>{ const [x,y]=px([s.lon,s.lat]); const on=nxStop===s.name; return `<circle data-nx="${esc(s.name)}" cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${(on?r*1.3:r).toFixed(3)}" style="fill:${gcol[s.name]||"#6e7d7a"};stroke:${on?"var(--ink)":"#fff"};stroke-width:${(2*u).toFixed(3)};pointer-events:all;cursor:pointer"><title>${esc(s.name)}</title></circle>`; }).join("")
+  overlay.innerHTML=nxRoutes(u)+st.map(s=>{ const [x,y]=px([s.lon,s.lat]); const on=nxStop===s.name; return `<circle data-nx="${esc(s.name)}" cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${(on?r*1.3:r).toFixed(3)}" style="fill:${gcol[s.name]||"#6e7d7a"};stroke:${on?"var(--ink)":"#fff"};stroke-width:${(2*u).toFixed(3)};pointer-events:all;cursor:pointer"><title>${esc(s.name)}</title></circle>`; }).join("")
     +(()=>{ const boxes=[]; return groups.map(g=>{ const xs=g.pts.map(s=>px([s.lon,s.lat])), x0=Math.min(...xs.map(p=>p[0])), x1=Math.max(...xs.map(p=>p[0])), yc=xs.reduce((a,p)=>a+p[1],0)/xs.length;
       /* Beschriftung rechts, sonst darunter, darüber oder links – je nachdem, wo sie keine andere überdeckt */
       const w=(g.name.length+(g.u?4:0))*7.6*u, h=15*u, opts=[[x1+9*u,yc+4.5*u],[x0,yc+18*u],[x0,yc-11*u],[x0-9*u-w,yc+4.5*u]];
@@ -1268,7 +1288,7 @@ function renderNext(bg){
     ${NX.err?`<p class="note">${NX.err}</p>`:""}
     ${groups.length?`<div class="nxstops">${groups.map(g=>`<button class="sub" data-nxs="${esc(g.name)}" aria-pressed="${nxStop===g.name}" style="--pc:${g.col}"><i class="nxdot" style="background:${g.col}"></i>${esc(g.name)}${g.u?" (U)":""} <small>${fmtDist(g.d)}</small></button>`).join("")}<button class="wien" id="nxmore">${nxCount===3?"3 weitere anzeigen":"weniger anzeigen"}</button></div>`:`<p class="note">Keine Haltestelle in der Nähe.</p>`}
     ${deps.length?`<ul class="flist nxlist">${deps.map(row).join("")}</ul>`:(NX.loading||!NX.at)&&groups.length?`<p class="note">Abfahrten werden geladen …</p>`:groups.length?`<p class="note">Gerade keine Abfahrten gemeldet.</p>`:""}
-    <p class="note" style="margin:6px 0 0">Die nächsten ${NX_PER_LINE} Abfahrten pro Linie und Richtung. ◀ ▶ = Fahrtrichtung, ♿ = barrierefrei, ❄ = klimatisiert (laut Wiener Linien). Haltestelle antippen zum Filtern.</p></div>`;
+    <p class="note" style="margin:6px 0 0">Die nächsten ${NX_PER_LINE} Abfahrten pro Linie und Richtung. Auf der Karte: Verlauf dieser Linien (Stadt Wien). ◀ ▶ = Fahrtrichtung, ♿ = barrierefrei, ❄ = klimatisiert (laut Wiener Linien). Haltestelle antippen zum Filtern.</p></div>`;
   const more=document.getElementById("nxmore"); if(more) more.onclick=()=>{ nxCount=nxCount===3?6:3; nxStop=null; NX.zoomed=false; NX.key=""; NX.active=null; NX.stops=[]; loadDepartures(true); render(); };
   box.querySelectorAll("[data-nxs]").forEach(b=>b.onclick=()=>{ nxStop=nxStop===b.dataset.nxs?null:b.dataset.nxs; render(); });
 }
