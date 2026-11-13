@@ -45,7 +45,7 @@ public class WienWidget extends AppWidgetProvider {
     public void onDeleted(Context c, int[] ids) {
         SharedPreferences.Editor e = prefs(c).edit();
         for (int id : ids) {
-            for (String k : new String[]{"mode", "z", "px", "py", "info", "time"}) e.remove(k + id);
+            for (String k : new String[]{"mode", "z", "zman", "px", "py", "info", "time"}) e.remove(k + id);
             new File(c.getCacheDir(), "widget_" + id + ".png").delete();
         }
         e.apply();
@@ -63,14 +63,14 @@ public class WienWidget extends AppWidgetProvider {
         switch (a) {
             case A_MODE:
                 e.putString("mode" + id, in.getStringExtra("mode"));
-                e.putInt("px" + id, 0).putInt("py" + id, 0);
+                e.putInt("px" + id, 0).putInt("py" + id, 0).putBoolean("zman" + id, false);
                 refetch = true;
                 break;
             case A_ZOOM:
                 int z = Math.max(12, Math.min(18, p.getInt("z" + id, 16) + in.getIntExtra("d", 0)));
                 int old = p.getInt("z" + id, 16);
                 double f = Math.pow(2, z - old);
-                e.putInt("z" + id, z);
+                e.putInt("z" + id, z).putBoolean("zman" + id, true);
                 e.putInt("px" + id, (int) (p.getInt("px" + id, 0) * f));
                 e.putInt("py" + id, (int) (p.getInt("py" + id, 0) * f));
                 break;
@@ -79,7 +79,7 @@ public class WienWidget extends AppWidgetProvider {
                 e.putInt("py" + id, p.getInt("py" + id, 0) + in.getIntExtra("dy", 0));
                 break;
             case A_CENTER:
-                e.putInt("px" + id, 0).putInt("py" + id, 0);
+                e.putInt("px" + id, 0).putInt("py" + id, 0).putBoolean("zman" + id, false);
                 break;
             case A_REDRAW:
                 break;

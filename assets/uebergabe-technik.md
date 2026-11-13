@@ -18,14 +18,20 @@ Stand: 11.11.2026 · Für neue Chats in diesem Projekt (z. B. Widget). Zuerst le
 
 ## Android (Trusted Web Activity)
 - Projekt im Repo unter `android/` (Bubblewrap-Gerüst, android-browser-helper). Paketname **ch.puhl.wienaktuell**, App-Name „Wien live - Daten & Zahlen“, Launcher „Wien live“.
-- Aktuell: **versionName 1.0.0, versionCode 1**, minSdk 24, targetSdk und compileSdk 36. Fallback ohne TWA-Browser: Custom Tabs.
+- Aktuell: **versionName 1.3.0, versionCode 2** (mit Widget; 1.0.0/Code 1 war die erste Play-Einreichung), minSdk 24, targetSdk und compileSdk 36. Fallback ohne TWA-Browser: Custom Tabs.
 - **Für jede neue .aab versionCode erhöhen** (in `android/app/build.gradle` und `android/twa-manifest.json`).
 - Bauen (Cloud-Container): JDK 17 (`apt install openjdk-17-jdk-headless`), Android cmdline-tools + `platforms;android-36`, `build-tools;35.0.0`; `local.properties` mit `sdk.dir`; `./gradlew bundleRelease`. Maven Central blockt mit 429 → im `build.gradle` Mirror `https://maven-central.storage-download.googleapis.com/maven2/` statt `mavenCentral()` (bereits so im Repo).
 - Signieren: `jarsigner -sigalg SHA256withRSA -digestalg SHA-256` mit **upload-key.jks**, Alias `upload`. Schlüssel + Passwort sind **nicht im Repo**, sondern bei Christoph (ZIP „wien-live-playstore“); für einen neuen Build muss er sie hochladen.
 - Upload-Schlüssel SHA-256: `79:4B:83:5C:5B:2C:F7:FF:A6:98:4A:51:15:C2:79:E9:A6:F2:C5:84:A4:44:A9:52:6D:18:83:8B:29:AB:11:5C`
 - `docs/.well-known/assetlinks.json` enthält bisher nur den Upload-Schlüssel. **Offen:** SHA-256 des Google-App-Signaturschlüssels (Play Console → App-Integrität) ergänzen, sonst Adressleiste in der Play-Version.
 
-## Hinweise für ein Home-Screen-Widget
+## Home-Screen-Widget (seit 1.3.0 eingebaut)
+- Code: `WienWidget.java` (Provider, Knöpfe), `WidgetRefreshActivity.java` (Standort nur beim Tippen auf ↻), `WidgetData.java` (Daten + Kartenbild aus basemap-Kacheln). Layout `res/layout/widget_wien.xml`.
+- Daten: `docs/haltestellen.json`, `docs/widget-punkte.json` (Taxi, Trinkbrunnen; `scripts/build_widget.py`), Wiener-Linien-Monitor direkt, nextbike GBFS.
+- Testen ohne Emulator: `./gradlew testReleaseUnitTest` (Robolectric, zeichnet Bilder nach `app/build/widget-test/`).
+- App-Direktaufruf: `#ebene=next|taxi|bike|infra:brunnen`.
+
+## Frühere Überlegungen zum Widget
 - Ein Android-Widget ist **nativer Code** (AppWidgetProvider, Layout, ggf. WorkManager) im `android/`-Projekt – die TWA allein kann keine Widgets. Daten am besten direkt von denselben Quellen/Worker holen (JSON), Klick auf das Widget öffnet die TWA mit passender URL (z. B. `/#layer=next`).
 - Braucht eine neue .aab (versionCode 2) und neue Prüfung durch Google; neue Datenflüsse in Datenschutzerklärung und Play-„Datensicherheit“ nachtragen.
 - Standort im Widget würde eine Android-Standortberechtigung in der App erfordern (bisher keine) → Datenschutz/Play-Angaben ändern sich.

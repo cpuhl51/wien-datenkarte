@@ -97,7 +97,7 @@ public class WidgetRefreshActivity extends Activity {
             WienWidget.prefs(this).edit()
                     .putFloat("lat", (float) l.getLatitude()).putFloat("lon", (float) l.getLongitude())
                     .putLong("locTime", System.currentTimeMillis())
-                    .putInt("px" + id, 0).putInt("py" + id, 0).apply();
+                    .putInt("px" + id, 0).putInt("py" + id, 0).putBoolean("zman" + id, false).apply();
         }
         WienWidget.background(this, id, true);
         finish();

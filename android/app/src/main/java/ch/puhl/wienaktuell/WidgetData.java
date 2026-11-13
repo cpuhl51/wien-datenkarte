@@ -98,6 +98,15 @@ final class WidgetData {
         boolean hasLoc = p.contains("lat");
         double lat = p.getFloat("lat", 48.2085f), lon = p.getFloat("lon", 16.3731f);
         int z = hasLoc ? p.getInt("z" + id, 16) : Math.min(p.getInt("z" + id, 13), 13);
+        if (hasLoc && !p.getBoolean("zman" + id, false)) {
+            // Ausschnitt automatisch so wählen, dass die nächsten Treffer zu sehen sind
+            double d = nearestDist(ctx, mode, lon, lat);
+            double mpp = 156543.03 * Math.cos(Math.toRadians(lat)); // Meter je Pixel bei Zoom 0
+            double half = (H / 2.0 / SCALE) * 0.8;
+            z = d <= 0 ? 16 : (int) Math.floor(Math.log(mpp * half / d) / Math.log(2));
+            z = Math.max(13, Math.min(17, z));
+            p.edit().putInt("z" + id, z).apply();
+        }
         double cx = wx(lon, z) + p.getInt("px" + id, 0) / SCALE, cy = wy(lat, z) + p.getInt("py" + id, 0) / SCALE;
 
         List<Pt> pts = new ArrayList<>();
@@ -121,15 +130,23 @@ final class WidgetData {
         Paint fill = new Paint(Paint.ANTI_ALIAS_FLAG), stroke = new Paint(Paint.ANTI_ALIAS_FLAG);
         stroke.setStyle(Paint.Style.STROKE); stroke.setColor(Color.WHITE); stroke.setStrokeWidth(4);
         List<RectF> used = new ArrayList<>();
-        for (Pt t : pts) {
+        float ux = (float) ((wx(lon, z) - ox) * SCALE), uy = (float) ((wy(lat, z) - oy) * SCALE);
+        if (hasLoc) used.add(new RectF(ux - 16, uy - 16, ux + 16, uy + 16));
+        for (Pt t : pts) { // erst alle Punkte …
             float x = (float) ((wx(t.lon, z) - ox) * SCALE), y = (float) ((wy(t.lat, z) - oy) * SCALE);
             if (x < -20 || y < -20 || x > W + 20 || y > H + 20) continue;
             fill.setColor(t.col);
             cv.drawCircle(x, y, 13, fill); cv.drawCircle(x, y, 13, stroke);
-            if (t.label != null) label(cv, t.label, t.name, x, y, t.col, used);
+            used.add(new RectF(x - 14, y - 14, x + 14, y + 14));
+        }
+        for (Pt t : pts) { // … dann die Beschriftungen, ohne Punkte zu verdecken
+            if (t.label == null) continue;
+            float x = (float) ((wx(t.lon, z) - ox) * SCALE), y = (float) ((wy(t.lat, z) - oy) * SCALE);
+            if (x < 0 || y < 0 || x > W || y > H) continue;
+            label(cv, t.label, t.name, x, y, t.col, used);
         }
         if (hasLoc) {
-            float x = (float) ((wx(lon, z) - ox) * SCALE), y = (float) ((wy(lat, z) - oy) * SCALE);
+            float x = ux, y = uy;
             fill.setColor(0x331C7ED6); cv.drawCircle(x, y, 30, fill);
             fill.setColor(0xFF1C7ED6); cv.drawCircle(x, y, 13, fill);
             stroke.setStrokeWidth(5); cv.drawCircle(x, y, 13, stroke);
@@ -143,6 +160,29 @@ final class WidgetData {
         String hm = new SimpleDateFormat("HH:mm", Locale.GERMAN).format(new Date());
         String loc = hasLoc ? " · Standort von " + new SimpleDateFormat("HH:mm", Locale.GERMAN).format(new Date(p.getLong("locTime", 0))) : "";
         p.edit().putString("info" + id, info).putString("time" + id, "Stand " + hm + loc + " · ↻ = neu orten").apply();
+    }
+
+    /** Entfernung, die der Ausschnitt mindestens zeigen soll (3. nächster Treffer bzw. 3. nächste Haltestelle). */
+    static double nearestDist(Context ctx, String mode, double lon, double lat) {
+        try {
+            List<Double> ds = new ArrayList<>();
+            if (mode.equals("taxi") || mode.equals("brunnen")) {
+                JSONArray a = new JSONObject(cached(ctx, WienWidget.APP + "widget-punkte.json", "widget-punkte.json", 7L * 86400000)).getJSONArray(mode);
+                for (int i = 0; i < a.length(); i++) { JSONArray r = a.getJSONArray(i); ds.add(dist(lon, lat, r.getDouble(0), r.getDouble(1))); }
+            } else if (mode.equals("bike")) {
+                JSONArray a = new JSONObject(cached(ctx, GBFS + "station_information.json", "gbfs_info.json", 86400000L)).getJSONObject("data").getJSONArray("stations");
+                for (int i = 0; i < a.length(); i++) { JSONObject s = a.getJSONObject(i); ds.add(dist(lon, lat, s.getDouble("lon"), s.getDouble("lat"))); }
+            } else {
+                JSONObject hs = new JSONObject(cached(ctx, WienWidget.APP + "haltestellen.json", "haltestellen.json", 7L * 86400000));
+                Map<String, Double> byName = new LinkedHashMap<>();
+                Iterator<String> it = hs.keys();
+                while (it.hasNext()) { JSONArray r = hs.getJSONArray(it.next()); double d = dist(lon, lat, r.getDouble(0), r.getDouble(1));
+                    Double o = byName.get(r.getString(2)); if (o == null || d < o) byName.put(r.getString(2), d); }
+                ds.addAll(byName.values());
+            }
+            Collections.sort(ds);
+            return ds.isEmpty() ? 0 : ds.get(Math.min(2, ds.size() - 1));
+        } catch (Exception e) { return 0; }
     }
 
     static void drawTiles(Context ctx, Canvas cv, int z, double cx, double cy) {
@@ -184,7 +224,8 @@ final class WidgetData {
         for (float[] o : opts) {
             RectF c = new RectF(o[0], o[1], o[0] + w, o[1] + h);
             if (c.left < 2 || c.right > W - 2 || c.top < 2 || c.bottom > H - 2) continue;
-            boolean hit = false; for (RectF u : used) if (RectF.intersects(u, c)) { hit = true; break; }
+            boolean hit = false;
+            for (RectF u : used) { if (u.contains(x, y)) continue; if (RectF.intersects(u, c)) { hit = true; break; } }
             if (!hit) { r = c; break; }
         }
         if (r == null) return;
@@ -210,6 +251,7 @@ final class WidgetData {
             all.add(t);
         }
         Collections.sort(all, (p, q) -> Double.compare(p.d, q.d));
+        for (int i = 0; i < Math.min(2, all.size()); i++) all.get(i).label = fmt(all.get(i).d);
         StringBuilder s = new StringBuilder();
         for (int i = 0; i < Math.min(2, all.size()); i++) {
             Pt t = all.get(i);
@@ -239,10 +281,12 @@ final class WidgetData {
             t.text = t.name + " · " + nb + (nb == 1 ? " Rad" : " Räder") + (hasDocks ? " · " + nd + (nd == 1 ? " Platz" : " Plätze") : " · Rückgabe auf Fläche");
             t.d = dist(lon, lat, t.lon, t.lat);
             double px = (wx(t.lon, z) - ox) * SCALE, py = (wy(t.lat, z) - oy) * SCALE;
-            if (px > -20 && py > -20 && px < W + 20 && py < H + 20) { t.label = nb + (nb == 1 ? " Rad" : " Räder"); t.name = null; out.add(t); }
+            t.label = String.valueOf(nb); t.name = null;
+            if (px > -20 && py > -20 && px < W + 20 && py < H + 20) out.add(t);
             all.add(t);
         }
         Collections.sort(all, (p, q) -> Double.compare(p.d, q.d));
+        for (int i = 8; i < all.size(); i++) all.get(i).label = null;
         StringBuilder s = new StringBuilder();
         for (int i = 0; i < Math.min(2, all.size()); i++) { if (s.length() > 0) s.append('\n'); s.append(fmt(all.get(i).d)).append(" · ").append(all.get(i).text); }
         return s.length() > 0 ? s.toString() : "Keine Station gefunden.";
