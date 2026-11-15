@@ -1961,7 +1961,11 @@
 "org": "Stadt Wien | Veterinäramt und Tierschutz",
 "tel": "+43 1 4000-8060",
 "mail": "post@ma60.wien.gv.at",
-"img": "/fundundvergabetiere/internet/Bild/Thumbnail/86557"
+"img": "/fundundvergabetiere/internet/Bild/Thumbnail/86557",
+"xy": [
+16.49659,
+48.2501
+]
 },
 {
 "id": "64591",
