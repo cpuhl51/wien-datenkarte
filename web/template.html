@@ -1228,7 +1228,7 @@ async function loadDepartures(force){
   }catch(e){ NX.err="Abfahrten konnten gerade nicht geladen werden."; }
   NX.loading=false; NX.last=Date.now(); if(layer.id==="next") render();
 }
-let nxStop=null, nxGeoTried=false;
+let nxStop=null, nxGeoTried=false, nxAll=false, nxPrevLayer=null;
 /* Linienverläufe der hier abfahrenden Linien (Stadt Wien, OEFFLINIENOGD), nur bei „Nächstes Öffi“ geladen */
 let LINES=null, LINES_LOADING=false;
 const NX_GRP={ptTram:"tram",ptMetro:"metro",ptBusCity:"bus",ptBusNight:"night",ptTramWLB:"wlb"};
@@ -1260,6 +1260,7 @@ function nxRoutes(u){
   return out+labs;
 }
 function renderNext(bg){
+  if(nxPrevLayer!=="next"){ nxAll=false; nxStop=null; } /* beim Wechsel auf „Nächstes Öffi“ wieder eingeklappt */
   for(let b=1;b<=23;b++){ paths[b].setAttribute("fill",bg); paths[b].classList.remove("sel"); labelEls[b].textContent=""; }
   document.getElementById("ramp").style.background="none"; document.getElementById("ticks").innerHTML="";
   document.getElementById("layernote").textContent="Abfahrtszeiten in Echtzeit, wo die Wiener Linien sie melden, sonst laut Fahrplan (mit * markiert). Entfernungen in Luftlinie.";
@@ -1295,7 +1296,7 @@ function renderNext(bg){
       const vx0=zoom.cx-W/zoom.k/2, vx1=zoom.cx+W/zoom.k/2;
       const hit=([lx,ly])=>lx<vx0||lx+w>vx1||boxes.some(b=>!(lx+w<b[0]||lx>b[2]||ly<b[1]||ly-h>b[3]));
       const [x,yy]=opts.find(o=>!hit(o))||opts[0]; boxes.push([x,yy-15*u,x+w,yy-15*u+h]); const y=yy-4.5*u;
-      return `<text x="${(x).toFixed(2)}" y="${(y+4.5*u).toFixed(2)}" class="stat" style="fill:${g.col};font-size:${(13*u).toFixed(3)}px;stroke-width:${(4*u).toFixed(3)}px;font-weight:700">${esc(g.name)}${g.u?" (U)":""}</text>${nx?`<text x="${x.toFixed(2)}" y="${(y+17.5*u).toFixed(2)}" class="stat" style="fill:var(--ink);font-size:${(11*u).toFixed(3)}px;stroke-width:${(3.5*u).toFixed(3)}px;font-weight:600">${esc(nx)}</text>`:""}`; }).join(""); })()
+      return `<text data-nx="${esc(g.name)}" x="${(x).toFixed(2)}" y="${(y+4.5*u).toFixed(2)}" class="stat" style="pointer-events:all;cursor:pointer;fill:${g.col};font-size:${(13*u).toFixed(3)}px;stroke-width:${(4*u).toFixed(3)}px;font-weight:700">${esc(g.name)}${g.u?" (U)":""}</text>${nx?`<text data-nx="${esc(g.name)}" x="${x.toFixed(2)}" y="${(y+17.5*u).toFixed(2)}" class="stat" style="pointer-events:all;cursor:pointer;fill:var(--ink);font-size:${(11*u).toFixed(3)}px;stroke-width:${(3.5*u).toFixed(3)}px;font-weight:600">${esc(nx)}</text>`:""}`; }).join(""); })()
     +(()=>{ const [x,y]=px([me.lon,me.lat]); return `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${(14*u).toFixed(3)}" style="fill:#1c7ed6;fill-opacity:.2;stroke:none"></circle><circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${(7*u).toFixed(3)}" style="fill:#1c7ed6;stroke:#fff;stroke-width:${(2.5*u).toFixed(3)}"><title>Dein Standort</title></circle>`; })()
 ;
   const deps=NX.deps.filter(d=>!nxStop||d.stop===nxStop);
@@ -1305,11 +1306,14 @@ function renderNext(bg){
   const cdTxt=d=>{ if(d.cd<=0) return "jetzt"+(d.real?"":"*"); const s=d.cd+" min"+(d.real?"":"*"); return s.length>6?d.cd+" m"+(d.real?"":"*"):s; };
   const row=d=>{ const c=lineCol(d.line,d.type), i=dirIdx(d), gc=gcol[d.stop]||"#6e7d7a";
     return `<li class="nxrow" style="border-left:4px solid ${gc}"><span class="nxcd">${cdTxt(d)}</span><span class="nxl"><b class="nxtri" style="color:${c}">${i===0?"◀":""}</b><span class="nxline" style="background:${c}">${esc(d.line)}</span><b class="nxtri" style="color:${c}">${i===1?"▶":""}</b></span><span class="nxto"><span class="nx1"><i class="nxdot" style="background:${gc}"></i>${d.acc?`<span class="nxacc" title="barrierefrei (Rollstuhl)">♿</span>`:""}${d.cool?`<span class="nxcool" title="klimatisiert">❄</span>`:""}${esc(d.to)}</span><small>${esc(d.stop)}${d.d!=null?" · "+fmtDist(d.d):""}${d.time?" · "+d.time:""}</small></span></li>`; };
-  box.innerHTML=`<div class="nxbox"><h3 style="margin:6px 0 2px">Nächste Abfahrten</h3>
+  const showAll=nxAll||!!nxStop, shown=showAll?deps:deps.slice(0,3);
+  box.innerHTML=`<div class="nxbox"><p class="note" style="margin:2px 0 8px;font-size:12px">Die Karte zeigt nur die nächste Abfahrt pro Linie, unabhängig von der Richtung. Details zur Station durch Anklicken.</p>
+    <h3 style="margin:6px 0 2px">Nächste Abfahrten</h3>
     ${NX.err?`<p class="note">${NX.err}</p>`:""}
     ${groups.length?`<div class="nxstops">${groups.map(g=>`<button class="sub" data-nxs="${esc(g.name)}" aria-pressed="${nxStop===g.name}" style="--pc:${g.col}"><i class="nxdot" style="background:${g.col}"></i>${esc(g.name)}${g.u?" (U)":""} <small>${fmtDist(g.d)}</small></button>`).join("")}<button class="wien" id="nxmore">${nxCount===3?"3 weitere anzeigen":"weniger anzeigen"}</button></div>`:`<p class="note">Keine Haltestelle in der Nähe.</p>`}
-    ${deps.length?`<ul class="flist nxlist">${deps.map(row).join("")}</ul>`:(NX.loading||!NX.at)&&groups.length?`<p class="note">Abfahrten werden geladen …</p>`:groups.length?`<p class="note">Gerade keine Abfahrten gemeldet.</p>`:""}
+    ${deps.length?`<ul class="flist nxlist">${shown.map(row).join("")}</ul>${!nxStop&&deps.length>3?`<p style="margin:8px 0 0"><button class="linkbtn" id="nxall">${nxAll?"Abfahrten einklappen":"Weitere Abfahrten laden"}</button></p>`:""}`:(NX.loading||!NX.at)&&groups.length?`<p class="note">Abfahrten werden geladen …</p>`:groups.length?`<p class="note">Gerade keine Abfahrten gemeldet.</p>`:""}
     <p class="note" style="margin:6px 0 0">Die nächsten ${NX_PER_LINE} Abfahrten pro Linie und Richtung. Auf der Karte: Verlauf dieser Linien (Stadt Wien). ◀ ▶ = Fahrtrichtung, ♿ = barrierefrei, ❄ = klimatisiert (laut Wiener Linien). Haltestelle antippen zum Filtern.</p></div>`;
+  const all=document.getElementById("nxall"); if(all) all.onclick=()=>{ nxAll=!nxAll; render(); if(!nxAll) document.getElementById("mappick").scrollIntoView({block:"nearest",behavior:"smooth"}); };
   const more=document.getElementById("nxmore"); if(more) more.onclick=()=>{ nxCount=nxCount===3?6:3; nxStop=null; NX.zoomed=false; NX.key=""; NX.active=null; NX.stops=[]; loadDepartures(true); render(); };
   box.querySelectorAll("[data-nxs]").forEach(b=>b.onclick=()=>{ nxStop=nxStop===b.dataset.nxs?null:b.dataset.nxs; render(); });
 }
@@ -1376,6 +1380,7 @@ let rankSplit=true;
 function render2(){
   /* nach „Nächstes Öffi“ wieder ganz Wien zeigen */
   if(layer.id!=="next") document.getElementById("nxrefresh").hidden=true;
+  setTimeout(()=>{ nxPrevLayer=layer.id; },0);
   if(layer.id!=="next"&&NX.zoomed){ NX.zoomed=false; zoom.k=1; zoom.cx=W/2; zoom.cy=H/2; applyZoom(); overlay.innerHTML=""; }
   if(layer.special){ renderSpecial(); return; }
   document.querySelector(".yearbar").hidden=false; document.querySelector(".rank").hidden=false;
