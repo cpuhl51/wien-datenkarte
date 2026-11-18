@@ -3,7 +3,7 @@
 //   /            → aktuelle Störungen (trafficInfoList), 60 Sekunden zwischengespeichert
 //   /monitor?stopId=…&stopId=…  → Abfahrten an bis zu 20 Haltepunkten, 20 Sekunden zwischengespeichert
 const BASE = "https://www.wienerlinien.at/ogd_realtime/";
-const ALLOWED_ORIGINS = ["https://app.wien-live-daten.puhl.ch", "https://cpuhl51.github.io"];
+const ALLOWED_ORIGINS = ["https://app.wien-live-daten.puhl.ch", "https://beta.wien-live-daten.puhl.ch", "https://cpuhl51.github.io"];
 
 export default {
   async fetch(request) {

@@ -1,0 +1,54 @@
+name: "2 · Testversion freigeben (live)"
+
+# Nur von Hand: Actions → „2 · Testversion freigeben (live)“ → Run workflow → Versionsnummer eintippen.
+# Veröffentlicht genau den Stand, der zuletzt als Testversion hochgeladen wurde (Markierung „testversion“).
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Versionsnummer der getesteten Testversion (z. B. 1.3.1)"
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ftp-live
+  cancel-in-progress: false
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: testversion
+          fetch-depth: 0
+
+      - name: Versionsnummer prüfen
+        run: |
+          V=$(python3 -c "import json;print(json.load(open('docs/version.json'))['version'])")
+          if [ "$V" != "${{ github.event.inputs.version }}" ]; then
+            echo "::error::Die Testversion ist $V, eingegeben wurde ${{ github.event.inputs.version }}. Nichts veröffentlicht."; exit 1; fi
+          echo "Gebe Version $V frei."
+
+      - name: Live hochladen
+        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          local-dir: docs/
+          server-dir: ${{ secrets.FTP_DIR_LIVE }}
+          exclude: |
+            **/.git*
+            **/.git*/**
+            CNAME
+
+      - name: Branch „live“ und Markierung „live-version“ setzen
+        run: |
+          git push -f origin HEAD:refs/heads/live
+          git tag -f live-version
+          git push -f origin refs/tags/live-version

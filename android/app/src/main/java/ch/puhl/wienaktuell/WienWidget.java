@@ -126,10 +126,10 @@ public class WienWidget extends AppWidgetProvider {
 
     static String layerUrl(String mode) {
         switch (mode) {
-            case "taxi": return APP + "#ebene=taxi";
-            case "bike": return APP + "#ebene=bike";
-            case "brunnen": return APP + "#ebene=infra:brunnen";
-            default: return APP + "#ebene=next";
+            case "taxi": return APP + "?quelle=play#ebene=taxi";
+            case "bike": return APP + "?quelle=play#ebene=bike";
+            case "brunnen": return APP + "?quelle=play#ebene=infra:brunnen";
+            default: return APP + "?quelle=play#ebene=next";
         }
     }
 

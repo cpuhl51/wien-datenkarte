@@ -1,0 +1,58 @@
+name: "1 · Testversion hochladen"
+
+# Jede Änderung auf main geht automatisch NUR auf die Testadresse beta.wien-live-daten.puhl.ch.
+# Live geht erst über „2 · Testversion freigeben (live)“ – das startet Christoph selbst.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ftp-test
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Versionsnummern prüfen (version.json, index.html, sw.js)
+        run: |
+          V=$(python3 -c "import json;print(json.load(open('docs/version.json'))['version'])")
+          grep -q "const VERSION=\"$V\"" docs/index.html || { echo "::error::VERSION in docs/index.html passt nicht zu $V"; exit 1; }
+          grep -q "wien-live-$V\"" docs/sw.js || { echo "::error::Cache-Name in docs/sw.js passt nicht zu $V"; exit 1; }
+          echo "Version $V ist überall gleich."
+
+      - name: FTP-Zugang vorhanden?
+        id: ftp
+        env:
+          S: ${{ secrets.FTP_SERVER }}
+          D: ${{ secrets.FTP_DIR_TEST }}
+        run: |
+          if [ -z "$S" ] || [ -z "$D" ]; then echo "::notice::FTP-Secrets fehlen noch – Testversion wird nicht hochgeladen."; echo "ok=0" >> "$GITHUB_OUTPUT"; else echo "ok=1" >> "$GITHUB_OUTPUT"; fi
+
+      - name: Auf die Testadresse hochladen
+        if: steps.ftp.outputs.ok == '1'
+        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          local-dir: docs/
+          server-dir: ${{ secrets.FTP_DIR_TEST }}
+          exclude: |
+            **/.git*
+            **/.git*/**
+            CNAME
+
+      - name: Markierung „testversion“ setzen
+        if: steps.ftp.outputs.ok == '1'
+        run: |
+          git tag -f testversion
+          git push -f origin testversion

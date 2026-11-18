@@ -5,7 +5,7 @@
 
 App: „Wien live - Daten & Zahlen“ · Repo `cpuhl51/wien-datenkarte` (öffentlich, MIT)
 · Paket `ch.puhl.wienaktuell` · Live: https://app.wien-live-daten.puhl.ch
-· Web-Version derzeit 1.3.1 · Android-Paket 1.3.0 (versionCode 2, mit Widget).
+· Web-Version 1.3.2 · Android-Paket 1.3.2 (versionCode 2, mit Widget, Start-URL `/?quelle=play`).
 
 ## Was Christoph will
 
@@ -36,49 +36,52 @@ App: „Wien live - Daten & Zahlen“ · Repo `cpuhl51/wien-datenkarte` (öffent
 
 | Thema | bUntis! | Wien live |
 |---|---|---|
-| Hosting | All-Inkl per FTP | **GitHub Pages** aus `docs/` (Domain per CNAME bei All-Inkl) |
+| Hosting | All-Inkl per FTP | bisher GitHub Pages → **wird auf All-Inkl umgezogen** |
 | Daten | statisch | **jede Nacht automatisch** (Action `daten-update.yml`, 03:17) + Live-Daten im Browser |
 | App-Paket | PWABuilder | **Bubblewrap/Gradle-Projekt im Repo (`android/`)**, weil das Widget nativer Code ist – PWABuilder kann das nicht |
 | Schlüssel | PWABuilder-Keystore | `upload-key.jks`, Alias `upload` (von Claude erzeugt, bei Christoph) |
-| Play-Erkennung | `/?quelle=play` | bisher über den Referrer `android-app://…`; **auf `/?quelle=play` umstellen** (Start-URL im nächsten Paket) |
+| Play-Erkennung | `/?quelle=play` | `/?quelle=play` (seit 1.3.2) plus Referrer `android-app://…` |
 | Fremddaten | keine | Stadt Wien (data.wien.gv.at, CC BY 4.0), Wiener Linien (CC BY 4.0), nextbike GBFS (CC0), basemap.at → Quellen stehen in der App, Lizenzliste auf der Info-Seite ergänzen |
 
-## Schritt 1 – Testumgebung
+## Schritt 1 – Testumgebung (entschieden: alles auf All-Inkl wie bUntis!)
 
-**Vorschlag (zu bestätigen):** Live bleibt auf GitHub Pages, die **Testversion kommt
-per FTP auf All-Inkl** – so bleibt Live unangetastet, und die Test-Seite läuft wie bei
-bUntis!.
+Live und Test laufen per FTP auf All-Inkl. GitHub Pages wird nach dem Umzug abgeschaltet.
 
-**Christoph macht:**
-1. Im KAS von All-Inkl die Subdomain **`beta.wien-live-daten.puhl.ch`** mit eigenem
-   Ordner anlegen (SSL/Let's Encrypt aktivieren).
-2. Im Repo unter **Settings → Secrets and variables → Actions** vier Secrets:
-   `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD`, `FTP_DIR_TEST` (Ordner der Beta,
-   mit `/` am Ende). `FTP_DIR_LIVE` braucht es nicht, solange Live auf GitHub Pages
-   bleibt.
+**Christoph macht (KAS von All-Inkl):**
+1. Zwei Ordner anlegen, z. B. `/wien-live/` (Live) und `/wien-live-beta/` (Test).
+2. Subdomain **`beta.wien-live-daten.puhl.ch`** anlegen → Ordner `/wien-live-beta/`,
+   SSL (Let's Encrypt) einschalten.
+3. **Noch nicht** die Live-Subdomain umstellen – das machen wir gemeinsam, wenn die
+   Live-Dateien schon im Ordner liegen (Schritt 1b).
+4. Im Repo unter **Settings → Secrets and variables → Actions** fünf Secrets:
+   `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD`, `FTP_DIR_TEST`, `FTP_DIR_LIVE`
+   (Ordner mit `/` am Ende, so wie der FTP-Zugang sie sieht).
 
-**Claude macht:**
-- **Branches:** `main` = Entwicklung/Test, neuer Branch **`live`** = was GitHub Pages
-  zeigt (Pages-Quelle: Branch `live`, Ordner `/docs` – das stellt Christoph einmal in
-  Settings → Pages um, Claude sagt wann).
-- **`test.yml` „1 · Testversion hochladen“:** bei jedem Push auf `main`: prüft, dass
-  `version.json`, `VERSION` in `index.html` und Cache-Name in `sw.js` übereinstimmen,
-  lädt `docs/` per FTPS (`SamKirkland/FTP-Deploy-Action@v4.4.0`) nach `FTP_DIR_TEST`,
-  setzt die Markierung `testversion`.
-- **`live.yml` „2 · Testversion freigeben (live)“:** nur von Hand, verlangt die
-  Versionsnummer, prüft sie gegen die Markierung `testversion` und schiebt genau
-  diesen Stand auf den Branch `live` (→ GitHub Pages), setzt die Markierung `live`.
-- **Nächtliche Daten:** `daten-update.yml` aktualisiert **beide** Branches (`live`
-  und `main`) – Daten gehen ohne Freigabe live, Programmänderungen nie.
-- **Cloudflare Worker:** `beta.wien-live-daten.puhl.ch` als erlaubten Ursprung
-  ergänzen (Christoph fügt den neuen Code im Cloudflare-Dashboard ein, Anleitung in
-  `infos-app-betrieb.md`).
-- **Testversion erkennbar:** `IST_TEST` (Hostname enthält „beta“ oder „test“) →
-  oranges Band „Testversion“, Rohdaten zur Fehlersuche nur dort, `.htaccess` mit
-  `Header set X-Robots-Tag "noindex, nofollow"` und `<meta name="robots"
-  content="noindex">`.
-- Nach jedem Push prüfen: Ablauf grün, Beta liefert die neue Versionsnummer.
-  Dann Christoph sagen, was neu ist und was er testen soll.
+**Claude hat vorbereitet (im Repo):**
+- **`test.yml` „1 · Testversion hochladen“:** bei jedem Push auf `main`: prüft
+  `version.json` = `VERSION` in `index.html` = Cache-Name in `sw.js`, lädt `docs/` per
+  FTPS nach `FTP_DIR_TEST`, setzt die Markierung `testversion`. Ohne Secrets nur ein
+  Hinweis, kein Fehler.
+- **`live.yml` „2 · Testversion freigeben (live)“:** nur von Hand, mit Versionsnummer;
+  holt genau `testversion`, prüft die Nummer, lädt nach `FTP_DIR_LIVE`, setzt den
+  Branch `live` und die Markierung `live-version`.
+- **`daten-update.yml`:** jede Nacht für `main` (→ Test) **und** `live` (→ Live):
+  Daten laden, bauen, speichern, hochladen. Daten gehen ohne Freigabe live,
+  Programmänderungen nie.
+- `docs/.htaccess`: HTTPS-Umleitung, `X-Robots-Tag: noindex` für `beta.`,
+  frische Auslieferung von `index.html`, `sw.js`, `version.json`, Manifest.
+- In der App: `VERSION`, `IST_TEST` (oranges Band „Testversion“, noindex),
+  `IST_PLAY` über `/?quelle=play`.
+- Cloudflare Worker: `beta.wien-live-daten.puhl.ch` als erlaubter Ursprung
+  (Christoph fügt `live/worker.js` neu ein, Anleitung in `infos-app-betrieb.md`).
+
+**Schritt 1b – Umzug Live (gemeinsam):**
+1. Christoph startet einmal „2 · Testversion freigeben (live)“ → Live-Ordner gefüllt.
+2. Im KAS die Subdomain `app.wien-live-daten.puhl.ch` vom CNAME (GitHub) auf den
+   Ordner `/wien-live/` umstellen, SSL einschalten. Kurz kann HTTPS fehlen, bis das
+   Zertifikat da ist (Vermutung: Minuten).
+3. Prüfen: App, `/.well-known/assetlinks.json`, Live-Daten.
+4. GitHub → Settings → Pages abschalten, `docs/CNAME` entfernt Claude.
 
 ## Schritt 2 – App fit für den Play Store
 
@@ -88,21 +91,17 @@ Erledigt: Manifest mit Icons (maskable), Service Worker, eigene Domain,
 ausgeblendet.
 
 Offen:
-- `/?quelle=play` als Start-URL, `IST_PLAY` per `sessionStorage`, Spendenlinks als
-  `.nur-web` – Zahlungsrichtlinie vor Einreichung erneut prüfen.
-- `datenschutz.html`: Abschnitt **„Daten löschen“** ergänzen (Einstellungen liegen nur
-  im Browser/Gerät → App-Daten löschen bzw. deinstallieren; Widget-Standort ebenso).
-  Kontakt: Christoph Puhl, Wien, apps@puhl.ch, ohne Postadresse.
+- Erledigt in 1.3.2: `/?quelle=play`, `IST_PLAY`, Spendenlink in der Play-Version aus;
+  `datenschutz.html` mit „Daten löschen“. Zahlungsrichtlinie vor Einreichung prüfen.
 - Kein Login → kein Demo-Modus nötig.
-- **App-Standard-Lücken** (Burger-Menü, Einstellungen mit Stil Zönose/Klassisch und
-  Sprache DE/EN, Erststart-Hinweis zur Zönose, Stoffl-Schrift): großer Umbau.
-  Vorschlag: **nach** der Store-Freigabe in der Testversion umsetzen – Web-Änderungen
-  kommen ohne neues App-Paket in der Play-App an.
+- **App-Standard bei Wien live (Entscheidung 18.11.):** Zönose-Stil ist **nicht**
+  geplant. Burger-Menü vermutlich nicht – außer ein Entwurf überzeugt: Kategorien
+  (mit Farben) ins Burger-Menü, Unterkategorien als Auswahl direkt unter der Karte.
+  Entwurf zuerst in der Testversion zeigen.
 
 ## Schritt 3 – Play Console (gemeinsam)
 
-Stand klären: Wurde die App schon angelegt? Wurde 1.0.0 (Code 1) hochgeladen?
-Für Neues **immer das Paket 1.3.0 (Code 2, mit Widget)** nehmen.
+Stand 18.11.: in der Play Console ist noch nichts angelegt. Hochladen: **`wien-live-1.3.2.aab`** (Code 2).
 
 1. **App erstellen:** „Wien live - Daten & Zahlen“ (26 Zeichen), Deutsch (Österreich),
    App, kostenlos. Kostenlos ist danach endgültig.
@@ -120,7 +119,7 @@ Für Neues **immer das Paket 1.3.0 (Code 2, mit Widget)** nehmen.
 3. **Store-Eintrag:** Texte in `store-texte.md` (Paket), Symbol 512, Titelbild
    1024×500, 6 Handy-Screenshots vorhanden; **Tablet-Screenshot 2560×1600 fehlt** –
    erstellt Claude. Kategorie „Karten & Navigation“, Kontakt apps@puhl.ch.
-4. **App-Paket:** `wien-live-1.3.0.aab` (Bubblewrap, signiert mit `upload-key.jks`).
+4. **App-Paket:** `wien-live-1.3.2.aab` (Bubblewrap, signiert mit `upload-key.jks`).
    Jedes neue Paket: `versionCode` +1, `versionName` = App-Version, gebaut aus
    `android/` (Anleitung in `uebergabe-technik.md`).
 5. **Digital Asset Links:** in `docs/.well-known/assetlinks.json` den zweiten
@@ -144,7 +143,6 @@ Für Neues **immer das Paket 1.3.0 (Code 2, mit Widget)** nehmen.
 
 ## Offene Fragen an Christoph
 
-1. Testumgebung wie vorgeschlagen (Live auf GitHub Pages, Beta auf All-Inkl)?
-2. Subdomain `beta.wien-live-daten.puhl.ch` ok?
-3. Stand in der Play Console?
-4. Zielgruppe, KI-Logo, Testergruppe.
+1. Zielgruppe (13+ oder 18+)?
+2. Wurde das Logo mit KI erstellt?
+3. Testergruppe anlegen (`wien-live-tester@googlegroups.com`)?

@@ -1,5 +1,7 @@
 name: Daten aktualisieren
 
+# Jede Nacht neue Daten – für die Testversion (Branch main) UND die Live-Version (Branch live).
+# Daten gehen ohne Freigabe live, Programmänderungen nie (die kommen nur über „2 · Testversion freigeben“).
 on:
   schedule:
     - cron: "17 2 * * *"   # täglich 02:17 UTC (03:17 Wiener Winterzeit)
@@ -16,32 +18,50 @@ jobs:
   update:
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    strategy:
+      max-parallel: 1
+      fail-fast: false
+      matrix:
+        branch: [main, live]
     steps:
+      - name: Gibt es den Branch?
+        id: br
+        run: |
+          if git ls-remote --exit-code --heads "https://github.com/${{ github.repository }}.git" "${{ matrix.branch }}" >/dev/null; then echo "ok=1" >> "$GITHUB_OUTPUT"; else echo "::notice::Branch ${{ matrix.branch }} gibt es noch nicht – übersprungen."; echo "ok=0" >> "$GITHUB_OUTPUT"; fi
+
       - uses: actions/checkout@v5
+        if: steps.br.outputs.ok == '1'
+        with:
+          ref: ${{ matrix.branch }}
 
       - name: Daten der Stadt Wien laden
+        if: steps.br.outputs.ok == '1'
         run: bash scripts/fetch.sh
 
       - name: Fahrplan auszählen (heute und morgen, Wiener Zeit)
+        if: steps.br.outputs.ok == '1'
         run: TZ=Europe/Vienna python3 scripts/gtfs_count.py data/raw/gtfs data/geo/bezirke.json data/raw/fahrten.json
 
       - name: Daten aufbereiten und Seite bauen
+        if: steps.br.outputs.ok == '1'
         run: bash scripts/build_all.sh
 
       - name: Änderungen speichern
+        if: steps.br.outputs.ok == '1'
         run: |
+          B="${{ matrix.branch }}"
           git config user.name "daten-bot"
           git config user.email "daten-bot@users.noreply.github.com"
-          msg="Daten aktualisiert $(date -u +%Y-%m-%d)"
+          msg="Daten aktualisiert $(date -u +%Y-%m-%d) ($B)"
           git add data docs
           if git diff --cached --quiet; then echo "Keine neuen Daten."; exit 0; fi
           git commit -q -m "$msg"
           for i in 1 2 3; do
-            git push && exit 0
-            # Inzwischen wurde die App geändert: auf den neuesten Stand gehen und mit den geladenen Daten neu bauen
+            git push origin "HEAD:$B" && exit 0
+            # Inzwischen wurde der Branch geändert: auf den neuesten Stand gehen und mit den geladenen Daten neu bauen
             echo "Push abgelehnt, baue auf dem neuesten Stand neu (Versuch $i)"
             rm -rf /tmp/raw && cp -r data/raw /tmp/raw && cp data/fundtiere/archiv.json /tmp/archiv.json
-            git fetch -q origin main && git reset -q --hard origin/main
+            git fetch -q origin "$B" && git reset -q --hard "origin/$B"
             cp -r /tmp/raw/. data/raw/ && cp /tmp/archiv.json data/fundtiere/archiv.json
             bash scripts/build_all.sh
             git add data docs
@@ -49,3 +69,29 @@ jobs:
             git commit -q -m "$msg"
           done
           exit 1
+
+      - name: Zielordner wählen
+        if: steps.br.outputs.ok == '1'
+        id: ziel
+        env:
+          S: ${{ secrets.FTP_SERVER }}
+          DT: ${{ secrets.FTP_DIR_TEST }}
+          DL: ${{ secrets.FTP_DIR_LIVE }}
+        run: |
+          if [ "${{ matrix.branch }}" = "live" ]; then D="$DL"; else D="$DT"; fi
+          if [ -z "$S" ] || [ -z "$D" ]; then echo "::notice::FTP-Secrets fehlen – kein Upload."; echo "ok=0" >> "$GITHUB_OUTPUT"; else echo "ok=1" >> "$GITHUB_OUTPUT"; echo "dir=$D" >> "$GITHUB_OUTPUT"; fi
+
+      - name: Hochladen (main → Testadresse, live → Live-Adresse)
+        if: steps.br.outputs.ok == '1' && steps.ziel.outputs.ok == '1'
+        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          local-dir: docs/
+          server-dir: ${{ steps.ziel.outputs.dir }}
+          exclude: |
+            **/.git*
+            **/.git*/**
+            CNAME

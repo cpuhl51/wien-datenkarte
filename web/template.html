@@ -233,6 +233,7 @@ footer a{color:inherit}
 #subsmob .subs{margin:10px 0 4px;padding:8px 10px;border-left:3px solid var(--gc);background:color-mix(in srgb,var(--gc) 8%,transparent);border-radius:0 8px 8px 0}
 .howto{font-size:13px;margin:12px 0 0}
 .settingsrow{margin:14px 0 0}
+.testband{position:sticky;top:0;z-index:100;background:#f08c00;color:#000;text-align:center;font:700 13px var(--body);padding:5px 8px}
 .fotobtn{display:flex;align-items:center;gap:10px;margin:12px 0 4px;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);font:600 15px var(--body);text-decoration:none}
 .fotobtn b{margin-left:auto;font:600 13px var(--mono);color:var(--muted)}
 .fotobtn .fbx{font-size:20px;color:var(--muted)}
@@ -392,6 +393,13 @@ svg.vin text.vl{font:600 13px var(--body);fill:#3a2e08;pointer-events:none}
 </div>
 
 <script>
+/* App-Version – muss mit docs/version.json und dem Cache-Namen in docs/sw.js übereinstimmen (prüft der Ablauf „1 · Testversion hochladen“) */
+const VERSION="1.3.2";
+/* Testversion (beta.…) erkennbar machen */
+const IST_TEST=/^(beta|test)[.-]/.test(location.hostname)||/-(beta|test)\./.test(location.hostname);
+/* Play-Store-App: Start-URL /?quelle=play (ab App-Paket 1.3.x) oder Aufruf aus der Android-App */
+const IST_PLAY=(()=>{ try{ if(/[?&]quelle=play\b/.test(location.search)||document.referrer.startsWith("android-app://ch.puhl.wienaktuell")) sessionStorage.setItem("play","1"); return sessionStorage.getItem("play")==="1"; }catch(e){ return document.referrer.startsWith("android-app://"); } })();
+if(IST_TEST){ const rm=document.createElement("meta"); rm.name="robots"; rm.content="noindex, nofollow"; document.head.appendChild(rm); const tb=document.createElement("div"); tb.className="testband"; tb.setAttribute("role","status"); tb.textContent="Testversion "+VERSION+" – nicht die Live-App"; document.body.prepend(tb); document.title="TEST · "+document.title; }
 const GEO = __GEO__;
 const AREA = __AREA__;
 const DATA = __DATA__;
@@ -1593,7 +1601,7 @@ function select(b){sel=b;pickMode=false;render();}
 const LINKS={mail:"mailto:apps@puhl.ch",donate:"https://paypal.me/PuhlChristoph",github:"https://github.com/cpuhl51/wien-datenkarte",author:"https://de.wikipedia.org/wiki/Christoph_Puhl",comics:"https://www.diezöno.se",puhl:"https://www.puhl.ch"};
 const a_=(u,t)=>`<a href="${u}" target="_blank" rel="noopener">${t}</a>`;
 /* In der Play-Store-App (TWA) kein Spendenlink: Google verlangt für Trinkgeld an Entwickler vermutlich die Play-Abrechnung */
-const IS_TWA=(()=>{ try{ if(document.referrer.startsWith("android-app://ch.puhl.wienaktuell")) sessionStorage.setItem("twa","1"); return sessionStorage.getItem("twa")==="1"; }catch(e){ return document.referrer.startsWith("android-app://"); } })();
+const IS_TWA=IST_PLAY;
 const creditHtml=()=>`Diese kostenlose App wurde von ${a_(LINKS.mail,"Christoph Puhl")} entwickelt und von Claude.ai umgesetzt. ${IS_TWA?"":`Wenn Du möchtest, kannst Du ${a_(LINKS.donate,"hier")} gerne für einen Kaffee, ein Mohnbeugerl oder ein KI-Monatsabo spenden. `}Dieses Projekt auf ${a_(LINKS.github,"GitHub")} ansehen. Mehr über den ${a_(LINKS.author,"Autor")}, weitere Apps, ${a_(LINKS.comics,"Comics")} und ${a_("https://puhl.ch/category/programme-und-apps/","Tools")} findest Du auf ${a_(LINKS.puhl,"puhl.ch")}.`;
 function sliderName(L){ return L.clock?"Uhrzeit":(L.subs.every(s=>s.pts)||L.special)?"Stand":L.id==="wl"?"live":L.fund?"laufend":"Jahr"; }
 function layerTree(){

@@ -1,0 +1,18 @@
+# Gilt nur auf All-Inkl (Apache). Live: app.wien-live-daten.puhl.ch, Test: beta.wien-live-daten.puhl.ch
+RewriteEngine On
+RewriteCond %{HTTPS} !=on
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+AddType application/manifest+json .webmanifest
+AddType application/json .json
+
+<IfModule mod_headers.c>
+  # Testversion nicht in Suchmaschinen
+  <If "%{HTTP_HOST} =~ /^(beta|test)\./">
+    Header set X-Robots-Tag "noindex, nofollow"
+  </If>
+  # Diese Dateien immer frisch laden, damit Updates sofort ankommen
+  <FilesMatch "^(index\.html|sw\.js|version\.json|manifest\.webmanifest)$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+</IfModule>
