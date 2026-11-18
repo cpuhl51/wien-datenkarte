@@ -1,6 +1,15 @@
 {
-  "version": "1.4.0",
+  "version": "1.4.1",
   "verlauf": [
+    {
+      "version": "1.4.1",
+      "datum": "2026-11-18",
+      "aenderungen": [
+        "Symbole auf dem neuen Server repariert",
+        "Kategorie wechseln schließt die Fotoansicht",
+        "Knopf „Daten einer anderen Kategorie darstellen“"
+      ]
+    },
     {
       "version": "1.4.0",
       "datum": "2026-11-18",

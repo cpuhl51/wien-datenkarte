@@ -249,8 +249,7 @@ footer a{color:inherit}
 .dr-link{display:block;padding:11px 4px;border-bottom:1px solid var(--line);color:var(--ink);text-decoration:none;font:600 15px var(--body)}
 .drawer .lgroups{margin:0}
 body.noscroll{overflow:hidden}
-.catbtn{display:flex;align-items:center;gap:6px;width:100%;justify-content:flex-start;margin-top:12px;border-left:4px solid var(--gc,var(--line))}
-.catbtn #catname{font-weight:800}
+.catbtn{display:flex;align-items:center;justify-content:center;width:100%;margin-top:12px}
 .testband{position:sticky;top:0;z-index:100;background:#f08c00;color:#000;text-align:center;font:700 13px var(--body);padding:5px 8px}
 .fotobtn{display:flex;align-items:center;gap:10px;margin:12px 0 4px;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);font:600 15px var(--body);text-decoration:none}
 .fotobtn b{margin-left:auto;font:600 13px var(--mono);color:var(--muted)}
@@ -403,7 +402,7 @@ svg.vin text.vl{font:600 13px var(--body);fill:#3a2e08;pointer-events:none}
         <span class="yrange" id="yrange"></span>
       </div>
       <div id="subsmob"></div>
-      <button class="wien catbtn" id="catbtn" aria-controls="drawer">☰ <span id="catname"></span> · andere Karte wählen</button>
+      <button class="wien catbtn" id="catbtn" aria-controls="drawer">Daten einer anderen Kategorie darstellen</button>
       <div class="subs" id="subs" role="group" aria-label="Kennzahl"></div>
       <p class="note" id="layernote"></p>
       <p class="hint maphint"><span id="numhint"></span> · Bezirk antippen für Details · gezoomt: mit dem Finger verschieben</p>
@@ -428,7 +427,7 @@ svg.vin text.vl{font:600 13px var(--body);fill:#3a2e08;pointer-events:none}
 
 <script>
 /* App-Version – muss mit docs/version.json und dem Cache-Namen in docs/sw.js übereinstimmen (prüft der Ablauf „1 · Testversion hochladen“) */
-const VERSION="1.4.0";
+const VERSION="1.4.1";
 /* Testversion (beta.…) erkennbar machen */
 const IST_TEST=/^(beta|test)[.-]/.test(location.hostname)||/-(beta|test)\./.test(location.hostname);
 /* Play-Store-App: Start-URL /?quelle=play (ab App-Paket 1.3.x) oder Aufruf aus der Android-App */
@@ -493,7 +492,7 @@ const WL_CAUSE = [["bau","Bauarbeiten",/bau(arbeit|stelle)|gleisbau|gleisarbeit|
 const causeOf = i => { if(i.k==="aufzug") return "aufzug"; const s=i.t+" "+i.d; const c=WL_CAUSE.find(([,,r])=>r.test(s)); return c?c[0]:"sonst"; };
 const CAUSE_COL = {bau:"#1a1a1a",einsatz:"#1c5fd6",unfall:"#c4161c",technik:"#5c6670",verkehr:"#c4161c",veranst:"#c4161c",sonst:"#e0a800",aufzug:"#3fa9e0"};
 /* Piktogramme je Ursache */
-const CAUSE_ICON = c => `icons/stoerung/${CAUSE_COL[c]?c:"sonst"}.png${IV}`;
+const CAUSE_ICON = c => `bilder/stoerung/${CAUSE_COL[c]?c:"sonst"}.png${IV}`;
 /* ---------- Leihräder: WienMobil Rad, GBFS direkt vom Betreiber (erlaubt Browser-Abfragen) ---------- */
 const BK={at:null,last:0,loading:false,err:null};
 const GBFS="https://gbfs.nextbike.net/maps/gbfs/v2/nextbike_wr/de/";
@@ -1047,7 +1046,7 @@ function drawFund(s){
   const zp=14*Math.min(1.7,1+(zoom.k-1)*.15);
   fundG.innerHTML=fundItems().filter(i=>i.xy).map(i=>{ const [x,y]=px(i.xy), j=10*u, on=fundPick===i.id, z=(on?zp*1.45:zp)*u;
     const X=x+(hash01(i.id,1)-.5)*j*2, Y=y+(hash01(i.id,2)-.5)*j*2;
-    return `<g data-fund="${esc(i.id)}"><title>${esc(i.t)} · ${esc(i.o)}</title>${on?`<circle cx="${X.toFixed(2)}" cy="${Y.toFixed(2)}" r="${(z*.68).toFixed(2)}" style="fill:none;stroke:var(--ink);stroke-width:${(z*.09).toFixed(2)}"></circle>`:""}<image href="icons/fund/${fkOf(i)}.png${IV}" x="${(X-z/2).toFixed(2)}" y="${(Y-z/2).toFixed(2)}" width="${z.toFixed(2)}" height="${z.toFixed(2)}"></image></g>`; }).join("");
+    return `<g data-fund="${esc(i.id)}"><title>${esc(i.t)} · ${esc(i.o)}</title>${on?`<circle cx="${X.toFixed(2)}" cy="${Y.toFixed(2)}" r="${(z*.68).toFixed(2)}" style="fill:none;stroke:var(--ink);stroke-width:${(z*.09).toFixed(2)}"></circle>`:""}<image href="bilder/fund/${fkOf(i)}.png${IV}" x="${(X-z/2).toFixed(2)}" y="${(Y-z/2).toFixed(2)}" width="${z.toFixed(2)}" height="${z.toFixed(2)}"></image></g>`; }).join("");
 }
 svg.addEventListener("click",e=>{ const el=e.target.closest&&e.target.closest("[data-fund]"); if(!el||layer.id!=="fund") return; e.stopPropagation(); fundPick=el.dataset.fund; render();
   const c=document.getElementById("fundpick"); if(c) c.scrollIntoView({block:"nearest",behavior:"smooth"}); },true);
@@ -1056,7 +1055,7 @@ function fundPickCard(){
   return fundCard(i,"fundpick-x","fundpick");
 }
 function fundCard(i,closeId,id){
-  return `<div class="pick"${id?` id="${id}"`:""}><div class="pk-h"><img src="icons/fund/${fkOf(i)}.png${IV}" alt="" style="width:20px;height:20px;vertical-align:-5px;margin-right:6px">${esc(FUND_KIND[fkOf(i)][0])} · gefunden am ${dmy(i.d)}</div>
+  return `<div class="pick"${id?` id="${id}"`:""}><div class="pk-h"><img src="bilder/fund/${fkOf(i)}.png${IV}" alt="" style="width:20px;height:20px;vertical-align:-5px;margin-right:6px">${esc(FUND_KIND[fkOf(i)][0])} · gefunden am ${dmy(i.d)}</div>
     <div class="pk-a">${esc(i.t)}${i.f?" · "+esc(i.f):""}${i.s&&i.s!=="unbekannt"?" · "+esc(i.s):""}</div>
     ${i.foto?`<img class="fundfoto" src="${i.foto}" alt="Foto: ${esc(i.t)}" loading="lazy">`:""}
     ${i.mx||i.j?`<div class="pk-m" style="font-family:var(--body)">${[esc(i.mx||""),i.j?"geboren "+esc(i.j):""].filter(Boolean).join(" · ")}</div>`:""}
@@ -1145,7 +1144,7 @@ function renderControls(){
   document.getElementById("subsmob").style.setProperty("--gc",grp?grp.style.getPropertyValue("--gc"):layer.color);
   const gc=grp?grp.style.getPropertyValue("--gc"):layer.color;
   const key=s=>s.dot||(layer.id==="vote"&&s.id!=="all"?s.color:null);
-  const icon=s=>layer.id==="fund"&&FUND_KIND[s.id]?`icons/fund/${s.id}.png${IV}`:layer.id==="wl"&&CAUSE_COL[s.id]?`icons/stoerung/${s.id}.png${IV}`:null;
+  const icon=s=>layer.id==="fund"&&FUND_KIND[s.id]?`bilder/fund/${s.id}.png${IV}`:layer.id==="wl"&&CAUSE_COL[s.id]?`bilder/stoerung/${s.id}.png${IV}`:null;
   sc.innerHTML=layer.subs.length<2?"":layer.subs.map(s=>`<button class="sub" id="sub-${layer.id}-${s.id}" data-s="${s.id}" style="--pc:${gc}" aria-pressed="${s.id===state[layer.id].sub}">${icon(s)?`<img class="sico" src="${icon(s)}" alt="">`:key(s)?`<b class="sdot" style="background:${key(s)}"></b>`:""}${s.label}</button>`).join("");
   sc.hidden=layer.subs.length<2;
   sc.querySelectorAll(".sub").forEach(b=>b.addEventListener("click",()=>{state[layer.id].sub=b.dataset.s;render();}));
@@ -1162,7 +1161,7 @@ function renderControls(){
   document.getElementById("stand").innerHTML=`<div><b>Datenstand:</b> ${layer.stand(y)}</div><div><span>Quelle:</span> ${subOf(layer).src||layer.src}</div><div><span>Abgerufen:</span> ${ABRUF}</div>`;
   const w=document.getElementById("wien"); w.setAttribute("aria-pressed",sel===0&&!pickMode);
   { const nm=layer.label, gc=(LGROUPS.find(g=>flatIds(g[2]).includes(layer.id))||[])[1]||layer.color;
-    document.getElementById("tblayer").textContent=nm; document.getElementById("catname").textContent=nm;
+    document.getElementById("tblayer").textContent=nm;
     document.getElementById("catbtn").style.setProperty("--gc",gc); document.getElementById("tblayer").style.setProperty("--gc",gc); }
   svg.classList.toggle("ptzoom",zoom.k>=3&&(isPts(layer)||layer.id==="wl"||!!layer.fund));
   svg.classList.toggle("pickmode",pickMode); document.getElementById("pickmsg").hidden=!pickMode;
@@ -1450,7 +1449,7 @@ function render2(){
     document.getElementById("wlleg").innerHTML=(used.length?used.map(c=>`<span class="lg"><img src="${CAUSE_ICON(c)}" alt="" style="width:18px;height:18px;outline:none">${c==="aufzug"?"Aufzug":c==="sonst"?"Sonstiges":WL_CAUSE.find(x=>x[0]===c)[1]}</span>`).join("")+`<span class="lg" style="color:var(--muted)">Symbol${wlDrawn.lines?" oder Linie":""} antippen für die Meldung${wlDrawn.lines?" · punktiert = betroffener U-Bahn-Abschnitt (abwechselnd Linien- und Störungsfarbe)":""}</span>`:"")
       +(wlDrawn.off?`<span class="lg" style="color:var(--muted)">${wlDrawn.off} Meldung${wlDrawn.off>1?"en nennen":" nennt"} nur Straßenbahn- oder Buslinien ohne Haltestellen und ${wlDrawn.off>1?"sind":"ist"} daher nicht auf der Karte – siehe Liste unten.</span>`:"");
   } else if(layer.id==="fund"){ const it=fundItems(), n=it.filter(i=>i.xy).length;
-    document.getElementById("wlleg").innerHTML=Object.entries(FUND_KIND).filter(([k])=>it.some(i=>fkOf(i)===k)).map(([k,[l]])=>`<span class="lg"><img src="icons/fund/${k}.png${IV}" alt="" style="width:18px;height:18px;outline:none">${l}</span>`).join("")
+    document.getElementById("wlleg").innerHTML=Object.entries(FUND_KIND).filter(([k])=>it.some(i=>fkOf(i)===k)).map(([k,[l]])=>`<span class="lg"><img src="bilder/fund/${k}.png${IV}" alt="" style="width:18px;height:18px;outline:none">${l}</span>`).join("")
       +`<span class="lg" style="color:var(--muted)">Symbol = ungefähre Lage (Mitte der Straße bzw. des Parks) · ${n} von ${it.length} Meldungen verortet · antippen für Details</span>`;
   } else document.getElementById("wlleg").innerHTML="";
   const dotNote=layer.id==="bau"?`Symbol = Baustelle, gestrichelte Linie = betroffener Abschnitt; antippen für Zeitraum und Details. ${BAU.err?BAU.err+" ":""}`:layer.id==="bike"?`● = eine Station: hell = mehr als 2 ${s.id==="bike"?"Räder":"Plätze"} frei, dunkel = nur 1–2, grau = keine. `:isPts(layer)?`● = ein Standort, antippen für Details. `:"";
@@ -1863,7 +1862,8 @@ LGROUPS.concat([["Weitere","#7f8c87",LAYERS.map(L=>L.id).filter(id=>!inGroup.has
     const ch=document.createElement("div"); ch.className="chips"; g.appendChild(ch);
     Ls.forEach(L=>{
       const btn=document.createElement("button");btn.className="chip";btn.id="layer-"+L.id;btn.dataset.l=L.id;btn.textContent=L.label;
-      btn.addEventListener("click",()=>{layer=L;render();maybeLive();closeDrawer(); document.getElementById("maptitle").scrollIntoView({block:"start",behavior:"smooth"});});
+      btn.addEventListener("click",()=>{ if(location.hash==="#fotos"||location.hash==="#info"){ history.replaceState(null,"",location.pathname+location.search); route(); } /* Fotos/Info schließen */
+        layer=L;render();maybeLive();closeDrawer(); document.getElementById("maptitle").scrollIntoView({block:"start",behavior:"smooth"});});
       ch.appendChild(btn);
     });
   });

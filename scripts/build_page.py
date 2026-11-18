@@ -28,8 +28,8 @@ head = """<!doctype html>
 <meta name="theme-color" content="#111715" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#f3f5f4" media="(prefers-color-scheme: light)">
 <link rel="manifest" href="manifest.webmanifest?v=__IV__">
-<link rel="icon" type="image/png" sizes="48x48" href="icons/favicon-48.png">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="48x48" href="bilder/favicon-48.png">
+<link rel="apple-touch-icon" href="bilder/apple-touch-icon.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Wien live">
 <script>try{var th=localStorage.getItem("theme");if(th==="light"||th==="dark")document.documentElement.setAttribute("data-theme",th)}catch(e){}</script>
