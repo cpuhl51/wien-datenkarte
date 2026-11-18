@@ -1,6 +1,6 @@
 name: Daten aktualisieren
 
-# Jede Nacht neue Daten – für die Testversion (Branch main) UND die Live-Version (Branch live).
+# Jede Nacht neue Daten – für die Testversion (Branch main bzw. beta, falls es einen Entwurf gibt) UND die Live-Version (Branch live).
 # Daten gehen ohne Freigabe live, Programmänderungen nie (die kommen nur über „2 · Testversion freigeben“).
 on:
   schedule:
@@ -22,7 +22,7 @@ jobs:
       max-parallel: 1
       fail-fast: false
       matrix:
-        branch: [main, live]
+        branch: [main, beta, live]
     steps:
       - name: Gibt es den Branch?
         id: br
@@ -79,6 +79,8 @@ jobs:
           DL: ${{ secrets.FTP_DIR_LIVE }}
         run: |
           if [ "${{ matrix.branch }}" = "live" ]; then D="$DL"; else D="$DT"; fi
+          # Gibt es einen Entwurf auf „beta“, zeigt die Testadresse diesen – main dann nicht hochladen
+          if [ "${{ matrix.branch }}" = "main" ] && git ls-remote --exit-code --heads origin beta >/dev/null 2>&1; then D=""; echo "::notice::Branch beta vorhanden – Testadresse zeigt beta."; fi
           if [ -z "$S" ] || [ -z "$D" ]; then echo "::notice::FTP-Secrets fehlen – kein Upload."; echo "ok=0" >> "$GITHUB_OUTPUT"; else echo "ok=1" >> "$GITHUB_OUTPUT"; echo "dir=$D" >> "$GITHUB_OUTPUT"; fi
 
       - name: Hochladen (main → Testadresse, live → Live-Adresse)
