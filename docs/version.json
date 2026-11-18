@@ -1,6 +1,15 @@
 {
-  "version": "1.3.2",
+  "version": "1.4.0",
   "verlauf": [
+    {
+      "version": "1.4.0",
+      "datum": "2026-11-18",
+      "aenderungen": [
+        "Entwurf: Burger-Menü mit allen Karten-Kategorien",
+        "Unterauswahl immer direkt unter der Karte",
+        "Kopfleiste mit aktueller Karte"
+      ]
+    },
     {
       "version": "1.3.2",
       "datum": "2026-11-18",
