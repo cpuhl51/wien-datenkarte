@@ -50,6 +50,7 @@ jobs:
             **/.git*
             **/.git*/**
             CNAME
+            .nojekyll
 
       - name: Markierung „testversion“ setzen
         if: steps.ftp.outputs.ok == '1'

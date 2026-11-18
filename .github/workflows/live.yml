@@ -46,6 +46,7 @@ jobs:
             **/.git*
             **/.git*/**
             CNAME
+            .nojekyll
 
       - name: Branch „live“ und Markierung „live-version“ setzen
         run: |
