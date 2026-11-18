@@ -4,7 +4,7 @@ name: "1 · Testversion hochladen"
 # Live geht erst über „2 · Testversion freigeben (live)“ – das startet Christoph selbst.
 on:
   push:
-    branches: [main]
+    branches: [main, beta]
   workflow_dispatch:
 
 permissions:
@@ -35,6 +35,8 @@ jobs:
           D: ${{ secrets.FTP_DIR_TEST }}
         run: |
           if [ -z "$S" ] || [ -z "$D" ]; then echo "::notice::FTP-Secrets fehlen noch – Testversion wird nicht hochgeladen."; echo "ok=0" >> "$GITHUB_OUTPUT"; else echo "ok=1" >> "$GITHUB_OUTPUT"; fi
+          # Liegt ein Entwurf auf „beta“, gehört die Testadresse diesem – main dann nicht hochladen
+          if [ "${{ github.ref_name }}" = "main" ] && git ls-remote --exit-code --heads origin beta >/dev/null 2>&1; then echo "::notice::Branch beta vorhanden – Testadresse zeigt den Entwurf, main wird nicht hochgeladen."; echo "ok=0" >> "$GITHUB_OUTPUT"; fi
 
       - name: Auf die Testadresse hochladen
         if: steps.ftp.outputs.ok == '1'
