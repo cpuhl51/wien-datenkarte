@@ -43,6 +43,15 @@ App: „Wien live - Daten & Zahlen“ · Repo `cpuhl51/wien-datenkarte` (öffent
 | Play-Erkennung | `/?quelle=play` | `/?quelle=play` (seit 1.3.2) plus Referrer `android-app://…` |
 | Fremddaten | keine | Stadt Wien (data.wien.gv.at, CC BY 4.0), Wiener Linien (CC BY 4.0), nextbike GBFS (CC0), basemap.at → Quellen stehen in der App, Lizenzliste auf der Info-Seite ergänzen |
 
+## Stand 18.11. abends
+- Erledigt: Ordner `/wien-live/` + `/wien-live-test/`, Subdomain `beta.` → `/wien-live-test/`
+  (SSL wird ausgestellt), `wien-live-daten.puhl.ch` → `/wien-live/`, fünf FTP-Secrets,
+  Cloudflare-Worker neu eingesetzt (Beta erlaubt), „1 · Testversion hochladen“ grün.
+- Nächstes: Beta prüfen → Schritt 1b (Umzug Live) → Burger-Menü-Entwurf auf Beta →
+  Play Console „App erstellen“.
+- **Achtung bis zum Umzug:** GitHub Pages zeigt noch `main` – jeder Push auf `main`
+  ist dort sofort live. Bis zum Umzug nichts Unfertiges auf `main` pushen.
+
 ## Schritt 1 – Testumgebung (entschieden: alles auf All-Inkl wie bUntis!)
 
 Live und Test laufen per FTP auf All-Inkl. GitHub Pages wird nach dem Umzug abgeschaltet.
