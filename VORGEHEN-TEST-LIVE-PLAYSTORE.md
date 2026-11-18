@@ -48,8 +48,8 @@ App: „Wien live - Daten & Zahlen“ · Repo `cpuhl51/wien-datenkarte` (öffent
 Live und Test laufen per FTP auf All-Inkl. GitHub Pages wird nach dem Umzug abgeschaltet.
 
 **Christoph macht (KAS von All-Inkl):**
-1. Zwei Ordner anlegen, z. B. `/wien-live/` (Live) und `/wien-live-beta/` (Test).
-2. Subdomain **`beta.wien-live-daten.puhl.ch`** anlegen → Ordner `/wien-live-beta/`,
+1. Zwei Ordner: `/wien-live/` (Live) und `/wien-live-test/` (Test) – angelegt 18.11.
+2. Subdomain **`beta.wien-live-daten.puhl.ch`** anlegen → Ordner `/wien-live-test/`,
    SSL (Let's Encrypt) einschalten.
 3. **Noch nicht** die Live-Subdomain umstellen – das machen wir gemeinsam, wenn die
    Live-Dateien schon im Ordner liegen (Schritt 1b).
@@ -143,6 +143,6 @@ Stand 18.11.: in der Play Console ist noch nichts angelegt. Hochladen: **`wien-l
 
 ## Offene Fragen an Christoph
 
-1. Zielgruppe (13+ oder 18+)?
-2. Wurde das Logo mit KI erstellt?
-3. Testergruppe anlegen (`wien-live-tester@googlegroups.com`)?
+- Entschieden 18.11.: Zielgruppe **ab 13**; Logo **mit KI erstellt** → in der Console
+  „KI-generierte Inhalte“ angeben.
+- Offen: Testergruppe anlegen (`wien-live-tester@googlegroups.com`)?
