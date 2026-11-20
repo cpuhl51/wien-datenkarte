@@ -2410,5 +2410,25 @@
 "tel": "+43 1 734 11 02 - 114",
 "mail": "tieraufnahme@tierquartier.at",
 "img": "/fundundvergabetiere/internet/Bild/Thumbnail/86912"
+},
+{
+"id": "64699",
+"t": "Katze",
+"k": "Katzen",
+"d": "2026-11-20",
+"s": "männlich",
+"f": "grau getigert",
+"o": "10., Neilreichgasse",
+"b": 10,
+"j": "",
+"mx": "",
+"org": "Stadt Wien | Veterinäramt und Tierschutz",
+"tel": "+43 1 4000-8060",
+"mail": "post@ma60.wien.gv.at",
+"img": "/fundundvergabetiere/internet/Bild/Thumbnail/86918",
+"xy": [
+16.35994,
+48.16386
+]
 }
 ]
