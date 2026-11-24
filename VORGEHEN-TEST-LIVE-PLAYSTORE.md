@@ -3,7 +3,7 @@
 **Für Claude, zuerst lesen.** Angepasst aus dem bewährten Ablauf von bUntis!
 (`cpuhl51/Buntis`) an Wien live. Stand: 18.11.2026.
 
-App: „Wien live - Daten & Zahlen“ · Repo `cpuhl51/wien-datenkarte` (öffentlich, MIT)
+App: „Wien live – Daten visuell“ · Repo `cpuhl51/wien-datenkarte` (öffentlich, MIT)
 · Paket `ch.puhl.wienaktuell` · Live: https://app.wien-live-daten.puhl.ch
 · Web-Version 1.3.2 · Android-Paket 1.3.2 (versionCode 2, mit Widget, Start-URL `/?quelle=play`).
 
@@ -111,7 +111,7 @@ Offen:
 
 Stand 18.11.: in der Play Console ist noch nichts angelegt. Hochladen: **`wien-live-1.3.2.aab`** (Code 2).
 
-1. **App erstellen:** „Wien live - Daten & Zahlen“ (26 Zeichen), Deutsch (Österreich),
+1. **App erstellen:** „Wien live – Daten visuell“ (25 Zeichen), Deutsch (Österreich),
    App, kostenlos. Kostenlos ist danach endgültig.
 2. **App-Inhalte:**
    - Datenschutz-URL `https://app.wien-live-daten.puhl.ch/datenschutz.html`

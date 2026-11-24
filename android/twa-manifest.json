@@ -1,7 +1,7 @@
 {
   "packageId": "ch.puhl.wienaktuell",
   "host": "app.wien-live-daten.puhl.ch",
-  "name": "Wien live - Daten & Zahlen",
+  "name": "Wien live – Daten visuell",
   "launcherName": "Wien live",
   "display": "standalone",
   "themeColor": "#c4161c",
@@ -17,7 +17,7 @@
   "maskableIconUrl": "https://app.wien-live-daten.puhl.ch/bilder/maskable-512.png?v=4",
   "splashScreenFadeOutDuration": 300,
   "signingKey": { "path": "./upload-key.jks", "alias": "upload" },
-  "appVersionName": "1.4.1",
+  "appVersionName": "1.4.2",
   "appVersionCode": 2,
   "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
@@ -34,5 +34,5 @@
   "fingerprints": [],
   "additionalTrustedOrigins": [],
   "retainedBundles": [],
-  "appVersion": "1.4.1"
+  "appVersion": "1.4.2"
 }

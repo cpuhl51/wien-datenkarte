@@ -1,4 +1,4 @@
-<title>Wien live - Daten &amp; Zahlen</title>
+<title>Wien live – Daten visuell</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
 /* Schriften liegen auf derselben Seite (SIL Open Font License), es wird nichts von Google Fonts geladen */
@@ -352,7 +352,7 @@ svg.vin text.vl{font:600 13px var(--body);fill:#3a2e08;pointer-events:none}
 </div>
 <div class="drawer-back" id="drawerback" hidden></div>
 <nav class="drawer" id="drawer" aria-label="Menü" hidden>
-  <div class="dr-head"><b>Wien live - Daten &amp; Zahlen</b><button class="dr-x" id="drawerx" aria-label="Menü schließen">✕</button></div>
+  <div class="dr-head"><b>Wien live – Daten visuell</b><button class="dr-x" id="drawerx" aria-label="Menü schließen">✕</button></div>
   <div class="dr-sec">Was die Karte zeigt</div>
   <div class="lgroups" id="layers" aria-label="Datenebene"></div>
   <div class="dr-sec">App</div>
@@ -365,7 +365,7 @@ svg.vin text.vl{font:600 13px var(--body);fill:#3a2e08;pointer-events:none}
 <div class="wrap">
   <header>
     <div class="topline"><div class="eyebrow">Live- und Informationskarte der Stadt Wien</div></div>
-    <h1>Wien live - Daten &amp; Zahlen</h1>
+    <h1>Wien live – Daten visuell</h1>
     <p class="lede">Finde was Du brauchst in deiner Nähe. Oder begib dich auf eine Zeitreise durch die politische und demografische Landschaft der lebenswertesten grünen Stadt der Welt.</p>
   </header>
 
@@ -427,7 +427,7 @@ svg.vin text.vl{font:600 13px var(--body);fill:#3a2e08;pointer-events:none}
 
 <script>
 /* App-Version – muss mit docs/version.json und dem Cache-Namen in docs/sw.js übereinstimmen (prüft der Ablauf „1 · Testversion hochladen“) */
-const VERSION="1.4.1";
+const VERSION="1.4.2";
 /* Testversion (beta.…) erkennbar machen */
 const IST_TEST=/^(beta|test)[.-]/.test(location.hostname)||/-(beta|test)\./.test(location.hostname);
 /* Play-Store-App: Start-URL /?quelle=play (ab App-Paket 1.3.x) oder Aufruf aus der Android-App */
@@ -1666,7 +1666,7 @@ function fillAbout(){
 function renderInfo(){
   document.getElementById("info").innerHTML=`<a class="back" href="#">‹ Zurück zur Karte</a>
   <h2 id="info-h">Einstellungen, Info und Datenschutz</h2>
-  <p><b>Wien live - Daten &amp; Zahlen</b> <span id="appver" class="vd"></span></p>
+  <p><b>Wien live – Daten visuell</b> <span id="appver" class="vd"></span></p>
   <p>Diese App zeigt offene Daten der Stadt Wien auf einer Karte der 23 Bezirke. Sie ist ein privates, nicht kommerzielles Projekt und kein Angebot der Stadt Wien.</p>
   <div class="creditbox">${creditHtml()}</div>
   <details class="vhist" id="vhist" hidden><summary>Versionsgeschichte</summary><div id="vhistbody"></div></details>

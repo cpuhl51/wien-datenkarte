@@ -1,6 +1,13 @@
 {
-  "version": "1.4.1",
+  "version": "1.4.2",
   "verlauf": [
+    {
+      "version": "1.4.2",
+      "datum": "2026-11-24",
+      "aenderungen": [
+        "Neuer Name: „Wien live – Daten visuell“"
+      ]
+    },
     {
       "version": "1.4.1",
       "datum": "2026-11-18",

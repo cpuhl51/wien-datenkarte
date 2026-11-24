@@ -1,4 +1,4 @@
-# Übergabe: technischer Stand „Wien live - Daten & Zahlen“
+# Übergabe: technischer Stand „Wien live – Daten visuell“
 
 Stand: 11.11.2026 · Für neue Chats in diesem Projekt (z. B. Widget). Zuerst lesen, dann `git pull`.
 
@@ -17,7 +17,7 @@ Stand: 11.11.2026 · Für neue Chats in diesem Projekt (z. B. Widget). Zuerst le
 - Testen: lokal `docs/` per http-Server, Playwright (Chromium vorinstalliert); Testbilder nie ins Repo legen.
 
 ## Android (Trusted Web Activity)
-- Projekt im Repo unter `android/` (Bubblewrap-Gerüst, android-browser-helper). Paketname **ch.puhl.wienaktuell**, App-Name „Wien live - Daten & Zahlen“, Launcher „Wien live“.
+- Projekt im Repo unter `android/` (Bubblewrap-Gerüst, android-browser-helper). Paketname **ch.puhl.wienaktuell**, App-Name „Wien live – Daten visuell“, Launcher „Wien live“.
 - Aktuell: **versionName 1.3.0, versionCode 2** (mit Widget; 1.0.0/Code 1 war die erste Play-Einreichung), minSdk 24, targetSdk und compileSdk 36. Fallback ohne TWA-Browser: Custom Tabs.
 - **Für jede neue .aab versionCode erhöhen** (in `android/app/build.gradle` und `android/twa-manifest.json`).
 - Bauen (Cloud-Container): JDK 17 (`apt install openjdk-17-jdk-headless`), Android cmdline-tools + `platforms;android-36`, `build-tools;35.0.0`; `local.properties` mit `sdk.dir`; `./gradlew bundleRelease`. Maven Central blockt mit 429 → im `build.gradle` Mirror `https://maven-central.storage-download.googleapis.com/maven2/` statt `mavenCentral()` (bereits so im Repo).
