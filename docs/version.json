@@ -1,6 +1,14 @@
 {
-  "version": "1.4.2",
+  "version": "1.4.3",
   "verlauf": [
+    {
+      "version": "1.4.3",
+      "datum": "2026-11-24",
+      "aenderungen": [
+        "Kopfzeile und Fotoknopf passen sich beim Wechsel zum Römischen Wien an",
+        "Menüpunkt „Weitere Apps“ springt zur richtigen Stelle"
+      ]
+    },
     {
       "version": "1.4.2",
       "datum": "2026-11-24",

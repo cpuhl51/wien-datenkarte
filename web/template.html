@@ -258,6 +258,7 @@ body.noscroll{overflow:hidden}
 .vhist summary{cursor:pointer;font-weight:600}
 .vhist ul{margin:6px 0 10px;padding-left:18px}
 .vhist .vd{color:var(--muted);font:12px var(--mono)}
+#moreapps{scroll-margin-top:72px}
 .moreapps{display:grid;gap:8px;margin:6px 0 0}
 .moreapps a{display:flex;align-items:center;gap:10px;color:var(--ink);text-decoration:none}
 .moreapps img{width:36px;height:36px;border-radius:8px}
@@ -427,7 +428,7 @@ svg.vin text.vl{font:600 13px var(--body);fill:#3a2e08;pointer-events:none}
 
 <script>
 /* App-Version – muss mit docs/version.json und dem Cache-Namen in docs/sw.js übereinstimmen (prüft der Ablauf „1 · Testversion hochladen“) */
-const VERSION="1.4.2";
+const VERSION="1.4.3";
 /* Testversion (beta.…) erkennbar machen */
 const IST_TEST=/^(beta|test)[.-]/.test(location.hostname)||/-(beta|test)\./.test(location.hostname);
 /* Play-Store-App: Start-URL /?quelle=play (ab App-Paket 1.3.x) oder Aufruf aus der Android-App */
@@ -1161,8 +1162,7 @@ function renderControls(){
   document.getElementById("stand").innerHTML=`<div><b>Datenstand:</b> ${layer.stand(y)}</div><div><span>Quelle:</span> ${subOf(layer).src||layer.src}</div><div><span>Abgerufen:</span> ${ABRUF}</div>`;
   const w=document.getElementById("wien"); w.setAttribute("aria-pressed",sel===0&&!pickMode);
   { const nm=layer.label, gc=(LGROUPS.find(g=>flatIds(g[2]).includes(layer.id))||[])[1]||layer.color;
-    document.getElementById("tblayer").textContent=nm;
-    document.getElementById("catbtn").style.setProperty("--gc",gc); document.getElementById("tblayer").style.setProperty("--gc",gc); }
+    document.getElementById("catbtn").style.setProperty("--gc",gc); }
   svg.classList.toggle("ptzoom",zoom.k>=3&&(isPts(layer)||layer.id==="wl"||!!layer.fund));
   svg.classList.toggle("pickmode",pickMode); document.getElementById("pickmsg").hidden=!pickMode;
   if(sel) lastSel=sel; const bz=document.getElementById("bzbtn"), nb=sel||lastSel;
@@ -1367,7 +1367,7 @@ svg.addEventListener("click",e=>{ const el=e.target.closest&&e.target.closest("[
 setInterval(()=>{ if(layer.id==="next"&&!document.hidden) loadDepartures(false); },10000);
 
 function renderSpecial(){
-  document.getElementById("mappick").innerHTML="";
+  document.getElementById("mappick").innerHTML=""; document.getElementById("fotobtn").hidden=true;
   if(layer.id!=="next") NX.zoomed=false;
   /* alles von der vorigen Ebene entfernen: Säulen, Störungs- und Fundtier-Symbole, Punkte, Legende */
   drawBars({}); wlG.innerHTML=""; fundG.innerHTML=""; overlay.innerHTML=""; document.getElementById("wlleg").innerHTML="";
@@ -1416,8 +1416,13 @@ function updateTitle(){
   const s=subOf(layer), y=yearOf(layer), when=layer.clock?hhmm(y)+" Uhr":(layer.fund||layer.live||isPts(layer))?"aktueller Stand":y;
   document.getElementById("mapsub").textContent=[layer.subs.length>1&&s.id!=="all"?s.label:(layer.subs.length>1?"Alle":""),when].filter(Boolean).join(" · ");
 }
+function updTopbar(){
+  const gc=(LGROUPS.find(g=>flatIds(g[2]).includes(layer.id))||[])[1]||layer.color, tb=document.getElementById("tblayer");
+  tb.textContent=layer.label; tb.style.setProperty("--gc",gc);
+  if(!layer.fund) document.getElementById("fotobtn").hidden=true;
+}
 function render(){
-  render2(); try{ updateTitle(); }catch(e){} try{ drawTiles(); }catch(e){}
+  render2(); try{ updTopbar(); }catch(e){} try{ updateTitle(); }catch(e){} try{ drawTiles(); }catch(e){}
   ls.set("lastView",{layer:layer.id,sub:state[layer.id].sub}); updateStartBtn();
 }
 let rankSplit=true;
@@ -1660,7 +1665,7 @@ function fillAbout(){
   if(VER){ av.textContent="Version "+VER.version; const h=document.getElementById("vhist"); h.hidden=false;
     document.getElementById("vhistbody").innerHTML=(VER.verlauf||[]).map(x=>`<p style="margin:8px 0 0"><b>${esc(x.version)}</b> <span class="vd">${esc(dmy(x.datum))}</span></p><ul>${(x.aenderungen||[]).map(c=>`<li>${esc(c)}</li>`).join("")}</ul>`).join(""); }
   const others=(APPS||[]).filter(a=>a&&a.url&&!/wien-live-daten\.puhl\.ch/.test(a.url));
-  if(others.length){ document.getElementById("moreapps").hidden=false;
+  if(others.length){
     document.getElementById("moreappsbody").innerHTML=others.map(a=>`<a href="${esc(a.playstore||a.url)}" target="_blank" rel="noopener">${a.icon?`<img src="${esc(a.icon)}" alt="">`:""}<span>${esc(a.name||"")}<small>${esc(a.beschreibung||"")}</small></span></a>`).join(""); }
 }
 function renderInfo(){
@@ -1670,7 +1675,7 @@ function renderInfo(){
   <p>Diese App zeigt offene Daten der Stadt Wien auf einer Karte der 23 Bezirke. Sie ist ein privates, nicht kommerzielles Projekt und kein Angebot der Stadt Wien.</p>
   <div class="creditbox">${creditHtml()}</div>
   <details class="vhist" id="vhist" hidden><summary>Versionsgeschichte</summary><div id="vhistbody"></div></details>
-  <div id="moreapps" hidden><h3>Weitere Apps</h3><div class="moreapps" id="moreappsbody"></div></div>
+  <div id="moreapps"><h3>Weitere Apps</h3><div class="moreapps" id="moreappsbody"><a href="https://puhl.ch/category/programme-und-apps/" target="_blank" rel="noopener"><span>Programme und Apps auf puhl.ch<small>Alle Apps und Tools von Christoph Puhl</small></span></a></div></div>
 
   <h3>Darstellung</h3>
   <div class="themesw" role="group" aria-label="Darstellung">${[["auto","Auto"],["light","Hell"],["dark","Dunkel"]].map(([v,l])=>`<button data-th="${v}" aria-pressed="${curTheme()===v}">${l}</button>`).join("")}</div>
@@ -1738,7 +1743,7 @@ document.getElementById("catbtn").addEventListener("click",openDrawer);
 document.getElementById("drawerx").addEventListener("click",closeDrawer);
 document.getElementById("drawerback").addEventListener("click",closeDrawer);
 document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeDrawer(); });
-document.querySelectorAll("#drawer [data-close]").forEach(a=>a.addEventListener("click",()=>{ closeDrawer(); if(a.dataset.scroll) setTimeout(()=>{ const el=document.getElementById(a.dataset.scroll); if(el&&!el.hidden) el.scrollIntoView({block:"start"}); },400); }));
+document.querySelectorAll("#drawer [data-close]").forEach(a=>a.addEventListener("click",()=>{ closeDrawer(); if(a.dataset.scroll){ const go=()=>{ const el=document.getElementById(a.dataset.scroll); if(el) el.scrollIntoView({block:"start"}); }; setTimeout(go,150); setTimeout(go,600); } }));
 if(IST_PLAY) document.querySelectorAll(".nur-web").forEach(e=>e.remove());
 
 /* „Weitere Werte“: Name antippen wechselt die Karte auf diese Statistik (Bezirk bleibt gewählt) */
