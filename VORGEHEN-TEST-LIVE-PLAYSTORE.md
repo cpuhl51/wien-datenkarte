@@ -43,18 +43,13 @@ App: „Wien live - Daten & Zahlen“ · Repo `cpuhl51/wien-datenkarte` (öffent
 | Play-Erkennung | `/?quelle=play` | `/?quelle=play` (seit 1.3.2) plus Referrer `android-app://…` |
 | Fremddaten | keine | Stadt Wien (data.wien.gv.at, CC BY 4.0), Wiener Linien (CC BY 4.0), nextbike GBFS (CC0), basemap.at → Quellen stehen in der App, Lizenzliste auf der Info-Seite ergänzen |
 
-## Stand 18.11. abends
-- Erledigt: Ordner `/wien-live/` + `/wien-live-test/`, Subdomain `beta.` → `/wien-live-test/`
-  (SSL wird ausgestellt), `wien-live-daten.puhl.ch` → `/wien-live/`, fünf FTP-Secrets,
-  Cloudflare-Worker neu eingesetzt (Beta erlaubt), „1 · Testversion hochladen“ grün.
-- Nächstes: Beta prüfen → Schritt 1b (Umzug Live) → Burger-Menü-Entwurf auf Beta →
-  Play Console „App erstellen“.
-- **Wichtig für den Umzug:** All-Inkl leitet die Adresse `/icons/` auf eigene Server-Symbole um
-  → der Bilder-Ordner heißt auf `beta` jetzt `docs/bilder/` (1.4.1). `main` vor dem
-  Live-Umzug auf diesen Stand bringen (beta übernehmen), sonst fehlen live alle Symbole.
-- Entwurf Burger-Menü (1.4.x) liegt auf Branch `beta`, Christoph findet ihn gut.
-- **Achtung bis zum Umzug:** GitHub Pages zeigt noch `main` – jeder Push auf `main`
-  ist dort sofort live. Bis zum Umzug nichts Unfertiges auf `main` pushen.
+## Stand 24.11.
+- Entwurf 1.4.1 (Burger-Menü, Ordner `bilder/`) ist in `main` übernommen, Testadresse zeigt
+  `main` (Markierung `testversion` = 1.4.1). Branch `beta` wird nicht mehr gebraucht
+  (Löschen über GitHub → Branches, Claude darf keine Branches löschen).
+- App-Paket `wien-live-1.4.1.aab` (Code 2), Handy-Screenshots neu, Tablet-Screenshot da.
+- Nächstes: Live freigeben (Actions „2 …“, Version 1.4.1) → KAS: `app.wien-live-daten`
+  vom GitHub-CNAME auf `/wien-live/` → GitHub Pages aus → Play Console.
 
 ## Schritt 1 – Testumgebung (entschieden: alles auf All-Inkl wie bUntis!)
 
