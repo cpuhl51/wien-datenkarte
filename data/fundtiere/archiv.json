@@ -2481,7 +2481,11 @@
 "org": "TierQuarTier Wien,  1220 Wien, Süßenbrunner Straße 101",
 "tel": "+43 1 734 11 02 - 114",
 "mail": "tieraufnahme@tierquartier.at",
-"img": "/fundundvergabetiere/internet/Bild/Thumbnail/86854"
+"img": "/fundundvergabetiere/internet/Bild/Thumbnail/86854",
+"xy": [
+16.35396,
+48.14664
+]
 },
 {
 "id": "64692",
@@ -2497,7 +2501,11 @@
 "org": "TierQuarTier Wien,  1220 Wien, Süßenbrunner Straße 101",
 "tel": "+43 1 734 11 02 - 114",
 "mail": "tieraufnahme@tierquartier.at",
-"img": "/fundundvergabetiere/internet/Bild/Thumbnail/86912"
+"img": "/fundundvergabetiere/internet/Bild/Thumbnail/86912",
+"xy": [
+16.38971,
+48.15585
+]
 },
 {
 "id": "64699",
@@ -2588,6 +2596,22 @@
 "img": "/fundundvergabetiere/internet/Bild/Thumbnail/86958"
 },
 {
+"id": "64717",
+"t": "American Staffordshire Terrier",
+"k": "Hunde",
+"d": "2026-11-21",
+"s": "weiblich",
+"f": "grau",
+"o": "21., Berzeliusgasse",
+"b": 21,
+"j": "",
+"mx": "",
+"org": "TierQuarTier Wien,  1220 Wien, Süßenbrunner Straße 101",
+"tel": "+43 1 734 11 02 - 114",
+"mail": "tieraufnahme@tierquartier.at",
+"img": ""
+},
+{
 "id": "64719",
 "t": "Langhaarkatze",
 "k": "Katzen",
@@ -2618,5 +2642,37 @@
 "tel": "+43 1 734 11 02 - 114",
 "mail": "tieraufnahme@tierquartier.at",
 "img": "/fundundvergabetiere/internet/Bild/Thumbnail/86972"
+},
+{
+"id": "64733",
+"t": "Langhaarkatze",
+"k": "Katzen",
+"d": "2026-11-23",
+"s": "männlich",
+"f": "rot getigert-weiß",
+"o": "22., Saikogasse",
+"b": 22,
+"j": "2022",
+"mx": "",
+"org": "TierQuarTier Wien,  1220 Wien, Süßenbrunner Straße 101",
+"tel": "+43 1 734 11 02 - 114",
+"mail": "tieraufnahme@tierquartier.at",
+"img": "/fundundvergabetiere/internet/Bild/Thumbnail/86977"
+},
+{
+"id": "64734",
+"t": "Rosellasittich",
+"k": "Andere Tiere",
+"d": "2026-11-23",
+"s": "unbekannt",
+"f": "",
+"o": "17., Johann-Nepomuk-Berger-Platz",
+"b": 17,
+"j": "",
+"mx": "",
+"org": "Zoo Forchtenstein, 1140 Wien",
+"tel": "0676/95 33 256 v. Montag - Freitag 10-14 Uhr (ausgenommen Feiertage)",
+"mail": "reptilienzooforchtenstein@gmail.com",
+"img": "/fundundvergabetiere/internet/Bild/Thumbnail/86978"
 }
 ]
