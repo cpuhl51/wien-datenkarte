@@ -1,10 +1,13 @@
-[{
-  "relation": ["delegate_permission/common.handle_all_urls"],
-  "target": {
-    "namespace": "android_app",
-    "package_name": "ch.puhl.wienaktuell",
-    "sha256_cert_fingerprints": [
-      "79:4B:83:5C:5B:2C:F7:FF:A6:98:4A:51:15:C2:79:E9:A6:F2:C5:84:A4:44:A9:52:6D:18:83:8B:29:AB:11:5C"
-    ]
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "ch.puhl.wienaktuell",
+      "sha256_cert_fingerprints": [
+        "98:D6:40:4B:7D:AC:67:58:C8:A2:4F:D6:2D:6E:BF:80:5B:E5:F6:9F:32:E8:86:4B:2A:9C:98:F5:69:9C:B5:32",
+        "79:4B:83:5C:5B:2C:F7:FF:A6:98:4A:51:15:C2:79:E9:A6:F2:C5:84:A4:44:A9:52:6D:18:83:8B:29:AB:11:5C"
+      ]
+    }
   }
-}]
+]
