@@ -49,6 +49,10 @@ App: „Wien live - Daten & Zahlen“ · Repo `cpuhl51/wien-datenkarte` (öffent
   Cloudflare-Worker neu eingesetzt (Beta erlaubt), „1 · Testversion hochladen“ grün.
 - Nächstes: Beta prüfen → Schritt 1b (Umzug Live) → Burger-Menü-Entwurf auf Beta →
   Play Console „App erstellen“.
+- **Wichtig für den Umzug:** All-Inkl leitet die Adresse `/icons/` auf eigene Server-Symbole um
+  → der Bilder-Ordner heißt auf `beta` jetzt `docs/bilder/` (1.4.1). `main` vor dem
+  Live-Umzug auf diesen Stand bringen (beta übernehmen), sonst fehlen live alle Symbole.
+- Entwurf Burger-Menü (1.4.x) liegt auf Branch `beta`, Christoph findet ihn gut.
 - **Achtung bis zum Umzug:** GitHub Pages zeigt noch `main` – jeder Push auf `main`
   ist dort sofort live. Bis zum Umzug nichts Unfertiges auf `main` pushen.
 

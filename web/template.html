@@ -233,6 +233,23 @@ footer a{color:inherit}
 #subsmob .subs{margin:10px 0 4px;padding:8px 10px;border-left:3px solid var(--gc);background:color-mix(in srgb,var(--gc) 8%,transparent);border-radius:0 8px 8px 0}
 .howto{font-size:13px;margin:12px 0 0}
 .settingsrow{margin:14px 0 0}
+.topbar{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:10px;padding:8px 14px;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(6px);border-bottom:1px solid var(--line);margin:-8px -16px 0}
+.testband+.topbar,.testband~.topbar{top:27px}
+.burger{width:40px;height:40px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface);display:flex;flex-direction:column;justify-content:center;align-items:center;gap:4px;cursor:pointer;padding:0}
+.burger span{display:block;width:18px;height:2px;background:var(--ink);border-radius:2px}
+.tb-title{font:800 16px var(--display,var(--body));color:var(--ink)}
+.tb-layer{font:600 13px var(--body);color:var(--muted);padding-left:10px;border-left:3px solid var(--gc,var(--line));overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.drawer-back{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:90}
+.drawer{position:fixed;top:0;left:0;bottom:0;width:min(88vw,380px);z-index:91;background:var(--bg);box-shadow:4px 0 24px rgba(0,0,0,.25);overflow-y:auto;padding:12px 14px 30px;transform:translateX(-102%);transition:transform .2s ease}
+.drawer.open{transform:none}
+@media (prefers-reduced-motion:reduce){.drawer{transition:none}}
+.dr-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;font-size:15px}
+.dr-x{border:0;background:none;font-size:20px;cursor:pointer;color:var(--ink);padding:6px 8px}
+.dr-sec{font:600 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:16px 0 8px}
+.dr-link{display:block;padding:11px 4px;border-bottom:1px solid var(--line);color:var(--ink);text-decoration:none;font:600 15px var(--body)}
+.drawer .lgroups{margin:0}
+body.noscroll{overflow:hidden}
+.catbtn{display:flex;align-items:center;justify-content:center;width:100%;margin-top:12px}
 .testband{position:sticky;top:0;z-index:100;background:#f08c00;color:#000;text-align:center;font:700 13px var(--body);padding:5px 8px}
 .fotobtn{display:flex;align-items:center;gap:10px;margin:12px 0 4px;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);font:600 15px var(--body);text-decoration:none}
 .fotobtn b{margin-left:auto;font:600 13px var(--mono);color:var(--muted)}
@@ -329,6 +346,22 @@ svg.vin text.vl{font:600 13px var(--body);fill:#3a2e08;pointer-events:none}
 .card h4{font:600 12px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:12px 0 6px}
 </style>
 
+<div class="topbar" id="topbar">
+  <button class="burger" id="burger" aria-label="Menü öffnen" aria-expanded="false" aria-controls="drawer"><span></span><span></span><span></span></button>
+  <span class="tb-title">Wien live</span><span class="tb-layer" id="tblayer"></span>
+</div>
+<div class="drawer-back" id="drawerback" hidden></div>
+<nav class="drawer" id="drawer" aria-label="Menü" hidden>
+  <div class="dr-head"><b>Wien live - Daten &amp; Zahlen</b><button class="dr-x" id="drawerx" aria-label="Menü schließen">✕</button></div>
+  <div class="dr-sec">Was die Karte zeigt</div>
+  <div class="lgroups" id="layers" aria-label="Datenebene"></div>
+  <div class="dr-sec">App</div>
+  <a class="dr-link" href="#info" data-close>Einstellungen &amp; Info</a>
+  <a class="dr-link" href="#info" data-close data-scroll="moreapps">Weitere Apps</a>
+  <a class="dr-link nur-web" href="https://paypal.me/PuhlChristoph" target="_blank" rel="noopener">Spenden ☕</a>
+  <a class="dr-link" href="datenschutz.html">Datenschutz</a>
+  <a class="dr-link" href="mailto:apps@puhl.ch">Kontakt &amp; Fehler melden</a>
+</nav>
 <div class="wrap">
   <header>
     <div class="topline"><div class="eyebrow">Live- und Informationskarte der Stadt Wien</div></div>
@@ -369,7 +402,7 @@ svg.vin text.vl{font:600 13px var(--body);fill:#3a2e08;pointer-events:none}
         <span class="yrange" id="yrange"></span>
       </div>
       <div id="subsmob"></div>
-      <div class="lgroups" id="layers" aria-label="Datenebene"></div>
+      <button class="wien catbtn" id="catbtn" aria-controls="drawer">Daten einer anderen Kategorie darstellen</button>
       <div class="subs" id="subs" role="group" aria-label="Kennzahl"></div>
       <p class="note" id="layernote"></p>
       <p class="hint maphint"><span id="numhint"></span> · Bezirk antippen für Details · gezoomt: mit dem Finger verschieben</p>
@@ -394,7 +427,7 @@ svg.vin text.vl{font:600 13px var(--body);fill:#3a2e08;pointer-events:none}
 
 <script>
 /* App-Version – muss mit docs/version.json und dem Cache-Namen in docs/sw.js übereinstimmen (prüft der Ablauf „1 · Testversion hochladen“) */
-const VERSION="1.3.2";
+const VERSION="1.4.1";
 /* Testversion (beta.…) erkennbar machen */
 const IST_TEST=/^(beta|test)[.-]/.test(location.hostname)||/-(beta|test)\./.test(location.hostname);
 /* Play-Store-App: Start-URL /?quelle=play (ab App-Paket 1.3.x) oder Aufruf aus der Android-App */
@@ -459,7 +492,7 @@ const WL_CAUSE = [["bau","Bauarbeiten",/bau(arbeit|stelle)|gleisbau|gleisarbeit|
 const causeOf = i => { if(i.k==="aufzug") return "aufzug"; const s=i.t+" "+i.d; const c=WL_CAUSE.find(([,,r])=>r.test(s)); return c?c[0]:"sonst"; };
 const CAUSE_COL = {bau:"#1a1a1a",einsatz:"#1c5fd6",unfall:"#c4161c",technik:"#5c6670",verkehr:"#c4161c",veranst:"#c4161c",sonst:"#e0a800",aufzug:"#3fa9e0"};
 /* Piktogramme je Ursache */
-const CAUSE_ICON = c => `icons/stoerung/${CAUSE_COL[c]?c:"sonst"}.png${IV}`;
+const CAUSE_ICON = c => `bilder/stoerung/${CAUSE_COL[c]?c:"sonst"}.png${IV}`;
 /* ---------- Leihräder: WienMobil Rad, GBFS direkt vom Betreiber (erlaubt Browser-Abfragen) ---------- */
 const BK={at:null,last:0,loading:false,err:null};
 const GBFS="https://gbfs.nextbike.net/maps/gbfs/v2/nextbike_wr/de/";
@@ -1013,7 +1046,7 @@ function drawFund(s){
   const zp=14*Math.min(1.7,1+(zoom.k-1)*.15);
   fundG.innerHTML=fundItems().filter(i=>i.xy).map(i=>{ const [x,y]=px(i.xy), j=10*u, on=fundPick===i.id, z=(on?zp*1.45:zp)*u;
     const X=x+(hash01(i.id,1)-.5)*j*2, Y=y+(hash01(i.id,2)-.5)*j*2;
-    return `<g data-fund="${esc(i.id)}"><title>${esc(i.t)} · ${esc(i.o)}</title>${on?`<circle cx="${X.toFixed(2)}" cy="${Y.toFixed(2)}" r="${(z*.68).toFixed(2)}" style="fill:none;stroke:var(--ink);stroke-width:${(z*.09).toFixed(2)}"></circle>`:""}<image href="icons/fund/${fkOf(i)}.png${IV}" x="${(X-z/2).toFixed(2)}" y="${(Y-z/2).toFixed(2)}" width="${z.toFixed(2)}" height="${z.toFixed(2)}"></image></g>`; }).join("");
+    return `<g data-fund="${esc(i.id)}"><title>${esc(i.t)} · ${esc(i.o)}</title>${on?`<circle cx="${X.toFixed(2)}" cy="${Y.toFixed(2)}" r="${(z*.68).toFixed(2)}" style="fill:none;stroke:var(--ink);stroke-width:${(z*.09).toFixed(2)}"></circle>`:""}<image href="bilder/fund/${fkOf(i)}.png${IV}" x="${(X-z/2).toFixed(2)}" y="${(Y-z/2).toFixed(2)}" width="${z.toFixed(2)}" height="${z.toFixed(2)}"></image></g>`; }).join("");
 }
 svg.addEventListener("click",e=>{ const el=e.target.closest&&e.target.closest("[data-fund]"); if(!el||layer.id!=="fund") return; e.stopPropagation(); fundPick=el.dataset.fund; render();
   const c=document.getElementById("fundpick"); if(c) c.scrollIntoView({block:"nearest",behavior:"smooth"}); },true);
@@ -1022,7 +1055,7 @@ function fundPickCard(){
   return fundCard(i,"fundpick-x","fundpick");
 }
 function fundCard(i,closeId,id){
-  return `<div class="pick"${id?` id="${id}"`:""}><div class="pk-h"><img src="icons/fund/${fkOf(i)}.png${IV}" alt="" style="width:20px;height:20px;vertical-align:-5px;margin-right:6px">${esc(FUND_KIND[fkOf(i)][0])} · gefunden am ${dmy(i.d)}</div>
+  return `<div class="pick"${id?` id="${id}"`:""}><div class="pk-h"><img src="bilder/fund/${fkOf(i)}.png${IV}" alt="" style="width:20px;height:20px;vertical-align:-5px;margin-right:6px">${esc(FUND_KIND[fkOf(i)][0])} · gefunden am ${dmy(i.d)}</div>
     <div class="pk-a">${esc(i.t)}${i.f?" · "+esc(i.f):""}${i.s&&i.s!=="unbekannt"?" · "+esc(i.s):""}</div>
     ${i.foto?`<img class="fundfoto" src="${i.foto}" alt="Foto: ${esc(i.t)}" loading="lazy">`:""}
     ${i.mx||i.j?`<div class="pk-m" style="font-family:var(--body)">${[esc(i.mx||""),i.j?"geboren "+esc(i.j):""].filter(Boolean).join(" · ")}</div>`:""}
@@ -1106,12 +1139,12 @@ function renderControls(){
   /* Unterauswahl direkt unter der Kategorie der gewählten Ebene, in deren Farbe; eigener Punkt nur, wo die Farbe auf der Karte etwas bedeutet */
   const chip=document.getElementById("layer-"+layer.id), grp=chip&&chip.closest(".lgroup");
   /* Handy: Unterauswahl direkt unter der Karte; Desktop: unter der Kategorie */
-  const slot=MOBILE.matches?document.getElementById("subsmob"):grp;
+  const slot=document.getElementById("subsmob"); /* Entwurf Burger-Menü: Unterauswahl immer direkt unter der Karte */
   if(slot&&sc.parentNode!==slot) slot.appendChild(sc);
   document.getElementById("subsmob").style.setProperty("--gc",grp?grp.style.getPropertyValue("--gc"):layer.color);
   const gc=grp?grp.style.getPropertyValue("--gc"):layer.color;
   const key=s=>s.dot||(layer.id==="vote"&&s.id!=="all"?s.color:null);
-  const icon=s=>layer.id==="fund"&&FUND_KIND[s.id]?`icons/fund/${s.id}.png${IV}`:layer.id==="wl"&&CAUSE_COL[s.id]?`icons/stoerung/${s.id}.png${IV}`:null;
+  const icon=s=>layer.id==="fund"&&FUND_KIND[s.id]?`bilder/fund/${s.id}.png${IV}`:layer.id==="wl"&&CAUSE_COL[s.id]?`bilder/stoerung/${s.id}.png${IV}`:null;
   sc.innerHTML=layer.subs.length<2?"":layer.subs.map(s=>`<button class="sub" id="sub-${layer.id}-${s.id}" data-s="${s.id}" style="--pc:${gc}" aria-pressed="${s.id===state[layer.id].sub}">${icon(s)?`<img class="sico" src="${icon(s)}" alt="">`:key(s)?`<b class="sdot" style="background:${key(s)}"></b>`:""}${s.label}</button>`).join("");
   sc.hidden=layer.subs.length<2;
   sc.querySelectorAll(".sub").forEach(b=>b.addEventListener("click",()=>{state[layer.id].sub=b.dataset.s;render();}));
@@ -1127,6 +1160,9 @@ function renderControls(){
   document.getElementById("yrange").textContent=layer.clock?`Uhrzeit · ${dmy(FP_DAY)}`:layer.live?"Momentaufnahme":layer.fund?"laufender Feed":ys.length>1?`${ys.length} Jahre: ${ys[0]}–${ys[ys.length-1]}`:"nur dieses Jahr verfügbar";
   document.getElementById("stand").innerHTML=`<div><b>Datenstand:</b> ${layer.stand(y)}</div><div><span>Quelle:</span> ${subOf(layer).src||layer.src}</div><div><span>Abgerufen:</span> ${ABRUF}</div>`;
   const w=document.getElementById("wien"); w.setAttribute("aria-pressed",sel===0&&!pickMode);
+  { const nm=layer.label, gc=(LGROUPS.find(g=>flatIds(g[2]).includes(layer.id))||[])[1]||layer.color;
+    document.getElementById("tblayer").textContent=nm;
+    document.getElementById("catbtn").style.setProperty("--gc",gc); document.getElementById("tblayer").style.setProperty("--gc",gc); }
   svg.classList.toggle("ptzoom",zoom.k>=3&&(isPts(layer)||layer.id==="wl"||!!layer.fund));
   svg.classList.toggle("pickmode",pickMode); document.getElementById("pickmsg").hidden=!pickMode;
   if(sel) lastSel=sel; const bz=document.getElementById("bzbtn"), nb=sel||lastSel;
@@ -1413,7 +1449,7 @@ function render2(){
     document.getElementById("wlleg").innerHTML=(used.length?used.map(c=>`<span class="lg"><img src="${CAUSE_ICON(c)}" alt="" style="width:18px;height:18px;outline:none">${c==="aufzug"?"Aufzug":c==="sonst"?"Sonstiges":WL_CAUSE.find(x=>x[0]===c)[1]}</span>`).join("")+`<span class="lg" style="color:var(--muted)">Symbol${wlDrawn.lines?" oder Linie":""} antippen für die Meldung${wlDrawn.lines?" · punktiert = betroffener U-Bahn-Abschnitt (abwechselnd Linien- und Störungsfarbe)":""}</span>`:"")
       +(wlDrawn.off?`<span class="lg" style="color:var(--muted)">${wlDrawn.off} Meldung${wlDrawn.off>1?"en nennen":" nennt"} nur Straßenbahn- oder Buslinien ohne Haltestellen und ${wlDrawn.off>1?"sind":"ist"} daher nicht auf der Karte – siehe Liste unten.</span>`:"");
   } else if(layer.id==="fund"){ const it=fundItems(), n=it.filter(i=>i.xy).length;
-    document.getElementById("wlleg").innerHTML=Object.entries(FUND_KIND).filter(([k])=>it.some(i=>fkOf(i)===k)).map(([k,[l]])=>`<span class="lg"><img src="icons/fund/${k}.png${IV}" alt="" style="width:18px;height:18px;outline:none">${l}</span>`).join("")
+    document.getElementById("wlleg").innerHTML=Object.entries(FUND_KIND).filter(([k])=>it.some(i=>fkOf(i)===k)).map(([k,[l]])=>`<span class="lg"><img src="bilder/fund/${k}.png${IV}" alt="" style="width:18px;height:18px;outline:none">${l}</span>`).join("")
       +`<span class="lg" style="color:var(--muted)">Symbol = ungefähre Lage (Mitte der Straße bzw. des Parks) · ${n} von ${it.length} Meldungen verortet · antippen für Details</span>`;
   } else document.getElementById("wlleg").innerHTML="";
   const dotNote=layer.id==="bau"?`Symbol = Baustelle, gestrichelte Linie = betroffener Abschnitt; antippen für Zeitraum und Details. ${BAU.err?BAU.err+" ":""}`:layer.id==="bike"?`● = eine Station: hell = mehr als 2 ${s.id==="bike"?"Räder":"Plätze"} frei, dunkel = nur 1–2, grau = keine. `:isPts(layer)?`● = ein Standort, antippen für Details. `:"";
@@ -1691,6 +1727,20 @@ function renderInfo(){
   <p>Fehler gefunden oder eine Idee? Schreib an ${a_(LINKS.mail,"apps@puhl.ch")}.</p>
   <a class="back" href="#">‹ Zurück zur Karte</a>`;
 }
+/* ---------- Burger-Menü (Entwurf) ---------- */
+function openDrawer(){ const d=document.getElementById("drawer"); d.hidden=false; document.getElementById("drawerback").hidden=false; requestAnimationFrame(()=>d.classList.add("open"));
+  document.getElementById("burger").setAttribute("aria-expanded","true"); document.body.classList.add("noscroll");
+  const on=d.querySelector(".chip[aria-pressed=true]")||d.querySelector("button"); if(on) on.focus({preventScroll:true}); if(on) on.scrollIntoView({block:"center"}); }
+function closeDrawer(){ const d=document.getElementById("drawer"); if(d.hidden) return; d.classList.remove("open"); document.getElementById("drawerback").hidden=true;
+  document.getElementById("burger").setAttribute("aria-expanded","false"); document.body.classList.remove("noscroll"); setTimeout(()=>{ if(!d.classList.contains("open")) d.hidden=true; },220); }
+document.getElementById("burger").addEventListener("click",()=>document.getElementById("drawer").hidden?openDrawer():closeDrawer());
+document.getElementById("catbtn").addEventListener("click",openDrawer);
+document.getElementById("drawerx").addEventListener("click",closeDrawer);
+document.getElementById("drawerback").addEventListener("click",closeDrawer);
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeDrawer(); });
+document.querySelectorAll("#drawer [data-close]").forEach(a=>a.addEventListener("click",()=>{ closeDrawer(); if(a.dataset.scroll) setTimeout(()=>{ const el=document.getElementById(a.dataset.scroll); if(el&&!el.hidden) el.scrollIntoView({block:"start"}); },400); }));
+if(IST_PLAY) document.querySelectorAll(".nur-web").forEach(e=>e.remove());
+
 /* „Weitere Werte“: Name antippen wechselt die Karte auf diese Statistik (Bezirk bleibt gewählt) */
 function goLayer(id){ const L=LAYERS.find(x=>x.id===id); if(!L) return; layer=L; render(); maybeLive();
   document.getElementById("maptitle").scrollIntoView({block:"start",behavior:"smooth"}); }
@@ -1812,7 +1862,8 @@ LGROUPS.concat([["Weitere","#7f8c87",LAYERS.map(L=>L.id).filter(id=>!inGroup.has
     const ch=document.createElement("div"); ch.className="chips"; g.appendChild(ch);
     Ls.forEach(L=>{
       const btn=document.createElement("button");btn.className="chip";btn.id="layer-"+L.id;btn.dataset.l=L.id;btn.textContent=L.label;
-      btn.addEventListener("click",()=>{layer=L;render();maybeLive();});
+      btn.addEventListener("click",()=>{ if(location.hash==="#fotos"||location.hash==="#info"){ history.replaceState(null,"",location.pathname+location.search); route(); } /* Fotos/Info schließen */
+        layer=L;render();maybeLive();closeDrawer(); document.getElementById("maptitle").scrollIntoView({block:"start",behavior:"smooth"});});
       ch.appendChild(btn);
     });
   });
