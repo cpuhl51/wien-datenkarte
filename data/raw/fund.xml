@@ -11,6 +11,86 @@
 		
 
 <item>
+	<title>Nymphensittich</title>
+	<description>03_Andere Tiere</description>
+	<guid isPermaLink="false">64740</guid>
+	<dc:date>2026-11-24</dc:date>
+	<vie:geburtsjahr></vie:geburtsjahr>
+	<vie:geschlecht>unbekannt</vie:geschlecht>
+	<vie:farbe>gelb-orange</vie:farbe>
+	<vie:mischling></vie:mischling>
+	<cal:location>
+		<vcard:street-address>02., Meiereistra&#223;e</vcard:street-address>
+	</cal:location>
+	<cal:organizer>
+		<vcard:fn>Stadt Wien | Veterin&#228;ramt und Tierschutz</vcard:fn>
+		<vcard:tel>+43 1 4000-8060</vcard:tel>
+		<vcard:email>post@ma60.wien.gv.at</vcard:email>
+	</cal:organizer>
+		<media:thumbnail url="/fundundvergabetiere/internet/Bild/Thumbnail/87001" />
+</item>
+
+<item>
+	<title>Europ&#228;isch Kurzhaar</title>
+	<description>02_Katzen</description>
+	<guid isPermaLink="false">64751</guid>
+	<dc:date>2026-11-24</dc:date>
+	<vie:geburtsjahr>2025</vie:geburtsjahr>
+	<vie:geschlecht>weiblich</vie:geschlecht>
+	<vie:farbe>braun getigert</vie:farbe>
+	<vie:mischling></vie:mischling>
+	<cal:location>
+		<vcard:street-address>02., Kraftwerk Freudenau</vcard:street-address>
+	</cal:location>
+	<cal:organizer>
+		<vcard:fn>TierQuarTier Wien,  1220 Wien, S&#252;&#223;enbrunner Stra&#223;e 101</vcard:fn>
+		<vcard:tel>+43 1 734 11 02 - 114</vcard:tel>
+		<vcard:email>tieraufnahme@tierquartier.at</vcard:email>
+	</cal:organizer>
+		<media:thumbnail url="/fundundvergabetiere/internet/Bild/Thumbnail/87004" />
+</item>
+
+<item>
+	<title>Europ&#228;isch Kurzhaar</title>
+	<description>02_Katzen</description>
+	<guid isPermaLink="false">64742</guid>
+	<dc:date>2026-11-24</dc:date>
+	<vie:geburtsjahr>2013</vie:geburtsjahr>
+	<vie:geschlecht>m&#228;nnlich</vie:geschlecht>
+	<vie:farbe>wei&#223; mit braun getigert </vie:farbe>
+	<vie:mischling></vie:mischling>
+	<cal:location>
+		<vcard:street-address>02., Krieau</vcard:street-address>
+	</cal:location>
+	<cal:organizer>
+		<vcard:fn>TierQuarTier Wien,  1220 Wien, S&#252;&#223;enbrunner Stra&#223;e 101</vcard:fn>
+		<vcard:tel>+43 1 734 11 02 - 114</vcard:tel>
+		<vcard:email>tieraufnahme@tierquartier.at</vcard:email>
+	</cal:organizer>
+		<media:thumbnail url="/fundundvergabetiere/internet/Bild/Thumbnail/86990" />
+</item>
+
+<item>
+	<title>Langhaarkatze</title>
+	<description>02_Katzen</description>
+	<guid isPermaLink="false">64749</guid>
+	<dc:date>2026-11-24</dc:date>
+	<vie:geburtsjahr>2024</vie:geburtsjahr>
+	<vie:geschlecht>m&#228;nnlich</vie:geschlecht>
+	<vie:farbe>grau</vie:farbe>
+	<vie:mischling></vie:mischling>
+	<cal:location>
+		<vcard:street-address>03., Arsenalstra&#223;e</vcard:street-address>
+	</cal:location>
+	<cal:organizer>
+		<vcard:fn>TierQuarTier Wien,  1220 Wien, S&#252;&#223;enbrunner Stra&#223;e 101</vcard:fn>
+		<vcard:tel>+43 1 734 11 02 - 114</vcard:tel>
+		<vcard:email>tieraufnahme@tierquartier.at</vcard:email>
+	</cal:organizer>
+		<media:thumbnail url="/fundundvergabetiere/internet/Bild/Thumbnail/87003" />
+</item>
+
+<item>
 	<title>Rosellasittich</title>
 	<description>03_Andere Tiere</description>
 	<guid isPermaLink="false">64734</guid>
@@ -28,6 +108,46 @@
 		<vcard:email>reptilienzooforchtenstein@gmail.com</vcard:email>
 	</cal:organizer>
 		<media:thumbnail url="/fundundvergabetiere/internet/Bild/Thumbnail/86978" />
+</item>
+
+<item>
+	<title>Europ&#228;isch Kurzhaar</title>
+	<description>02_Katzen</description>
+	<guid isPermaLink="false">64732</guid>
+	<dc:date>2026-11-23</dc:date>
+	<vie:geburtsjahr>2026</vie:geburtsjahr>
+	<vie:geschlecht>m&#228;nnlich</vie:geschlecht>
+	<vie:farbe>braun getigert</vie:farbe>
+	<vie:mischling></vie:mischling>
+	<cal:location>
+		<vcard:street-address>23., Lastenstra&#223;e</vcard:street-address>
+	</cal:location>
+	<cal:organizer>
+		<vcard:fn>Stadt Wien | Veterin&#228;ramt und Tierschutz</vcard:fn>
+		<vcard:tel>+43 1 4000-8060</vcard:tel>
+		<vcard:email>post@ma60.wien.gv.at</vcard:email>
+	</cal:organizer>
+		<media:thumbnail url="/fundundvergabetiere/internet/Bild/Thumbnail/86991" />
+</item>
+
+<item>
+	<title>Europ&#228;isch Kurzhaar</title>
+	<description>02_Katzen</description>
+	<guid isPermaLink="false">64743</guid>
+	<dc:date>2026-11-23</dc:date>
+	<vie:geburtsjahr>2026</vie:geburtsjahr>
+	<vie:geschlecht>m&#228;nnlich</vie:geschlecht>
+	<vie:farbe>braun getigert</vie:farbe>
+	<vie:mischling></vie:mischling>
+	<cal:location>
+		<vcard:street-address>23., Lastenstra&#223;e</vcard:street-address>
+	</cal:location>
+	<cal:organizer>
+		<vcard:fn>Stadt Wien | Veterin&#228;ramt und Tierschutz</vcard:fn>
+		<vcard:tel>+43 1 4000-8060</vcard:tel>
+		<vcard:email>post@ma60.wien.gv.at</vcard:email>
+	</cal:organizer>
+		<media:thumbnail url="/fundundvergabetiere/internet/Bild/Thumbnail/86992" />
 </item>
 
 <item>
@@ -1350,26 +1470,6 @@
 </item>
 
 <item>
-	<title>Europ&#228;isch Kurzhaar</title>
-	<description>02_Katzen</description>
-	<guid isPermaLink="false">64445</guid>
-	<dc:date>2026-10-26</dc:date>
-	<vie:geburtsjahr>2025</vie:geburtsjahr>
-	<vie:geschlecht>weiblich</vie:geschlecht>
-	<vie:farbe>schwarz mit braun</vie:farbe>
-	<vie:mischling></vie:mischling>
-	<cal:location>
-		<vcard:street-address>16., Haberlgasse</vcard:street-address>
-	</cal:location>
-	<cal:organizer>
-		<vcard:fn>TierQuarTier Wien,  1220 Wien, S&#252;&#223;enbrunner Stra&#223;e 101</vcard:fn>
-		<vcard:tel>+43 1 734 11 02 - 114</vcard:tel>
-		<vcard:email>tieraufnahme@tierquartier.at</vcard:email>
-	</cal:organizer>
-		<media:thumbnail url="/fundundvergabetiere/internet/Bild/Thumbnail/86358" />
-</item>
-
-<item>
 	<title>Langhaarkatze</title>
 	<description>02_Katzen</description>
 	<guid isPermaLink="false">64441</guid>
@@ -1387,66 +1487,6 @@
 		<vcard:email>tieraufnahme@tierquartier.at</vcard:email>
 	</cal:organizer>
 		<media:thumbnail url="/fundundvergabetiere/internet/Bild/Thumbnail/86356" />
-</item>
-
-<item>
-	<title>Birma</title>
-	<description>02_Katzen</description>
-	<guid isPermaLink="false">64434</guid>
-	<dc:date>2026-10-24</dc:date>
-	<vie:geburtsjahr></vie:geburtsjahr>
-	<vie:geschlecht>unbekannt</vie:geschlecht>
-	<vie:farbe>rassetypisch</vie:farbe>
-	<vie:mischling></vie:mischling>
-	<cal:location>
-		<vcard:street-address>19., Zahnradbahnstra&#223;e</vcard:street-address>
-	</cal:location>
-	<cal:organizer>
-		<vcard:fn>TierQuarTier Wien,  1220 Wien, S&#252;&#223;enbrunner Stra&#223;e 101</vcard:fn>
-		<vcard:tel>+43 1 734 11 02 - 114</vcard:tel>
-		<vcard:email>tieraufnahme@tierquartier.at</vcard:email>
-	</cal:organizer>
-		<media:thumbnail url="/fundundvergabetiere/internet/Bild/Thumbnail/86353" />
-</item>
-
-<item>
-	<title>Europ&#228;isch Kurzhaar</title>
-	<description>02_Katzen</description>
-	<guid isPermaLink="false">64430</guid>
-	<dc:date>2026-10-24</dc:date>
-	<vie:geburtsjahr>2026</vie:geburtsjahr>
-	<vie:geschlecht>weiblich</vie:geschlecht>
-	<vie:farbe>tricolor</vie:farbe>
-	<vie:mischling></vie:mischling>
-	<cal:location>
-		<vcard:street-address>21., Adolf-Loos-Gasse</vcard:street-address>
-	</cal:location>
-	<cal:organizer>
-		<vcard:fn>TierQuarTier Wien,  1220 Wien, S&#252;&#223;enbrunner Stra&#223;e 101</vcard:fn>
-		<vcard:tel>+43 1 734 11 02 - 114</vcard:tel>
-		<vcard:email>tieraufnahme@tierquartier.at</vcard:email>
-	</cal:organizer>
-		<media:thumbnail url="/fundundvergabetiere/internet/Bild/Thumbnail/86352" />
-</item>
-
-<item>
-	<title>Europ&#228;isch Kurzhaar</title>
-	<description>02_Katzen</description>
-	<guid isPermaLink="false">64435</guid>
-	<dc:date>2026-10-24</dc:date>
-	<vie:geburtsjahr>2010</vie:geburtsjahr>
-	<vie:geschlecht>weiblich</vie:geschlecht>
-	<vie:farbe>braun getigert</vie:farbe>
-	<vie:mischling></vie:mischling>
-	<cal:location>
-		<vcard:street-address>14., Jakob-Gremdlinger-Stra&#223;e</vcard:street-address>
-	</cal:location>
-	<cal:organizer>
-		<vcard:fn>TierQuarTier Wien,  1220 Wien, S&#252;&#223;enbrunner Stra&#223;e 101</vcard:fn>
-		<vcard:tel>+43 1 734 11 02 - 114</vcard:tel>
-		<vcard:email>tieraufnahme@tierquartier.at</vcard:email>
-	</cal:organizer>
-		<media:thumbnail url="/fundundvergabetiere/internet/Bild/Thumbnail/86354" />
 </item>
 
 	</channel>
