@@ -24,7 +24,7 @@ head = """<!doctype html>
 <html lang="de">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#111715" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#f3f5f4" media="(prefers-color-scheme: light)">
 <link rel="manifest" href="manifest.webmanifest?v=__IV__">

@@ -197,6 +197,8 @@ svg.map > text{font-size:calc(11px / var(--zk,1));stroke-width:calc(3px / var(--
 svg.map.zoomed > text.small,svg.map.zoomed > text.tiny{font-size:calc(11px / var(--zk,1));stroke-width:calc(3px / var(--zk,1));letter-spacing:0}
 /* Zwei-Finger-Geste gehört der Karte, nicht dem Seitenzoom des Browsers */
 svg.map{touch-action:pan-x pan-y}
+/* Seitenzoom ist abgeschaltet (Viewport); Doppeltippen soll auch nicht zoomen */
+html{touch-action:manipulation}
 .legend{display:flex;flex-direction:column;gap:4px}
 .ramp{height:10px;border-radius:3px}
 .ticks{display:flex;justify-content:space-between;font:12px var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}

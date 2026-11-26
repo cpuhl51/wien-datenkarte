@@ -6,7 +6,8 @@
       "datum": "2026-11-26",
       "aenderungen": [
         "Einrichtungen: Punkte (z. B. Trinkbrunnen) werden beim Hineinzoomen so groß wie die WC-Punkte",
-        "Play-App fragt beim ersten Start nach dem Standort"
+        "Play-App fragt beim ersten Start nach dem Standort",
+        "Zwei-Finger-Zoom vergrößert nur noch die Karte, nicht mehr die ganze Seite"
       ]
     },
     {
