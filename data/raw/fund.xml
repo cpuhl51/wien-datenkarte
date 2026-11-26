@@ -11,6 +11,146 @@
 		
 
 <item>
+	<title>Kaninchen</title>
+	<description>03_Andere Tiere</description>
+	<guid isPermaLink="false">64767</guid>
+	<dc:date>2026-11-26</dc:date>
+	<vie:geburtsjahr></vie:geburtsjahr>
+	<vie:geschlecht>unbekannt</vie:geschlecht>
+	<vie:farbe>wei&#223;/braun</vie:farbe>
+	<vie:mischling></vie:mischling>
+	<cal:location>
+		<vcard:street-address>12., Karsteinergasse </vcard:street-address>
+	</cal:location>
+	<cal:organizer>
+		<vcard:fn>Stadt Wien | Veterin&#228;ramt und Tierschutz</vcard:fn>
+		<vcard:tel>+43 1 4000-8060</vcard:tel>
+		<vcard:email>post@ma60.wien.gv.at</vcard:email>
+	</cal:organizer>
+		<media:thumbnail url="/fundundvergabetiere/internet/Bild/Thumbnail/87027" />
+</item>
+
+<item>
+	<title>Kaninchen</title>
+	<description>03_Andere Tiere</description>
+	<guid isPermaLink="false">64768</guid>
+	<dc:date>2026-11-26</dc:date>
+	<vie:geburtsjahr></vie:geburtsjahr>
+	<vie:geschlecht>unbekannt</vie:geschlecht>
+	<vie:farbe>braun/grau</vie:farbe>
+	<vie:mischling></vie:mischling>
+	<cal:location>
+		<vcard:street-address>12., Karsteinergasse </vcard:street-address>
+	</cal:location>
+	<cal:organizer>
+		<vcard:fn>Stadt Wien | Veterin&#228;ramt und Tierschutz</vcard:fn>
+		<vcard:tel>+43 1 4000-8060</vcard:tel>
+		<vcard:email>post@ma60.wien.gv.at</vcard:email>
+	</cal:organizer>
+		<media:thumbnail url="/fundundvergabetiere/internet/Bild/Thumbnail/87028" />
+</item>
+
+<item>
+	<title>Katze</title>
+	<description>02_Katzen</description>
+	<guid isPermaLink="false">64766</guid>
+	<dc:date>2026-11-26</dc:date>
+	<vie:geburtsjahr></vie:geburtsjahr>
+	<vie:geschlecht>weiblich</vie:geschlecht>
+	<vie:farbe>braun/wei&#223; getigert </vie:farbe>
+	<vie:mischling></vie:mischling>
+	<cal:location>
+		<vcard:street-address>16., Huberpark</vcard:street-address>
+	</cal:location>
+	<cal:organizer>
+		<vcard:fn>Stadt Wien | Veterin&#228;ramt und Tierschutz</vcard:fn>
+		<vcard:tel>+43 1 4000-8060</vcard:tel>
+		<vcard:email>post@ma60.wien.gv.at</vcard:email>
+	</cal:organizer>
+		<media:thumbnail url="/fundundvergabetiere/internet/Bild/Thumbnail/87026" />
+</item>
+
+<item>
+	<title>Hund</title>
+	<description>01_Hunde</description>
+	<guid isPermaLink="false">64757</guid>
+	<dc:date>2026-11-25</dc:date>
+	<vie:geburtsjahr>2023</vie:geburtsjahr>
+	<vie:geschlecht>weiblich</vie:geschlecht>
+	<vie:farbe>braun gestromt</vie:farbe>
+	<vie:mischling>Mischling</vie:mischling>
+	<cal:location>
+		<vcard:street-address>14., Hernstorferstra&#223;e</vcard:street-address>
+	</cal:location>
+	<cal:organizer>
+		<vcard:fn>TierQuarTier Wien,  1220 Wien, S&#252;&#223;enbrunner Stra&#223;e 101</vcard:fn>
+		<vcard:tel>+43 1 734 11 02 - 114</vcard:tel>
+		<vcard:email>tieraufnahme@tierquartier.at</vcard:email>
+	</cal:organizer>
+		<media:thumbnail url="/fundundvergabetiere/internet/Bild/Thumbnail/87025" />
+</item>
+
+<item>
+	<title>Europ&#228;isch Kurzhaar</title>
+	<description>02_Katzen</description>
+	<guid isPermaLink="false">64753</guid>
+	<dc:date>2026-11-25</dc:date>
+	<vie:geburtsjahr>2025</vie:geburtsjahr>
+	<vie:geschlecht>weiblich</vie:geschlecht>
+	<vie:farbe>grau mit rot </vie:farbe>
+	<vie:mischling></vie:mischling>
+	<cal:location>
+		<vcard:street-address>05., Siebenbrunnengasse</vcard:street-address>
+	</cal:location>
+	<cal:organizer>
+		<vcard:fn>TierQuarTier Wien,  1220 Wien, S&#252;&#223;enbrunner Stra&#223;e 101</vcard:fn>
+		<vcard:tel>+43 1 734 11 02 - 114</vcard:tel>
+		<vcard:email>tieraufnahme@tierquartier.at</vcard:email>
+	</cal:organizer>
+		<media:thumbnail url="/fundundvergabetiere/internet/Bild/Thumbnail/87007" />
+</item>
+
+<item>
+	<title>Europ&#228;isch Kurzhaar</title>
+	<description>02_Katzen</description>
+	<guid isPermaLink="false">64754</guid>
+	<dc:date>2026-11-25</dc:date>
+	<vie:geburtsjahr>2025</vie:geburtsjahr>
+	<vie:geschlecht>weiblich</vie:geschlecht>
+	<vie:farbe>schwarz</vie:farbe>
+	<vie:mischling></vie:mischling>
+	<cal:location>
+		<vcard:street-address>10., Buchengasse </vcard:street-address>
+	</cal:location>
+	<cal:organizer>
+		<vcard:fn>TierQuarTier Wien,  1220 Wien, S&#252;&#223;enbrunner Stra&#223;e 101</vcard:fn>
+		<vcard:tel>+43 1 734 11 02 - 114</vcard:tel>
+		<vcard:email>tieraufnahme@tierquartier.at</vcard:email>
+	</cal:organizer>
+		<media:thumbnail url="/fundundvergabetiere/internet/Bild/Thumbnail/87005" />
+</item>
+
+<item>
+	<title>Hund</title>
+	<description>01_Hunde</description>
+	<guid isPermaLink="false">64755</guid>
+	<dc:date>2026-11-25</dc:date>
+	<vie:geburtsjahr>2026</vie:geburtsjahr>
+	<vie:geschlecht>m&#228;nnlich</vie:geschlecht>
+	<vie:farbe>schwarz</vie:farbe>
+	<vie:mischling>Mischling</vie:mischling>
+	<cal:location>
+		<vcard:street-address>06., Stumpergasse</vcard:street-address>
+	</cal:location>
+	<cal:organizer>
+		<vcard:fn>TierQuarTier Wien,  1220 Wien, S&#252;&#223;enbrunner Stra&#223;e 101</vcard:fn>
+		<vcard:tel>+43 1 734 11 02 - 114</vcard:tel>
+		<vcard:email>tieraufnahme@tierquartier.at</vcard:email>
+	</cal:organizer>
+		<media:thumbnail url="/fundundvergabetiere/internet/Bild/Thumbnail/87024" />
+</item>
+
+<item>
 	<title>Nymphensittich</title>
 	<description>03_Andere Tiere</description>
 	<guid isPermaLink="false">64740</guid>
@@ -1467,26 +1607,6 @@
 		<vcard:email>tieraufnahme@tierquartier.at</vcard:email>
 	</cal:organizer>
 		<media:thumbnail url="/fundundvergabetiere/internet/Bild/Thumbnail/86327" />
-</item>
-
-<item>
-	<title>Langhaarkatze</title>
-	<description>02_Katzen</description>
-	<guid isPermaLink="false">64441</guid>
-	<dc:date>2026-10-25</dc:date>
-	<vie:geburtsjahr>2026</vie:geburtsjahr>
-	<vie:geschlecht>weiblich</vie:geschlecht>
-	<vie:farbe>wei&#223;</vie:farbe>
-	<vie:mischling></vie:mischling>
-	<cal:location>
-		<vcard:street-address>10., Laubeplatz</vcard:street-address>
-	</cal:location>
-	<cal:organizer>
-		<vcard:fn>TierQuarTier Wien,  1220 Wien, S&#252;&#223;enbrunner Stra&#223;e 101</vcard:fn>
-		<vcard:tel>+43 1 734 11 02 - 114</vcard:tel>
-		<vcard:email>tieraufnahme@tierquartier.at</vcard:email>
-	</cal:organizer>
-		<media:thumbnail url="/fundundvergabetiere/internet/Bild/Thumbnail/86356" />
 </item>
 
 	</channel>
