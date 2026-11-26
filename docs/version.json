@@ -1,6 +1,14 @@
 {
-  "version": "1.4.4",
+  "version": "1.4.5",
   "verlauf": [
+    {
+      "version": "1.4.5",
+      "datum": "2026-11-26",
+      "aenderungen": [
+        "Einrichtungen: Punkte (z. B. Trinkbrunnen) werden beim Hineinzoomen so groß wie die WC-Punkte",
+        "Play-App fragt beim ersten Start nach dem Standort"
+      ]
+    },
     {
       "version": "1.4.4",
       "datum": "2026-11-26",

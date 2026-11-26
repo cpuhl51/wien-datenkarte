@@ -15,7 +15,10 @@
  */
 package ch.puhl.wienaktuell;
 
+import android.Manifest;
+import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -24,6 +27,31 @@ import android.os.Bundle;
 
 public class LauncherActivity
         extends com.google.androidbrowserhelper.trusted.LauncherActivity {
+
+    /* Beim ersten Start einmal nach dem Standort fragen (für „Nächstes Öffi“ und das Widget).
+       Ohne diese Android-Freigabe liefert Chrome in der App keinen Standort. */
+    private static final int REQ_STANDORT = 41;
+    private static final String PREFS = "wienlive", KEY_GEFRAGT = "standort_gefragt";
+    private boolean mFrageStandort;
+
+    private boolean standortErlaubt() {
+        return checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                || checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    @Override
+    protected boolean shouldLaunchImmediately() {
+        SharedPreferences sp = getSharedPreferences(PREFS, MODE_PRIVATE);
+        mFrageStandort = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                && !standortErlaubt() && !sp.getBoolean(KEY_GEFRAGT, false);
+        return !mFrageStandort;
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results) {
+        super.onRequestPermissionsResult(requestCode, permissions, results);
+        if (requestCode == REQ_STANDORT) launchTwa();
+    }
     
 
     
@@ -39,6 +67,11 @@ public class LauncherActivity
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT);
         } else {
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
+        }
+        if (mFrageStandort) {
+            getSharedPreferences(PREFS, MODE_PRIVATE).edit().putBoolean(KEY_GEFRAGT, true).apply();
+            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION}, REQ_STANDORT);
         }
     }
 
