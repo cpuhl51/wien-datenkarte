@@ -178,8 +178,8 @@
 
         <service
             android:name=".DelegationService"
-            android:enabled="@bool/enableNotification"
-            android:exported="@bool/enableNotification">
+            android:enabled="true"
+            android:exported="true">
 
             
 
@@ -192,6 +192,10 @@
         
 
         
+        <activity android:name="com.google.androidbrowserhelper.locationdelegation.PermissionRequestActivity"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:exported="false" />
+
         <!-- Home-Screen-Widget „Wien live in der Nähe“ -->
         <receiver android:name=".WienWidget" android:exported="false" android:label="@string/widgetName">
             <intent-filter>
