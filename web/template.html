@@ -259,6 +259,7 @@ body.noscroll{overflow:hidden}
 .vhist ul{margin:6px 0 10px;padding-left:18px}
 .vhist .vd{color:var(--muted);font:12px var(--mono)}
 #moreapps{scroll-margin-top:72px}
+.nxgeo{margin-top:10px;font:600 15px var(--body);padding:9px 16px;border-radius:999px;border:1.5px solid currentColor;background:none;color:inherit;cursor:pointer}
 .moreapps{display:grid;gap:8px;margin:6px 0 0}
 .moreapps a{display:flex;align-items:center;gap:10px;color:var(--ink);text-decoration:none}
 .moreapps img{width:36px;height:36px;border-radius:8px}
@@ -428,7 +429,7 @@ svg.vin text.vl{font:600 13px var(--body);fill:#3a2e08;pointer-events:none}
 
 <script>
 /* App-Version – muss mit docs/version.json und dem Cache-Namen in docs/sw.js übereinstimmen (prüft der Ablauf „1 · Testversion hochladen“) */
-const VERSION="1.4.3";
+const VERSION="1.4.4";
 /* Testversion (beta.…) erkennbar machen */
 const IST_TEST=/^(beta|test)[.-]/.test(location.hostname)||/-(beta|test)\./.test(location.hostname);
 /* Play-Store-App: Start-URL /?quelle=play (ab App-Paket 1.3.x) oder Aufruf aus der Android-App */
@@ -1316,7 +1317,7 @@ function renderNext(bg){
     if(!nxGeoTried&&navigator.geolocation){ nxGeoTried=true;
       navigator.geolocation.getCurrentPosition(p=>{ const m={lat:p.coords.latitude,lon:p.coords.longitude,acc:p.coords.accuracy}, [x,y]=px([m.lon,m.lat]);
         if(x<-20||x>W+20||y<-20||y>H+20){ nxNoGeo("Du bist gerade außerhalb von Wien."); return; } me=m; nxGeoTried=false; render(); },
-        ()=>{ nxGeoTried=false; nxNoGeo(); },{enableHighAccuracy:true,timeout:15000,maximumAge:60000});
+        e=>{ nxGeoTried=false; nxNoGeo("",e&&e.code); },{enableHighAccuracy:true,timeout:15000,maximumAge:60000});
     } else if(!navigator.geolocation) nxNoGeo();
     return;
   }
@@ -1361,7 +1362,16 @@ function renderNext(bg){
   const more=document.getElementById("nxmore"); if(more) more.onclick=()=>{ nxCount=nxCount===3?6:3; nxStop=null; NX.zoomed=false; NX.key=""; NX.active=null; NX.stops=[]; loadDepartures(true); render(); };
   box.querySelectorAll("[data-nxs]").forEach(b=>b.onclick=()=>{ nxStop=nxStop===b.dataset.nxs?null:b.dataset.nxs; render(); });
 }
-function nxNoGeo(extra){ const el=document.getElementById("nxmsg"); if(el&&layer.id==="next") el.textContent="Dein Standort kann aktuell nicht abgerufen werden."+(extra?" "+extra:""); }
+function nxNoGeo(extra,code){ const el=document.getElementById("nxmsg"); if(!el||layer.id!=="next") return;
+  if(extra){ el.textContent="Dein Standort kann aktuell nicht abgerufen werden. "+extra; return; }
+  const wo=IST_PLAY?"Handy-Einstellungen → Apps → „Wien live“ (oder „Chrome“) → Berechtigungen → Standort → „Zulassen“":"im Browser auf das Symbol links neben der Adresse tippen → Berechtigungen → Standort → „Zulassen“";
+  const txt=code===1?`<b>Bitte gib deinen Standort frei.</b> Ohne Standort kann die App die Haltestellen in deiner Nähe nicht finden. Hast du die Freigabe früher abgelehnt, erlaubst du sie so: ${wo}.`
+    :code===2?`<b>Dein Standort ist am Handy ausgeschaltet.</b> Schalte „Standort“ in den Schnelleinstellungen ein (von oben wischen) und tippe dann auf den Knopf.`
+    :code===3?`<b>Dein Standort wurde nicht rechtzeitig gefunden.</b> Das passiert manchmal in Gebäuden. Versuch es noch einmal.`
+    :`<b>Für die Abfahrten braucht die App deinen Standort.</b> Tippe auf den Knopf und erlaube den Zugriff.`;
+  el.innerHTML=txt+` <br><button type="button" class="nxgeo">📍 Standort freigeben</button>`;
+  el.querySelector(".nxgeo").addEventListener("click",()=>{ el.textContent="Standort wird ermittelt …"; nxGeoTried=false; render(); });
+}
 svg.addEventListener("click",e=>{ const el=e.target.closest&&e.target.closest("[data-nx]"); if(!el||layer.id!=="next") return; e.stopPropagation(); nxStop=nxStop===el.dataset.nx?null:el.dataset.nx; render();
   document.getElementById("mappick").scrollIntoView({block:"nearest",behavior:"smooth"}); },true);
 setInterval(()=>{ if(layer.id==="next"&&!document.hidden) loadDepartures(false); },10000);

@@ -1,6 +1,13 @@
 {
-  "version": "1.4.3",
+  "version": "1.4.4",
   "verlauf": [
+    {
+      "version": "1.4.4",
+      "datum": "2026-11-26",
+      "aenderungen": [
+        "Nächstes Öffi: klare Hinweise, wenn der Standort fehlt (nicht freigegeben, ausgeschaltet oder nicht gefunden), mit Knopf zum erneuten Freigeben"
+      ]
+    },
     {
       "version": "1.4.3",
       "datum": "2026-11-24",
