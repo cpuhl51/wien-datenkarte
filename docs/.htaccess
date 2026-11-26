@@ -15,4 +15,9 @@ AddType application/json .json
   <FilesMatch "^(index\.html|sw\.js|version\.json|manifest\.webmanifest)$">
     Header set Cache-Control "no-cache"
   </FilesMatch>
+  # Verknüpfung App ↔ Website: länger zwischenspeichern lassen, damit Chrome beim App-Start
+  # seltener neu prüfen muss (während der Prüfung blendet Chrome kurz die Adressleiste ein)
+  <FilesMatch "^assetlinks\.json$">
+    Header set Cache-Control "public, max-age=259200"
+  </FilesMatch>
 </IfModule>
