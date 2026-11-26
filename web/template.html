@@ -431,7 +431,7 @@ svg.vin text.vl{font:600 13px var(--body);fill:#3a2e08;pointer-events:none}
 
 <script>
 /* App-Version – muss mit docs/version.json und dem Cache-Namen in docs/sw.js übereinstimmen (prüft der Ablauf „1 · Testversion hochladen“) */
-const VERSION="1.4.5";
+const VERSION="1.4.6";
 /* Testversion (beta.…) erkennbar machen */
 const IST_TEST=/^(beta|test)[.-]/.test(location.hostname)||/-(beta|test)\./.test(location.hostname);
 /* Play-Store-App: Start-URL /?quelle=play (ab App-Paket 1.3.x) oder Aufruf aus der Android-App */
@@ -1848,6 +1848,11 @@ function endPointer(e){
   else if(pointers.size===1&&drag){ const p=[...pointers.values()][0]; drag={cx:zoom.cx,cy:zoom.cy,x:p.x,y:p.y,k:zoom.k,dist:null}; }
 }
 svg.addEventListener("pointerup",endPointer); svg.addEventListener("pointercancel",endPointer);
+/* Seitenzoom zusätzlich per Skript verhindern (falls der Browser „Zoom erzwingen“ aktiv hat oder die Geste neben der Karte beginnt).
+   Die Kartengeste läuft über Pointer-Events und bleibt davon unberührt. */
+["touchstart","touchmove"].forEach(ev=>document.addEventListener(ev,e=>{ if(e.touches&&e.touches.length>1) e.preventDefault(); },{passive:false}));
+document.addEventListener("gesturestart",e=>e.preventDefault());
+let lastTap=0; document.addEventListener("touchend",e=>{ const n=Date.now(); if(n-lastTap<300&&!e.target.closest("button,a,input,select,label,summary")) e.preventDefault(); lastTap=n; },{passive:false});
 /* nach dem Verschieben keinen Bezirk oder Punkt auswählen */
 window.addEventListener("click",e=>{ if(moved&&svg.contains(e.target)){ e.stopPropagation(); e.preventDefault(); moved=false; } },true);
 /* Antippen eines Punktes auf der Karte: nächster Punkt im Umkreis von ~14 Bildschirmpixeln */

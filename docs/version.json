@@ -1,6 +1,13 @@
 {
-  "version": "1.4.5",
+  "version": "1.4.6",
   "verlauf": [
+    {
+      "version": "1.4.6",
+      "datum": "2026-11-26",
+      "aenderungen": [
+        "Seitenzoom mit zwei Fingern auch dann verhindert, wenn die Geste neben der Karte beginnt"
+      ]
+    },
     {
       "version": "1.4.5",
       "datum": "2026-11-26",
