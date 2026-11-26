@@ -31,7 +31,7 @@ public class LauncherActivity
     /* Beim ersten Start einmal nach dem Standort fragen (für „Nächstes Öffi“ und das Widget).
        Ohne diese Android-Freigabe liefert Chrome in der App keinen Standort. */
     private static final int REQ_STANDORT = 41;
-    private static final String PREFS = "wienlive", KEY_GEFRAGT = "standort_gefragt";
+    static final String PREFS = "wienlive", KEY_GEFRAGT = "standort_gefragt";
     private boolean mFrageStandort;
 
     private boolean standortErlaubt() {
@@ -79,6 +79,13 @@ public class LauncherActivity
     protected Uri getLaunchingUrl() {
         // Get the original launch Url.
         Uri uri = super.getLaunchingUrl();
+        /* Der Web-App mitteilen, ob Android den Standort erlaubt (für passende Hinweise) */
+        try {
+            if (uri != null && uri.getQueryParameter("standort") == null) {
+                uri = uri.buildUpon().appendQueryParameter("standort",
+                        (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || standortErlaubt()) ? "1" : "0").build();
+            }
+        } catch (Exception ignored) { }
 
         
 

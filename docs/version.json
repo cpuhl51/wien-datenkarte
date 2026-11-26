@@ -1,6 +1,13 @@
 {
-  "version": "1.4.6",
+  "version": "1.4.7",
   "verlauf": [
+    {
+      "version": "1.4.7",
+      "datum": "2026-11-26",
+      "aenderungen": [
+        "Play-App: Knopf „Standort erlauben“ fragt erneut nach oder öffnet die App-Einstellungen, danach geht es automatisch weiter"
+      ]
+    },
     {
       "version": "1.4.6",
       "datum": "2026-11-26",

@@ -192,6 +192,19 @@
         
 
         
+        <!-- „Standort erlauben“ aus der Web-App: intent://standort#Intent;scheme=wienlive;package=ch.puhl.wienaktuell;end -->
+        <activity android:name=".StandortActivity"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:excludeFromRecents="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="wienlive" android:host="standort" />
+            </intent-filter>
+        </activity>
+
         <activity android:name="com.google.androidbrowserhelper.locationdelegation.PermissionRequestActivity"
             android:theme="@android:style/Theme.Translucent.NoTitleBar"
             android:exported="false" />
